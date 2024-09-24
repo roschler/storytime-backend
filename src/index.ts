@@ -21,11 +21,35 @@ if (process.env.NODE_ENV !== "production") {
 		https,
 	}
 	app = fastify(opts)
+
+	// HTTP health check route for AWS load balance.
+
+	// Register a health check route
+	app.get('/health', async (_request, reply) => {
+		reply.status(200).send('OK');
+	});
+
+	// Start the server
+	const start = async () => {
+		try {
+			await app.listen({ port: 3333, host: '0.0.0.0' });
+			app.log.info(`Server listening on port 3333`);
+		} catch (err) {
+			app.log.error(err);
+			process.exit(1);
+		}
+	};
+
+	start();
 }
 
-// Websock Controller
+// Websocket Controller
 app.register(websock, { server: app.server })
 
 app.listen({ port, host })
 
-console.log(`Storytime backend server listening on ${host}:${port}`)
+console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`)
+
+
+
+
