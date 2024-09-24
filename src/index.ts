@@ -1,5 +1,4 @@
 import "dotenv/config";
-
 import fastify, { FastifyInstance } from "fastify";
 import websock from "./websock";
 import { readFileSync } from "fs";
@@ -31,8 +30,8 @@ app.get('/health', async (_request, reply) => {
 	reply.status(200).send('OK');
 });
 
-// Websocket Controller
-app.register(websock, { server: app.server });
+// Register the websock plugin with a prefix to prevent route interference
+app.register(websock, { prefix: '/ws', server: app.server });
 
 // Start the server
 app.listen({ port, host }, (err, address) => {
