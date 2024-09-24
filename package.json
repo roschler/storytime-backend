@@ -10,7 +10,7 @@
 		"postinstall": "mkdirp output output/audio output/image output/story output/text",
 		"build": "rimraf dist && tsc",
 		"start": "node dist/index.js",
-		"forever": "node dist/index.js"
+		"forever": "forever node dist/index.js"
 	},
 	"author": "Karbon Dallas <hello@krbn.life>",
 	"license": "MIT",
