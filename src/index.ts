@@ -4,7 +4,7 @@ import websock from "./websock";
 import { readFileSync } from "fs";
 
 const port = Number(process.env.BACKEND_SERVER_PORT ?? 3001);
-const host = process.env.BACKEND_SERVER_HOST ?? "127.0.0.1";
+const host = "127.0.0.1";
 
 let app: FastifyInstance;
 
@@ -39,6 +39,6 @@ app.listen({ port, host }, (err, address) => {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime version 1.0 backend server listening on ${address}`);
+	app.log.info(`Storytime version 1.1 backend server listening on ${address}`);
 	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
 });
