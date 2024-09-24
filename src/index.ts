@@ -39,6 +39,6 @@ app.listen({ port, host }, (err, address) => {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime backend server listening on ${address}`);
+	app.log.info(`Storytime version 1.0 backend server listening on ${address}`);
 	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
 });
