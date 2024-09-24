@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Register the websock plugin with a prefix to prevent route interference
-app.register(websock, { prefix: '/ws', server: app.server });
+app.register(websock, { prefix: '/storytime', server: app.server });
 
 // Register the health check route for AWS load balancer
 app.get('/health', async (_request, reply) => {
