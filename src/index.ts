@@ -4,7 +4,8 @@ import websock from './websock';
 import { readFileSync } from 'fs';
 
 const port = Number(process.env.BACKEND_SERVER_PORT ?? 3001);
-const host = '127.0.0.1';
+// const host = '127.0.0.1';
+const host = '0.0.0.0';
 
 let app: FastifyInstance;
 
@@ -25,7 +26,10 @@ if (process.env.NODE_ENV !== 'production') {
 	app = fastify(opts);
 }
 
-// Register the `websock` plugin without a prefix
+// Register the `websock` plugin without a prefix.
+//  Remember, the websocket controller code in
+//  websock.ts in wsController() registers
+//  the "/storytime" path!
 app.register(websock, { server: app.server });
 
 // Register the health check route for AWS load balancer
@@ -39,6 +43,6 @@ app.listen({ port, host }, (err, address) => {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime version 1.3 backend server listening on ${address}`);
+	app.log.info(`Storytime version 1.4 backend server listening on ${address}`);
 	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
 });
