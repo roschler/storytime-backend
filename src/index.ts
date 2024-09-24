@@ -25,13 +25,13 @@ if (process.env.NODE_ENV !== "production") {
 	app = fastify(opts);
 }
 
+// Register the websock plugin with a prefix to prevent route interference
+app.register(websock, { prefix: '/ws', server: app.server });
+
 // Register the health check route for AWS load balancer
 app.get('/health', async (_request, reply) => {
 	reply.status(200).send('OK');
 });
-
-// Register the websock plugin with a prefix to prevent route interference
-app.register(websock, { prefix: '/ws', server: app.server });
 
 // Start the server
 app.listen({ port, host }, (err, address) => {
