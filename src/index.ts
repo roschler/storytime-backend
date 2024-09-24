@@ -32,6 +32,12 @@ if (process.env.NODE_ENV !== 'production') {
 //  the "/storytime" path!
 app.register(websock, { server: app.server });
 
+// Home page route for now.
+// Register the index route
+app.get('/', async (_request, reply) => {
+	reply.type('text/html').send('<p>Plastic educator website is under construction</p>');
+});
+
 // Register the health check route for AWS load balancer
 app.get('/health', async (_request, reply) => {
 	reply.status(200).send('OK');
@@ -43,6 +49,6 @@ app.listen({ port, host }, (err, address) => {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime version 1.4 backend server listening on ${address}`);
+	app.log.info(`Storytime version 1.5 backend server listening on ${address}`);
 	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
 });
