@@ -24,19 +24,28 @@ if (process.env.NODE_ENV !== "production") {
 	app = fastify(opts);
 }
 
-// Register the health check route BEFORE registering the WebSocket plugin
+// Health check route
 app.get('/health', async (_request, reply) => {
 	reply.status(200).send('OK');
 });
 
-// WebSocket Controller
+// Register the WebSocket plugin AFTER the health check route
 app.register(websock, { server: app.server });
 
-app.listen({ port, host }, (err, address) => {
+// Lifecycle hook to ensure everything is set up before listening
+app.ready(err => {
 	if (err) {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime backend server listening on ${address}`);
-	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
+
+	// Once the server is ready, start listening
+	app.listen({ port, host }, (err, address) => {
+		if (err) {
+			app.log.error(err);
+			process.exit(1);
+		}
+		app.log.info(`Server listening on ${address}`);
+		console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
+	});
 });
