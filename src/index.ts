@@ -51,7 +51,7 @@ app.register(fastifyHelmet, {
 */
 
 // Serve static files from the frontend build directory
-const frontendBuildPath = path.join(__dirname, '../frontend/build');
+const frontendBuildPath = path.join(__dirname, '../frontend/dist');
 
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, 'public'),
