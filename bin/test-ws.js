@@ -20,7 +20,7 @@ ws.on("open", () => {
 			type: "request",
 			payload: {
 				genre: "scifi",
-				prompt: "A large frog is writing Node.js code in a nice coffee shop",
+				prompt: "A happy dinosaur in a pizza shop eating a pepperoni pizza with a party hat on its head.",
 			},
 		}),
 	)
