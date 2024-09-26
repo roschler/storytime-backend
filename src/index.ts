@@ -34,7 +34,7 @@ console.log('Resolved static file path:', path.join(__dirname, staticPath));
 // Serve static files from the correct directory for the front-end
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, staticPath),
-	prefix: '/public/', // Serve static files from the root URL path
+	prefix: '/nft-supreme/', // Serve static files from the root URL path
 	constraints: { host: 'plasticeducator.com' },
 };
 
