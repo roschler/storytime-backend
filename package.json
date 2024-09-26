@@ -19,7 +19,7 @@
 		"@fastify/static": "^7.0.4",
 		"@fastify/websocket": "^9.0.0",
 		"dotenv": "^16.4.5",
-		"fastify": "^4.28.1",
+		"fastify": "^4.0.0",
 		"openai": "^4.39.0"
 	},
 	"devDependencies": {
