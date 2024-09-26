@@ -35,7 +35,7 @@ console.log('Resolved static file path:', path.join(__dirname, staticPath));
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, staticPath),
 	prefix: '/public/', // Serve static files from the root URL path
-	// constraints: { host: 'plasticeducator.com' },
+	constraints: { host: 'plasticeducator.com' },
 };
 
 app.register(fastifyStatic, staticOptions);
@@ -51,12 +51,12 @@ app.register(websock, { server: app.server });
 
 // Serve index.html at root
 app.get('/', async (_request, reply) => {
-	reply.sendFile('index.html');
+	return reply.sendFile('index.html');
 });
 
 // Register the health check route for AWS load balancer
 app.get('/health', async (_request, reply) => {
-	reply.status(200).send('OK');
+	return reply.status(200).send('OK');
 });
 
 // Wildcard route for front-end routing (must be after other routes)
