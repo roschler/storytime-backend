@@ -2,7 +2,7 @@ import "dotenv/config"
 
 import type WebSocket from "ws"
 import { createWriteStream } from "fs"
-import websocket from "@fastify/websocket"
+import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
 import { generateStory, isFlagged } from "./openai"
 import { Genre, StateType, ErrorType, RequestPayload } from "./system/types"
@@ -97,36 +97,42 @@ async function handleImageRequest(
 	saveImageURLs(state.current_request_id, urls)
 }
 
-async function wsConnection(client: WebSocket, request: FastifyRequest) {
+async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 	const state = {
 		streaming_audio: false,
 		streaming_text: false,
 		waiting_for_images: false,
 		current_request_id: "",
-	} as StateType
-	sendStateMessage(client, state)
-	console.log(`Client connected: ${request.ip}`)
-	client.on("message", async (raw) => {
-		const message = JSON.parse(raw.toString())
-		if (message.type === "request") {
-			const { prompt } = message.payload
-			state.current_request_id = `${Date.now()}-${crypto.randomUUID()}`
-			// Check if the prompt is flagged as harmful before
-			// passing the request to our respective AI handlers
+	};
 
-			const flagged = await isFlagged(prompt)
+	// Use the `connection.socket` instead of `client`
+	const client = connection.socket;
+
+	sendStateMessage(client, state);
+	console.log(`Client connected: ${request.ip}`);
+
+	client.on("message", async (raw) => {
+		const message = JSON.parse(raw.toString());
+		if (message.type === "request") {
+			const { prompt } = message.payload;
+			state.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+
+			// Check if the prompt is flagged as harmful before passing the request to AI handlers
+			const flagged = await isFlagged(prompt);
 			if (flagged) {
-				console.log(`User prompt was flagged as harmful: ${prompt}`)
+				console.log(`User prompt was flagged as harmful: ${prompt}`);
 				sendErrorMessage(client, {
 					error: badPromptError,
-				})
-				return // nope
+				});
+				return; // Exit
 			}
-			handleImageRequest(client, state, message.payload)
-			handleStoryRequest(client, state, message.payload)
+
+			handleImageRequest(client, state, message.payload);
+			handleStoryRequest(client, state, message.payload);
 		}
-	})
+	});
 }
+
 
 export default async function wsController(fastify: FastifyInstance) {
 	await fastify.register(websocket)
