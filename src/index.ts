@@ -35,7 +35,7 @@ console.log('Resolved static file path:', path.join(__dirname, staticPath));
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, staticPath),
 	prefix: '/public/', // Serve static files from the root URL path
-	constraints: { host: 'plasticeducator.com' },
+	// constraints: { host: 'plasticeducator.com' },
 };
 
 app.register(fastifyStatic, staticOptions);
