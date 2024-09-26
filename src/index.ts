@@ -52,11 +52,11 @@ app.register(fastifyHelmet, {
 
 // Serve static files from the correct directory for
 //  the front-end
-const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+const frontendBuildPath = path.join(__dirname, '../frontend-static');
 
 const staticOptions: FastifyStaticOptions = {
-	root: path.join(__dirname, 'public'),
-	prefix: '/public/', // optional: default '/'
+	root: path.join(__dirname, '../frontend-static'),
+	prefix: '/', // Serve static files from the root URL path
 	constraints: { host: 'plasticeducator.com' }, // optional: default {}
 	allowedPath: (pathName: string, rootDir: string, _request: any) => {
 		// Only allow files within the rootDir (build directory)
