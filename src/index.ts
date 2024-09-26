@@ -56,7 +56,7 @@ const frontendBuildPath = path.join(__dirname, '../frontend-static');
 
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, '../frontend-static'),
-	prefix: '/', // Serve static files from the root URL path
+	prefix: '/public/', // Serve static files from the root URL path
 	constraints: { host: 'plasticeducator.com' }, // optional: default {}
 	allowedPath: (pathName: string, rootDir: string, _request: any) => {
 		// Only allow files within the rootDir (build directory)
