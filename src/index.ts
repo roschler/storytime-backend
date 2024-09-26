@@ -27,6 +27,8 @@ if (process.env.NODE_ENV !== 'production') {
 	app = fastify(opts);
 }
 
+console.log('Current working directory at time of static path configuration:', process.cwd());
+
 // Serve static files from the correct directory for the front-end
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, '../frontend-static'),
