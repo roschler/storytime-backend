@@ -1,15 +1,12 @@
 import 'dotenv/config';
 
-import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify"
+import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fastifyStatic, { FastifyStaticOptions } from '@fastify/static';
-// import fastify from 'fastify';
-// import fastifyStatic, { FastifyStaticOptions } from '@fastify/static';
 import websock from './websock';
 import { readFileSync } from 'fs';
 import path from 'node:path';
 
 const port = Number(process.env.BACKEND_SERVER_PORT ?? 3001);
-// const host = '127.0.0.1';
 const host = '0.0.0.0';
 
 let app: FastifyInstance;
@@ -19,7 +16,6 @@ if (process.env.NODE_ENV !== 'production') {
 	console.log('Running in development mode, no SSL');
 	app = fastify({ logger: true });
 } else {
-	// Production mode
 	const https = {
 		key: readFileSync(process.cwd() + '/certs/server.key'),
 		cert: readFileSync(process.cwd() + '/certs/server.crt'),
@@ -31,46 +27,22 @@ if (process.env.NODE_ENV !== 'production') {
 	app = fastify(opts);
 }
 
-// Register fastify-helmet for security headers
-/*
-app.register(fastifyHelmet, {
-	contentSecurityPolicy: {
-		directives: {
-			defaultSrc: ["'self'"],
-		},
-	},
-});
-*/
-
-/*
-app.register(fastifyHelmet, {
-	helmet: {
-		contentSecurityPolicy: false, // Adjust as necessary
-	},
-});
-*/
-
-// Serve static files from the correct directory for
-//  the front-end
-const frontendBuildPath = path.join(__dirname, '../frontend-static');
-
+// Serve static files from the correct directory for the front-end
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, '../frontend-static'),
 	prefix: '/public/', // Serve static files from the root URL path
-	constraints: { host: 'plasticeducator.com' }, // optional: default {}
-	allowedPath: (pathName: string, rootDir: string, _request: any) => {
-		// Only allow files within the rootDir (build directory)
-		const resolved = path.join(rootDir, pathName);
-		return resolved.startsWith(rootDir);
-	},
+	constraints: { host: 'plasticeducator.com' },
 };
 
 app.register(fastifyStatic, staticOptions);
 
-// Register the `websock` plugin without a prefix.
-// Remember, the websocket controller code in
-// websock.ts in wsController() registers
-// the "/storytime" path!
+// Log all requests to see what is happening
+app.addHook('onRequest', (request, _reply, done) => {
+	console.log(`Request URL: ${request.url}`);
+	done();
+});
+
+// Register websocket plugin
 app.register(websock, { server: app.server });
 
 // Serve index.html at root
@@ -84,8 +56,8 @@ app.get('/health', async (_request, reply) => {
 });
 
 // Wildcard route for front-end routing (must be after other routes)
-app.setNotFoundHandler(async (_request: FastifyRequest, reply: FastifyReply) => {
-	// Serve index.html for unmatched routes (SPA support)
+app.setNotFoundHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+	console.log(`Route not found: ${request.url}`);
 	return reply.sendFile('index.html');
 });
 
