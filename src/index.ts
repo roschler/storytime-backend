@@ -27,7 +27,7 @@ if (process.env.NODE_ENV !== 'production') {
 	app = fastify(opts);
 }
 
-const staticPath = 'frontend-static';
+const staticPath = '../frontend-static';
 console.log('Current working directory at time of static path configuration:', process.cwd());
 console.log('Resolved static file path:', path.join(__dirname, staticPath));
 
