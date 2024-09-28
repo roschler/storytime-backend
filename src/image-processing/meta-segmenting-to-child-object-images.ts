@@ -3,6 +3,12 @@
 //  a segmenting call to Meta's SAM2 model and turn the
 //  objects found into separate child images.
 import sharp from 'sharp';
+// import * as components from "../components/index.js";
+import { Livepeer } from "livepeer"
+// import { BodyGenSegmentAnything2$inboundSchema } from "livepeer/models/components"
+import { openAsBlob } from "node:fs"
+import { GenSegmentAnything2Response } from "livepeer/models/operations"
+
 
 /**
  * Class for processing image segmentation results from SAM2.
@@ -35,15 +41,16 @@ export class MetaSegmentToObjectImages {
 	 * Process SAM2 result, crop objects from the image based on masks,
 	 * and save them as new image files.
 	 *
-	 * @param {SAM2Result} result - The SAM2 result object containing masks.
+	 * @param {GenSegmentAnything2Response} sam2ResultObj - The SAM2 result
+	 *  object containing masks.
 	 * @param {string} outputDir - The directory to save the cropped images.
 	 *
 	 * @returns {Promise<void>} - Resolves when all images are processed.
 	 */
-	public async processResult(result: SAM2Result, outputDir: string): Promise<void> {
+	public async processResult(sam2ResultObj: GenSegmentAnything2Response, outputDir: string): Promise<void> {
 		const errPrefix = '(processResult) ';
 
-		if (!result || typeof result !== 'object') {
+		if (!sam2ResultObj || typeof sam2ResultObj !== 'object') {
 			throw new Error(`${errPrefix}The result object is invalid.`);
 		}
 
@@ -57,8 +64,15 @@ export class MetaSegmentToObjectImages {
 			throw new Error(`${errPrefix}Image width or height is undefined.`);
 		}
 
+		const aryObjects = sam2ResultObj.masksResponse
+
+		// ROS: need to see what is coming back first.
+		console.info(`${errPrefix}aryObjects object:`);
+		console.dir(aryObjects, {depth: null, colors: true});
+
+		/*
 		// Iterate over each object in the SAM2 result
-		for (const obj of result.objects) {
+		for (const obj of aryObjects) {
 			if (!obj.object_id || !obj.mask) {
 				throw new Error(`${errPrefix}Invalid object structure.`);
 			}
@@ -71,6 +85,8 @@ export class MetaSegmentToObjectImages {
 				await this._cropAndSaveImage(obj.object_id, bbox, outputDir);
 			}
 		}
+
+		 */
 	}
 
 	/**
@@ -180,3 +196,79 @@ export interface BoundingBox {
 	width: number;
 	height: number;
 }
+
+/**
+ * Type for SAM2 result object.
+ */
+export interface SAM2Result {
+	masks: string;
+	scores: string;
+	logits: string;
+}
+
+/**
+ * Input parameters for segmentImage function.
+ */
+interface SegmentImageInput {
+	imagePath: string;
+	model_id?: string;
+	point_coords?: number[][];
+	point_labels?: number[];
+	box?: number[];
+	mask_input?: number[][];
+	multimask_output?: boolean;
+	return_logits?: boolean;
+	normalize_coords?: boolean;
+}
+
+/**
+ * Makes a SAM2 segmentation call to the Livepeer AI API.
+ *
+ * @param {SegmentImageInput} input - The input parameters
+ *  for the segmentation request.
+ *
+ * @returns {Promise<GenSegmentAnything2Response>} - A promise
+ *  that resolves to the GenSegmentAnything2Response result object
+ *  returned from LivePeer.
+ */
+export const segmentImage = async (input: SegmentImageInput): Promise<GenSegmentAnything2Response> => {
+	const {
+		imagePath,
+	} = input;
+
+	// Validate input parameters
+	if (!imagePath || typeof imagePath !== "string") {
+		throw new Error("Invalid 'imagePath' provided. It must be a non-empty string.");
+	}
+
+	// Create a Livepeer client instance
+	const livepeer = new Livepeer({
+		apiKey: process.env.LIVEPEER_API_KEY ?? "<YOUR_BEARER_TOKEN_HERE>",
+	});
+
+	// Open the image file as a readable stream
+	const imageBodyGenSAM2 = await openAsBlob(imagePath);
+
+	try {
+		// Make the segmentation request
+		const result =
+				await livepeer.generate.segmentAnything2({
+			image: imageBodyGenSAM2
+		});
+
+		// Validate the response
+		if (!result) {
+			throw new Error("Invalid response from SAM2 API.");
+		}
+
+		return result;
+	} catch (error: any) {
+		// Handle error responses
+		if (error.response) {
+			const errorData = await error.response.json();
+			throw new Error(`SAM2 API Error: ${JSON.stringify(errorData.detail)}`);
+		} else {
+			throw error;
+		}
+	}
+};

@@ -27,7 +27,15 @@ const livePeerRequestOptions = {
 	},
 }
 
-export const generateImages = async (prompt: string) => {
+/**
+ * Make an image generation request against the Livepeer service.
+ *
+ * @param {String} prompt - The prompt to pass to the Livepeer
+ *  image generation API.
+ *
+ * @return {Promise<*>}
+ */
+export const generateImages = async (prompt: string): Promise<any> => {
 	let urls
 	const body = {
 		prompt,
@@ -58,7 +66,18 @@ export const generateImages = async (prompt: string) => {
 	return urls
 }
 
-const _request = async (options: object) => {
+/**
+ * Create a request object for our use.
+ *
+ * @param {Object} options - The options for the
+ *  current request.
+ *
+ * @return {Promise<Response>} - The promise resolves
+ *  to the response from the Livepeer service.
+ *
+ * @private
+ */
+const _request = async (options: object): Promise<Response> => {
 	const endpoint = `https://${livepeer_sd_gateway}/text-to-image`
 	return fetch(endpoint, options)
 }
