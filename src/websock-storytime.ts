@@ -4,7 +4,7 @@ import type WebSocket from "ws"
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { generateStory, isFlagged } from "./openai"
+import { generateStory } from "./openai-storytime"
 import { Genre, StateType, ErrorType, RequestPayload } from "./system/types"
 import {
 	generateImages,
@@ -16,6 +16,7 @@ import {
 	saveMetaData,
 } from "./system/handlers"
 import path from "node:path"
+import { isFlagged } from "./openai-common"
 
 // What do we say when the user is trying to be problematic?
 
@@ -67,8 +68,8 @@ async function handleStoryRequest(
 	)
 
 	// Here we are streaming the output of the OpenAI completion to the client
-	// as well as to the local filestream we created above. This will change
-	// in a future version to use Firestream
+	//  over the WebSocket connection as well as to the local filestream we
+	//  created above. This will change in a future version to use Firestream
 
 	for await (const chunk of stream) {
 		const text = chunk.choices[0]?.delta?.content || ""
@@ -134,7 +135,8 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 			const { prompt } = message.payload;
 			state.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
-			// Check if the prompt is flagged as harmful before passing the request to AI handlers
+			// Check if the prompt is flagged as harmful before
+			//  passing the request to AI handlers
 			const flagged = await isFlagged(prompt);
 			if (flagged) {
 				console.log(`User prompt was flagged as harmful: ${prompt}`);
@@ -150,8 +152,13 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 	});
 }
 
-
-export default async function wsController(fastify: FastifyInstance) {
+/**
+ * This is the WebSocket controller for the Storytime app.
+ *
+ * @param {FastifyInstance} fastify - A valid Fastify
+ *  instance.
+ */
+export default async function wsControllerForStoryTime(fastify: FastifyInstance) {
 	await fastify.register(websocket)
 	fastify.get("/storytime", { websocket: true }, wsConnection)
 }

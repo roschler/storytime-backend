@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fastifyStatic, { FastifyStaticOptions } from '@fastify/static';
-import websock from './websock';
+import websock from './websock-storytime';
 import { readFileSync } from 'fs';
 import path from 'node:path';
 
