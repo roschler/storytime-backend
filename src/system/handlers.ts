@@ -1,5 +1,5 @@
 import type WebSocket from "ws"
-import { createWriteStream } from "fs"
+import fs, { createWriteStream } from "fs"
 import {
 	LivepeerImage,
 	ImageType,
@@ -8,6 +8,7 @@ import {
 	TextType,
 	Genre,
 } from "./types"
+import path from "node:path"
 
 // Pull in all of our environment variables
 // and set defaults if any of them are missing
@@ -124,9 +125,20 @@ export const saveMetaData = (
 		prompt,
 		genre,
 	}
+
+	const fullOutputFilePath =
+		process.cwd() + "/output/story/" + fileName + ".json"
+
+	const dir = path.dirname(fullOutputFilePath);
+
+	// Ensure the directory exists
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+
 	const string = JSON.stringify(metadata, null, 2)
 	const metaFile = createWriteStream(
-		process.cwd() + "/output/story/" + fileName + ".json",
+		fullOutputFilePath,
 		{
 			encoding: "utf-8",
 		},
@@ -139,9 +151,22 @@ export const saveImageURLs = (fileName: string, payload: string[]) => {
 	const urls = {
 		urls: payload,
 	}
+
 	const string = JSON.stringify(urls, null, 2)
+
+
+	const fullOutputFilePath =
+		process.cwd() + "/output/image/" + fileName + ".json"
+
+	const dir = path.dirname(fullOutputFilePath);
+
+	// Ensure the directory exists
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+
 	const metaFile = createWriteStream(
-		process.cwd() + "/output/image/" + fileName + ".json",
+		fullOutputFilePath,
 		{
 			encoding: "utf-8",
 		},

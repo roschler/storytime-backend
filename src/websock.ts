@@ -1,7 +1,7 @@
 import "dotenv/config"
 
 import type WebSocket from "ws"
-import { createWriteStream } from "fs"
+import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
 import { generateStory, isFlagged } from "./openai"
@@ -15,8 +15,11 @@ import {
 	saveImageURLs,
 	saveMetaData,
 } from "./system/handlers"
+import path from "node:path"
 
 // What do we say when the user is trying to be problematic?
+
+const CONSOLE_CATEGORY = 'websocket';
 
 const badPromptError =
 	process.env.HARMFUL_PROMPT_RESPONSE ??
@@ -42,8 +45,21 @@ async function handleStoryRequest(
 	// past generations to users on the front page in a future version!
 
 	const fileName = state.current_request_id
+	const fullFileName = fileName + ".txt";
+	const fullOutputFilename =
+		process.cwd() + "/output/text/" + fullFileName;
+	const dir = path.dirname(fullOutputFilename);
+
+	console.info(CONSOLE_CATEGORY, `Writing text output to:\n${fullOutputFilename}`)
+
+
+	// Ensure the directory exists
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+
 	const localFile = createWriteStream(
-		process.cwd() + "/output/text/" + fileName + ".txt",
+		fullOutputFilename,
 		{
 			encoding: "utf-8",
 		},
