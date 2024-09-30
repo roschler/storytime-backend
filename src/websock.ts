@@ -37,7 +37,8 @@ async function handleStoryRequest(
 	state: StateType,
 	payload: { prompt: string; genre: Genre },
 ) {
-	const stream = await generateStory(payload.prompt, payload.genre)
+	const stream =
+		await generateStory(payload.prompt, payload.genre)
 	state.streaming_text = true
 
 	// TODO: just put this in Fireproof instead so it's easy to sync locally

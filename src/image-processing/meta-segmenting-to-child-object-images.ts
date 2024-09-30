@@ -246,7 +246,9 @@ export const segmentImage = async (input: SegmentImageInput): Promise<GenSegment
 
 	// Create a Livepeer client instance
 	const livepeer = new Livepeer({
-		apiKey: process.env.LIVEPEER_API_KEY ?? "<YOUR_BEARER_TOKEN_HERE>",
+		apiKey: process.env.LIVEPEER_API_KEY,
+		// serverURL: "https://livepeer.studio/api/beta/generate/segment-anything-2"
+		serverURL: "https://ai-generator.livepeer.cloud"
 	});
 
 	// Open the image file as a readable stream
@@ -325,6 +327,9 @@ export const segmentImageSimple = async (imagePath: string): Promise<GenSegmentA
 			const errorData = await error.response.json();
 			throw new Error(`SAM2 API Error: ${JSON.stringify(errorData.detail)}`);
 		} else {
+			console.info(`${errPrefix}error object:`);
+			console.dir(error, {depth: null, colors: true});
+
 			throw error;
 		}
 	}
