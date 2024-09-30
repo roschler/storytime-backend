@@ -10,7 +10,8 @@
 		"postinstall": "mkdirp output output/audio output/image output/story output/text",
 		"build": "rimraf dist && tsc",
 		"start": "node dist/index.js",
-		"forever": "forever --daemon dist/index.js"
+		"forever": "forever --daemon dist/index.js",
+		"test-segmenting": "node --inspect-brk -r ts-node/register utility/test-segment-image.ts"
 	},
 	"author": "Karbon Dallas <hello@krbn.life>",
 	"license": "MIT",
@@ -35,6 +36,7 @@
 		"nodemon": "^3.1.0",
 		"prettier": "^3.2.5",
 		"rimraf": "^5.0.5",
+		"ts-node": "^10.9.2",
 		"tsconfig-paths": "^4.2.0",
 		"typescript": "^5.4.5"
 	}

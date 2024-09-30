@@ -8,7 +8,10 @@ import { Livepeer } from "livepeer"
 // import { BodyGenSegmentAnything2$inboundSchema } from "livepeer/models/components"
 import { openAsBlob } from "node:fs"
 import { GenSegmentAnything2Response } from "livepeer/models/operations"
+import fs from "fs"
 
+
+const DEFAULT_SEGMENT_ANYTHING_MODEL_ID = "facebook/sam2-hiera-large";
 
 /**
  * Class for processing image segmentation results from SAM2.
@@ -272,3 +275,58 @@ export const segmentImage = async (input: SegmentImageInput): Promise<GenSegment
 		}
 	}
 };
+
+/**
+ * Makes a SAM2 segmentation call to the Livepeer AI API
+ *  but only requires an image file path, not a full
+ *  SegmentImageInput object.
+ *
+ * @param {String} imagePath - The input parameters
+ *  for the segmentation request.
+ *
+ * @returns {Promise<GenSegmentAnything2Response>} - A promise
+ *  that resolves to the GenSegmentAnything2Response result object
+ *  returned from LivePeer.
+ */
+export const segmentImageSimple = async (imagePath: string): Promise<GenSegmentAnything2Response> => {
+	const errPrefix = `(segmentImageSimple) `
+
+	// Validate input parameters
+	if (!fs.existsSync(imagePath))
+		throw new Error(`${errPrefix}Unable to find the input file image using path:\n${imagePath}`);
+
+	// Create a Livepeer client instance
+	const livepeer = new Livepeer({
+		apiKey: process.env.LIVEPEER_API_KEY,
+		// serverURL: "https://livepeer.studio/api/beta/generate/segment-anything-2"
+		serverURL: "https://ai-generator.livepeer.cloud"
+	});
+
+	// Open the image file as a readable stream
+	const imageBodyGenSAM2 = await openAsBlob(imagePath);
+
+	try {
+		// Make the segmentation request
+		const result =
+			await livepeer.generate.segmentAnything2({
+				image: imageBodyGenSAM2,
+				modelId: DEFAULT_SEGMENT_ANYTHING_MODEL_ID
+			});
+
+		// Validate the response
+		if (!result) {
+			throw new Error("Invalid response from SAM2 API.");
+		}
+
+		return result;
+	} catch (error: any) {
+		// Handle error responses
+		if (error.response) {
+			const errorData = await error.response.json();
+			throw new Error(`SAM2 API Error: ${JSON.stringify(errorData.detail)}`);
+		} else {
+			throw error;
+		}
+	}
+};
+
