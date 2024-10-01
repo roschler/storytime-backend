@@ -22,9 +22,15 @@ export interface ImageType {
 	urls: string[]
 }
 
-export interface RequestPayload {
+// The request payload for a Storytime app request.
+export interface RequestPayload_storytime {
 	prompt: string
 	genre: Genre
+}
+
+// The request payload for a Chatbot app request.
+export interface RequestPayload_chat_bot {
+	prompt: string
 }
 
 export interface Prompt {

@@ -5,7 +5,7 @@ import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
 import { generateStory } from "./openai-storytime"
-import { Genre, StateType, ErrorType, RequestPayload } from "./system/types"
+import { Genre, StateType, ErrorType, RequestPayload_storytime } from "./system/types"
 import {
 	generateImages,
 	sendStateMessage,
@@ -32,7 +32,6 @@ const streamTextToConsole =
 	process.env.CONSOLE_STREAM_OUTPUT === "true" ? true : false
 
 // Create a completion stream from OpenAI and pipe it to the client
-
 async function handleStoryRequest(
 	client: WebSocket,
 	state: StateType,
@@ -103,10 +102,10 @@ async function handleStoryRequest(
 
 // Request some images from the Livepeer text-to-image API
 
-async function handleImageRequest(
+async function handleImageRequest_storytime(
 	client: WebSocket,
 	state: StateType,
-	payload: RequestPayload,
+	payload: RequestPayload_storytime,
 ) {
 	const prompt = payload.prompt
 	console.log(`Requesting images for prompt: ${prompt}`)
@@ -146,7 +145,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 				return; // Exit
 			}
 
-			handleImageRequest(client, state, message.payload);
+			handleImageRequest_storytime(client, state, message.payload);
 			handleStoryRequest(client, state, message.payload);
 		}
 	});

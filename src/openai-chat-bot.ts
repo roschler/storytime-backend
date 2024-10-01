@@ -1,8 +1,6 @@
-import OpenAI from "openai"
-
 import { chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { readTextFileSync } from "../utility/common-routines"
+import { readTextFileSync } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
 

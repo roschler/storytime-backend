@@ -4,7 +4,7 @@ import type WebSocket from "ws"
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { StateType, ErrorType, RequestPayload } from "./system/types"
+import { StateType, ErrorType, RequestPayload_chat_bot } from "./system/types"
 import {
 	generateImages,
 	sendStateMessage,
@@ -21,7 +21,8 @@ import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
 // What do we say when the user is trying to be problematic?
 
-const CONSOLE_CATEGORY = 'websocket';
+const CONSOLE_CATEGORY = 'websocket'
+const appName = 'Chatbot'
 
 const badPromptError =
 	process.env.HARMFUL_PROMPT_RESPONSE ??
@@ -31,6 +32,24 @@ const badPromptError =
 
 const streamTextToConsole =
 	process.env.CONSOLE_STREAM_OUTPUT === "true" ? true : false
+
+/**
+ * This function extracts the suggested image generation prompt
+ *  from the LLM Chatbot.
+ *
+ * @param {Object} payload - The payload field from the LLM
+ *  response object.
+ *
+ * @return {String} - Returns the suggested image generation
+ *  prompt.
+ */
+function extractImageGenerationPrompt(payload: any): string {
+	if (typeof payload !== 'object' || payload === null)
+		throw new Error(`The "message" parameter does not contain a valid object.`)
+
+	// TODO: Put the real code here!
+	return 'A frog wearing a hat.'
+}
 
 // Create a completion stream from OpenAI and pipe it to the client
 async function handleImageGenAssistanceRequest(
@@ -92,11 +111,33 @@ async function handleImageGenAssistanceRequest(
 		// particular can get very expensive very quickly!
 
 		if (stop) {
+			// -------------------- BEGIN: LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
+
+			// TODO: Check the "stop" value for failure codes and take
+			//  appropriate actions.
+
+			// Now that we have gotten the entire response from the LLM,
+			//  extract the image generation prompt and pass it on to the
+			//  Livepeer network.
+			console.info(CONSOLE_CATEGORY, `LLM response received.`)
+
+
 			state.streaming_text = false
+
+			// Notify the client side front-end that we have received
+			//  the entire LLM response.
 			sendStateMessage(client, state)
+
 			localFile.end()
+
+			// Save the meta-data for the session.
 			saveMetaData_chat_bot(fileName, payload)
-			console.log(`Stream from OpenAI stopped with reason: ${stop}`)
+			console.log(`${appName}: Stream from OpenAI stopped with reason: ${stop}`)
+
+			// Extract the image generation prompt from the LLM result.
+
+
+			// -------------------- END  : LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
 		}
 	}
 }
@@ -105,7 +146,7 @@ async function handleImageGenAssistanceRequest(
 async function handleImageRequest(
 	client: WebSocket,
 	state: StateType,
-	payload: RequestPayload,
+	payload: RequestPayload_chat_bot,
 ) {
 	const prompt = payload.prompt
 	console.log(`Requesting images for prompt: ${prompt}`)
@@ -159,7 +200,20 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 				return; // Exit
 			}
 
-			handleImageGenAssistanceRequest(client, state, message.payload);
+			// Submit the request to the LLM to get the image prompt
+			//  we should send to Livepeer for image generation purposes.
+			//
+			// NOTE: We await the call because we need to know what the
+			//  prompt for the image generation request is before making
+			//  the request to Livepeer.
+			await handleImageGenAssistanceRequest(client, state, message.payload);
+
+			// Extract the image generation prompt from the response.
+			const imageGenerationPrompt =
+				extractImageGenerationPrompt(message)
+
+			// Now generate the image.
+			handleImageRequest(client, state, {prompt: imageGenerationPrompt });
 		}
 	});
 }
