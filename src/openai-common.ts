@@ -3,19 +3,11 @@
 
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
 export const oai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 })
-
-// Typescript will complain if we don't cast these:
-export const top_p = Number(process.env.OPENAI_TOP_P || 0.5)
-export const max_tokens = Number(process.env.OPENAI_MAX_TOKENS || 150)
-export const temperature = Number(process.env.OPENAI_TEMPERATURE || 0.5)
-export const presence_penalty = Number(process.env.OPENAI_PRESENCE_PENALTY || 0.5)
-export const frequency_penalty = Number(process.env.OPENAI_FREQUENCY_PENALTY || 0.5)
-
-export const model = process.env.OPENAI_MODEL || "gpt-3.5-turbo"
 
 /**
  * This call makes the actual text completion call to the LLM.
@@ -24,10 +16,13 @@ export const model = process.env.OPENAI_MODEL || "gpt-3.5-turbo"
  *  system role.
  * @param {String} userPrompt - The prompt entered by the user
  *  to be included with the system prompt.
+ * @param {OpenAIParams_text_completion} textCompletionParams - A
+ *  valid OpenAI text completion call parameters object.
  */
 export async function chatCompletionStream(
 		systemPrompt: string,
-		userPrompt: string) {
+		userPrompt: string,
+		textCompletionParams: OpenAIParams_text_completion) {
 	console.log(
 		`Creating chat completion stream with system prompt: ${systemPrompt}`,
 	)
@@ -45,14 +40,14 @@ export async function chatCompletionStream(
 
 	// Call OpenAI's text completion API endpoint.
 	return oai.chat.completions.create({
-		model,
+		model: textCompletionParams.model_param_val,
 		messages,
-		frequency_penalty,
-		presence_penalty,
-		stream: true,
-		temperature,
-		max_tokens,
-		top_p,
+		frequency_penalty: textCompletionParams.frequency_penalty_param_val,
+		presence_penalty: textCompletionParams.presence_penalty_param_val,
+		stream: textCompletionParams.stream_param_val,
+		temperature: textCompletionParams.temperature_param_val,
+		max_tokens: textCompletionParams.max_tokens_param_val,
+		top_p: textCompletionParams.top_p_param_val,
 	})
 }
 
