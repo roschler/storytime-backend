@@ -2,12 +2,17 @@ import 'dotenv/config';
 
 import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fastifyStatic, { FastifyStaticOptions } from '@fastify/static';
-import websock from './websock-storytime';
+// import websock from './websock-storytime';
+import websock from './websock-chat-bot';
+
 import { readFileSync } from 'fs';
 import path from 'node:path';
 
 const port = Number(process.env.BACKEND_SERVER_PORT ?? 3001);
 const host = '0.0.0.0';
+
+const appName = 'Chatbot';
+const versionNum = '1.0';
 
 let app: FastifyInstance;
 
@@ -27,6 +32,7 @@ if (process.env.NODE_ENV !== 'production') {
 	app = fastify(opts);
 }
 
+// TODO: Change this to an environment variable.
 const staticPath = '../frontend-static';
 console.log('Current working directory at time of static path configuration:', process.cwd());
 console.log('Resolved static file path:', path.join(__dirname, staticPath));
@@ -34,6 +40,7 @@ console.log('Resolved static file path:', path.join(__dirname, staticPath));
 // Serve static files from the correct directory for the front-end
 const staticOptions: FastifyStaticOptions = {
 	root: path.join(__dirname, staticPath),
+	// TODO: Change these to environment variables.
 	prefix: '/nft-supreme/', // Serve static files from the root URL path
 	constraints: { host: 'plasticeducator.com' },
 };
@@ -71,6 +78,7 @@ app.listen({ port, host }, (err, address) => {
 		app.log.error(err);
 		process.exit(1);
 	}
-	app.log.info(`Storytime version 1.6 backend server listening on ${address}`);
-	console.log(`Storytime backend server listening for websocket traffic on ${host}:${port}`);
+
+	app.log.info(`${appName} version ${versionNum} backend server listening on ${address}`);
+	console.log(`${appName} backend server listening for websocket traffic on ${host}:${port}`);
 });

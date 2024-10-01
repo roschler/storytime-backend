@@ -43,16 +43,16 @@ function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 
 // This is the main system prompt uses to generate images.
 const g_MainImageGenerationSystemPrompt =
-	readTextFileSync('system-prompt-for-image-generation.txt');
+	readImageGenerationSubPromptOrDie('system-prompt-for-image-generation.txt');
 
 // Load the tips we got from Discord memges on generating images.
 const g_TipsFromDiscordMembersPrompt =
-	readTextFileSync('image-generation-tips-from-discord-members.txt')
+	readImageGenerationSubPromptOrDie('image-generation-tips-from-discord-members.txt')
 
 // Load the main document we have that contains the main image generation
 //  FAQ content.
 const g_MainImageGenerationFaqPrompt =
-	readTextFileSync('main-image-improvement-tips-and-guidelines-document.txt')
+	readImageGenerationSubPromptOrDie('main-image-improvement-tips-and-guidelines-document.txt')
 
 // -------------------- END  : LOAD PROMPT BUILDER TEXT FILES ------------
 
