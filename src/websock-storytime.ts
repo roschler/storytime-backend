@@ -13,7 +13,7 @@ import {
 	sendImageMessage,
 	sendTextMessage,
 	saveImageURLs,
-	saveMetaData,
+	saveMetaData_storytime,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -95,7 +95,7 @@ async function handleStoryRequest(
 			state.streaming_text = false
 			sendStateMessage(client, state)
 			localFile.end()
-			saveMetaData(fileName, payload)
+			saveMetaData_storytime(fileName, payload)
 			console.log(`Stream from OpenAI stopped with reason: ${stop}`)
 		}
 	}

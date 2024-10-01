@@ -1,0 +1,11 @@
+// Todo list and general notes.
+
+REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
+
+- Lower stable diffusion steps during BRAINSTORM mode and higher in REFINE mode.
+- Add the general negative prompts from storytime repo
+- Use sharp NPM package to optimize images before returning them to the client
+- Copy the optimized images to our S3 bucket
+- Use S3 bucket URLs for NFT asset URLs.
+- Create Amazon S3 bucket for generated images for the contest.  Later we can use a decentralized solution.
+-

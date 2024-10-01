@@ -9,6 +9,7 @@ import {
 	Genre,
 } from "./types"
 import path from "node:path"
+import { OpenAIParams_text_completion } from "../openai-parameter-objects"
 
 // Pull in all of our environment variables
 // and set defaults if any of them are missing
@@ -115,7 +116,15 @@ const _send = (c: WebSocket, p: object) => {
 	c.send(JSON.stringify(p))
 }
 
-export const saveMetaData = (
+/**
+ * Saves the meta-data associated with an ongoing Storytime
+ *  session.
+ *
+ * @param {String} fileName - The output file name for the
+ *  metadata to be stored in.
+ * @param {Object} payload - The object to write to the file.
+ */
+export const saveMetaData_storytime = (
 	fileName: string,
 	payload: { prompt: string; genre: Genre },
 ) => {
@@ -146,6 +155,46 @@ export const saveMetaData = (
 	metaFile.write(string)
 	metaFile.end()
 }
+
+/**
+ * Saves the meta-data associated with an ongoing Chatbot
+ *  session.
+ *
+ * @param {String} fileName - The output file name for the
+ *  metadata to be stored in.
+ * @param {Object} payload - The object to write to the file.
+ */
+export const saveMetaData_chat_bot = (
+	fileName: string,
+	payload: { prompt: string; textCompletionParams: OpenAIParams_text_completion },
+) => {
+	const { prompt, textCompletionParams } = payload
+	const metadata = {
+		prompt,
+		textCompletionParams,
+	}
+
+	const fullOutputFilePath =
+		process.cwd() + "/output/chat/" + fileName + ".json"
+
+	const dir = path.dirname(fullOutputFilePath);
+
+	// Ensure the directory exists
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+
+	const string = JSON.stringify(metadata, null, 2)
+	const metaFile = createWriteStream(
+		fullOutputFilePath,
+		{
+			encoding: "utf-8",
+		},
+	)
+	metaFile.write(string)
+	metaFile.end()
+}
+
 
 export const saveImageURLs = (fileName: string, payload: string[]) => {
 	const urls = {

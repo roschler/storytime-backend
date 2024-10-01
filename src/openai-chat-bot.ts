@@ -2,6 +2,7 @@ import OpenAI from "openai"
 
 import { chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
+import { readTextFileSync } from "../utility/common-routines"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
 
@@ -35,6 +36,17 @@ If the user is satisfied, switch back to the CAJOLE conversation mode to get the
 
 Use the document I uploaded to you to guide your answers in this mode to give the user best tips on generative AI model selection and what parameters for the model or how to change the parameters already selected.  Also use the document to guide your answer in helping the user craft a better text prompt that will create an image closer to the one they are trying to generate.
 	`;
+
+// -------------------- BEGIN: LOAD PROMPT BUILDER TEXT FILES ------------
+
+// We need to load the system, tips, and perhaps other source files
+//  from disk first, since they are used to build the full prompt
+//  passed to the LLM, along with the user's input.
+
+const g_TipsFileText =
+	readTextFileSync()
+
+// -------------------- END  : LOAD PROMPT BUILDER TEXT FILES ------------
 
 // The text completion parameter object for chatbot text
 //  completion calls, initialized to the default starting

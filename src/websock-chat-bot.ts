@@ -4,8 +4,7 @@ import type WebSocket from "ws"
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { generateStory } from "./openai-storytime"
-import { Genre, StateType, ErrorType, RequestPayload } from "./system/types"
+import { StateType, ErrorType, RequestPayload } from "./system/types"
 import {
 	generateImages,
 	sendStateMessage,
@@ -13,11 +12,12 @@ import {
 	sendImageMessage,
 	sendTextMessage,
 	saveImageURLs,
-	saveMetaData,
+	saveMetaData_storytime, saveMetaData_chat_bot,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
+import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
 // What do we say when the user is trying to be problematic?
 
@@ -36,7 +36,7 @@ const streamTextToConsole =
 async function handleImageGenAssistanceRequest(
 	client: WebSocket,
 	state: StateType,
-	payload: { prompt: string; genre: Genre },
+	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion },
 ) {
 	const stream =
 		await assistUserWithImageGeneration(payload.prompt)
@@ -95,14 +95,13 @@ async function handleImageGenAssistanceRequest(
 			state.streaming_text = false
 			sendStateMessage(client, state)
 			localFile.end()
-			saveMetaData(fileName, payload)
+			saveMetaData_chat_bot(fileName, payload)
 			console.log(`Stream from OpenAI stopped with reason: ${stop}`)
 		}
 	}
 }
 
 // Request some images from the Livepeer text-to-image API
-
 async function handleImageRequest(
 	client: WebSocket,
 	state: StateType,
