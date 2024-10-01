@@ -1,8 +1,6 @@
 import OpenAI from "openai"
 
-import {
-	chatCompletionStream
-} from "./openai-common"
+import { chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
@@ -41,10 +39,10 @@ Use the document I uploaded to you to guide your answers in this mode to give th
 // The text completion parameter object for chatbot text
 //  completion calls, initialized to the default starting
 //  values.  (Note, they will change over time as we help
-//  the user create better generative AI images.
+//  the user create better generative AI images).
 const g_TextCompletionParams =
-	// Chatbot app does not want text completions streamed to it.
-	new OpenAIParams_text_completion({stream_param_val: false})
+	// Chatbot app wants text completions streamed to it.
+	new OpenAIParams_text_completion()
 
 /**
  * Given a user prompt and the current image generation parameters,

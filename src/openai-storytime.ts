@@ -1,8 +1,6 @@
 import type { Genre, Prompt } from "./system/types"
 import { createStorytimeSystemPrompt, genreList } from "./system/prompts"
-import {
-	chatCompletionStream,
-} from "./openai-common"
+import { chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
 /**
@@ -14,10 +12,7 @@ import { OpenAIParams_text_completion } from "./openai-parameter-objects"
  *  selected by the user.
  */
 export async function generateStory(userPrompt: string, genre: Genre) {
-	const params = new OpenAIParams_text_completion(
-		// Storytime app wants text completions streamed to i.
-		{ stream_param_val: true }
-	)
+	const params = new OpenAIParams_text_completion()
 	
 	console.log(
 		`OpenAI settings: top_p=${params.top_p_param_val}, max_tokens=${params.max_tokens_param_val}, temperature=${params.temperature_param_val}, presence_penalty=${params.presence_penalty_param_val}, frequency_penalty=${params.frequency_penalty_param_val}`,
@@ -30,8 +25,7 @@ export async function generateStory(userPrompt: string, genre: Genre) {
 	)
 
 	const textCompletionParams =
-		// Storytime app wants text completions streamed to it.
-		new OpenAIParams_text_completion({stream_param_val: true})
+		new OpenAIParams_text_completion()
 
 	return chatCompletionStream(systemPrompt, userPrompt, textCompletionParams)
 }

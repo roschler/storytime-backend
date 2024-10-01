@@ -17,6 +17,7 @@ import {
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
+import { assistUserWithImageGeneration } from "./openai-chat-bot"
 
 // What do we say when the user is trying to be problematic?
 
@@ -32,14 +33,13 @@ const streamTextToConsole =
 	process.env.CONSOLE_STREAM_OUTPUT === "true" ? true : false
 
 // Create a completion stream from OpenAI and pipe it to the client
-
-async function handleStoryRequest(
+async function handleImageGenAssistanceRequest(
 	client: WebSocket,
 	state: StateType,
 	payload: { prompt: string; genre: Genre },
 ) {
 	const stream =
-		await generateStory(payload.prompt, payload.genre)
+		await assistUserWithImageGeneration(payload.prompt)
 	state.streaming_text = true
 
 	// TODO: just put this in Fireproof instead so it's easy to sync locally
@@ -146,8 +146,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 				return; // Exit
 			}
 
-			handleImageRequest(client, state, message.payload);
-			handleStoryRequest(client, state, message.payload);
+			handleImageGenAssistanceRequest(client, state, message.payload);
 		}
 	});
 }

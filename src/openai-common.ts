@@ -44,7 +44,9 @@ export async function chatCompletionStream(
 		messages,
 		frequency_penalty: textCompletionParams.frequency_penalty_param_val,
 		presence_penalty: textCompletionParams.presence_penalty_param_val,
-		stream: textCompletionParams.stream_param_val,
+		// stream: textCompletionParams.stream_param_val,
+		// Currently we always want text completions streamed to us.
+		stream: true,
 		temperature: textCompletionParams.temperature_param_val,
 		max_tokens: textCompletionParams.max_tokens_param_val,
 		top_p: textCompletionParams.top_p_param_val,

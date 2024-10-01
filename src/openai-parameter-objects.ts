@@ -43,7 +43,9 @@ export class OpenAIParams_text_completion {
 	 * Determines whether the API response should be streamed or not.
 	 * @default false
 	 */
-	public stream_param_val: boolean = false;
+	// For now, we always want text completions streamed, otherwise
+	//  it complicates the rest of the call flow unnecessarily.
+	// public stream_param_val: boolean = false;
 
 	/**
 	 * @type {string} Model parameter value.
