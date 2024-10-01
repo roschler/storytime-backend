@@ -2,6 +2,10 @@
 
 REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
 
+- NEXT: Where and when do we actually make an image request?  The Chatbot
+ app flow is more complicated than the Storytime app.  Call handleImageRequest()
+ once that is determined.
+
 - Lower stable diffusion steps during BRAINSTORM mode and higher in REFINE mode.
 - Add the general negative prompts from storytime repo
 - Use sharp NPM package to optimize images before returning them to the client

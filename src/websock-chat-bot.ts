@@ -114,7 +114,17 @@ async function handleImageRequest(
 	saveImageURLs(state.current_request_id, urls)
 }
 
+/**
+ * This is the WebSocket connection handler.
+ *
+ * @param {SocketStream} connection - The WebSocket
+ *  connection this handler services.
+ * @param {FastifyRequest} request - The Fastify
+ *  request object to process.
+ */
 async function wsConnection(connection: SocketStream, request: FastifyRequest) {
+
+	// Initialize the state flags.
 	const state = {
 		streaming_audio: false,
 		streaming_text: false,
@@ -128,6 +138,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 	sendStateMessage(client, state);
 	console.log(`Client connected: ${request.ip}`);
 
+	// The handler for new messages.
 	client.on("message", async (raw) => {
 		const message = JSON.parse(raw.toString());
 		if (message.type === "request") {
@@ -139,6 +150,9 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 			const flagged = await isFlagged(prompt);
 			if (flagged) {
 				console.log(`User prompt was flagged as harmful: ${prompt}`);
+
+				// Tell the client the prompt was considered harmful
+				//  so it can notify the user.
 				sendErrorMessage(client, {
 					error: badPromptError,
 				});
@@ -159,5 +173,5 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
  */
 export default async function wsControllerForChatBot(fastify: FastifyInstance) {
 	await fastify.register(websocket)
-	fastify.get("/storytime", { websocket: true }, wsConnection)
+	fastify.get("/chatbot", { websocket: true }, wsConnection)
 }
