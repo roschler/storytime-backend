@@ -12,12 +12,12 @@ import {
 	sendImageMessage,
 	sendTextMessage,
 	saveImageURLs,
-	saveMetaData_storytime, saveMetaData_chat_bot,
+	saveMetaData_chat_bot,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
 
-import {ChatCompletionChunk} from "completions.tx"
+import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
