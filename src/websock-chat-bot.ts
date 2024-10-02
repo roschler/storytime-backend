@@ -1,6 +1,8 @@
 import "dotenv/config"
 
-import type WebSocket from "ws"
+// import type WebSocket from "ws"
+import { WebSocket } from 'ws'
+
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
@@ -17,6 +19,7 @@ import {
 import path from "node:path"
 import { isFlagged } from "./openai-common"
 
+import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
@@ -53,10 +56,33 @@ function extractImageGenerationPrompt(payload: any): string {
 	return 'A frog wearing a hat.'
 }
 
-function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompletionChunk>, client: WebSocket, payload: {
+/**
+ * Given an OpenAI streaming response, extract out the
+ *  content we need contained in it.
+ *
+ * @param {StateType} state - The current state.
+ * @param {Stream} stream - The OpenAI stream associated
+ *  with the response.
+ * @param {WebSocket|null} client - The client websocket we
+ *  are servicing if we are in server mode, or NULL, if
+ *  we are in stand-alone utility mode.
+ * @param {Object<prompt, OpenAIParams_text_completion>} payload -
+ *  The payload object received.
+ *
+ * @return {Object} - Returns an object containing the content
+ *  we need from the streaming OpenAI text completions response.
+ */
+export async function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompletionChunk>, client: WebSocket | null, payload: {
 	prompt: string;
 	textCompletionParams: OpenAIParams_text_completion
 }) {
+
+	if (client === null) {
+		// Handle the null case if needed
+	} else if (!(client instanceof WebSocket)) {
+		throw new Error(`The value in the client parameter is not NULL, so it must be a WebSocket object and it is not.`);
+	}
+
 	const fileName = state.current_request_id
 	const fullFileName = fileName + ".txt"
 	const fullOutputFilename =
@@ -64,7 +90,6 @@ function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompl
 	const dir = path.dirname(fullOutputFilename)
 
 	console.info(CONSOLE_CATEGORY, `Writing text output to:\n${fullOutputFilename}`)
-
 
 	// Ensure the directory exists
 	if (!fs.existsSync(dir)) {
@@ -81,17 +106,32 @@ function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompl
 	// Here we are streaming the output of the OpenAI completion to the client
 	//  over the WebSocket connection as well as to the local filestream we
 	//  created above. This will change in a future version to use Firestream
+	const aryTextElements = []
 
 	for await (const chunk of stream) {
 		const text = chunk.choices[0]?.delta?.content || ""
 		const stop = chunk.choices[0]?.finish_reason
 
+		// Do not send a message to the client if we don't have
+		//  a valid WebSocket instance.  It could be a stand-alone
+		//  utility calling us.
 		if (text !== null) {
-			sendTextMessage(client, { delta: text })
-			localFile.write(text)
-		}
-		if (streamTextToConsole === true) {
-			process.stdout.write(chunk.choices[0]?.delta?.content || "")
+			const newContent = chunk.choices[0]?.delta?.content;
+
+			if (newContent)
+				aryTextElements.push(newContent);
+
+			if (client === null) {
+				// No client connection.  Do nothing.
+			} else {
+				// Pass the chunk on to the client.
+				sendTextMessage(client, { delta: text })
+				localFile.write(text)
+			}
+
+			if (streamTextToConsole === true) {
+				process.stdout.write(chunk.choices[0]?.delta?.content || "")
+			}
 		}
 
 		// When OpenAI gives us a stop signal, we wrap up the filestream
@@ -101,7 +141,6 @@ function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompl
 		// This limitation is set by `OPENAI_MAX_TOKENS` in the .env file
 		// if you'd like to increase it, but be aware that GPT-4 in
 		// particular can get very expensive very quickly!
-
 		if (stop) {
 			// -------------------- BEGIN: LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
 
@@ -113,25 +152,36 @@ function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompl
 			//  Livepeer network.
 			console.info(CONSOLE_CATEGORY, `LLM response received.`)
 
-
 			state.streaming_text = false
 
-			// Notify the client side front-end that we have received
-			//  the entire LLM response.
-			sendStateMessage(client, state)
+			// Do not send a message to the client if we don't have
+			//  a valid WebSocket instance.  It could be a stand-alone
+			//  utility calling us.
+			if (client == null) {
+				// No client connect.  Do nothing.
+			} else {
+				// Notify the client side front-end that we have received
+				//  the entire LLM response.
+				sendStateMessage(client, state)
 
-			localFile.end()
+				localFile.end()
 
-			// Save the meta-data for the session.
-			saveMetaData_chat_bot(fileName, payload)
-			console.log(`${appName}: Stream from OpenAI stopped with reason: ${stop}`)
+				// Save the meta-data for the session.
+				saveMetaData_chat_bot(fileName, payload)
+				console.log(`${appName}: Stream from OpenAI stopped with reason: ${stop}`)
 
-			// Extract the image generation prompt from the LLM result.
+				// Extract the image generation prompt from the LLM result.
 
-
-			// -------------------- END  : LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
+				// -------------------- END  : LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
+			}
 		}
 	}
+
+	// Time to return our aggregated result.
+	const allTextElements =
+		aryTextElements.join(' ');
+
+	return allTextElements;
 }
 
 // Create a completion stream from OpenAI and pipe it to the client
