@@ -2,7 +2,36 @@
 
 REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
 
+NEEDED INFRASTRUCTURE:
+
+    - Maintain per-session array:
+
+        * Array of user/llm texts detail objects:
+
+         {
+            role: [user | system ],
+            text_said: string,
+            decorator_object: [user object | null]
+         }
+
+    - Maintain a log file with the session ID as name.  Append
+        each object like that above as it is created during
+        a session.
+
 NEEDED FROM LLM:
+
+    INTENT DETECTORS:
+
+        - TEXT_ON_IMAGE: User prompt indicates text wanted on
+            image (Need to set a flag once that is detected to
+            affect future generations.
+
+        - USER_COMPLAINT_IMAGE_QUALITY: User has made an image
+            quality complaint. Return suggested model/parameter
+            change(s).
+
+        _ BRAINSTORMING: Create suggestions for possible images,
+            using previous inputs as guides.
 
     * The actual image generation text prompt to send to Livepeer for image generation and to be forwarded to the client front-end for display
 
