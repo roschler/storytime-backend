@@ -2,6 +2,33 @@
 
 REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
 
+NEEDED FROM LLM:
+
+    * The actual image generation text prompt to send to Livepeer for image generation and to be forwarded to the client front-end for display
+
+    * Suggestions for changes to
+        - The current image generation model
+        - The CFG parameter
+        - The steps parameter
+
+    * The reply to the user:
+
+        BRAINSTORMING mode:
+        REFINE mode:
+
+    * An explanation of any changes made to (what and why):
+
+        - The current image generation model
+        - The CFG parameter
+        - The steps parameter
+
+    NEXT: Implement above and implement the code that reacts to model
+     or parameter change suggestions from the LLM.
+
+    * Create log file of full session with user.  Assign a per session ID
+     to a thread.  Implement the logging.  Write the session interaction
+     to a text file.
+
 - NEXT: Where and when do we actually make an image request?  The Chatbot
  app flow is more complicated than the Storytime app.  Call handleImageRequest()
  once that is determined.
