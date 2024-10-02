@@ -17,6 +17,15 @@ const g_TextCompletionParams =
 	// Chatbot app wants text completions streamed to it.
 	new OpenAIParams_text_completion();
 
+// The text completion parameters object for intent detector
+//  calls.
+const g_TextCompletionParamsForIntentDetector =
+	new OpenAIParams_text_completion({
+		// Getting 400 unsupported value errors for o1-mini
+		// model_param_val: 'o1-mini'
+		model_param_val: 'gpt-4-turbo'
+	})
+
 // -------------------- BEGIN: INTENT DETECTOR IDS ------------
 
 // These are the IDs for each of the INTENT detectors we have created
@@ -46,34 +55,21 @@ export function isValidenumIntentDetectorId(enIntentDetectorId: string) {
 // -------------------- BEGIN: INTENT: IS_TEXT_WANTED_ON_IMAGE ------------
 
 const isTextWantedOnImage_prompt: string = `
-	You are an expert on determining if a block of text from a user 
-	contains any expression of their desire to put text on an image
-	during a generative AI image generation session.
-	
-	After analyzing the text, you return a simple JSON object as follows:
-	
-	{
-		"is_text_wanted_on_image": <boolean>
-	}
-	
-	Set the is_text_wanted_on_image property set to TRUE if you found
-		the intent of wanting to put text on the image, FALSE
-		if not.
-		
-	Some examples that should generate a response of TRUE:
-	
-	- "I want there to be a sign that says 'Will work for flies'"
-	- "Put the letters XYZ on the side of the building"
-	- "Write the number 123 on the top of the car"
-	- "You can see the words 'go home now' on the shirt the man is wearing"
-	
-	Some counter-examples that should generate a response of FALSE:
-	
-	- "I want 3 dogs in the picture"
-	- "I want the sign on the wall to have a red dot on it and nothing else"
-	- "You can see the faint image of a cat fluttering in the smoke"
-	- "Put a red door on the house"
-	- "The number of clouds in the sky is 100"
+You are an expert on determining if a block of text from a user contains any expression of their desire to put text on an image during a generative AI image generation session.
+
+After analyzing the text, you return a simple JSON object as follows:
+
+If the user said something that indicates they want text put on the image to be generated, you should output this JSON object:
+
+{
+    "is_text_wanted_on_image": true
+}
+
+If they did not indicate they want text placed on the image, you should output this JSON object:
+
+{
+    "is_text_wanted_on_image": false
+}
 `;
 
 if (true) {
@@ -81,14 +77,16 @@ if (true) {
 //  can await the result.
 	(async () => {
 		try {
-			const thePrompt =
-				'I want a sign on the wall that screams "Death to all dirty towels!';
+			//const thePrompt = 'I want a sign on the wall that screams "Death to all dirty towels!';
+
+			const thePrompt = 'I want a sign that the car is not moving!'
+
 			const result =
 				await chatCompletionImmediate(
 					enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
 					isTextWantedOnImage_prompt,
 					thePrompt,
-					g_TextCompletionParams,
+					g_TextCompletionParamsForIntentDetector,
 					true)
 
 			console.info(`${errPrefix}result object:`);
