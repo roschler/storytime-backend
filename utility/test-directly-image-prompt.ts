@@ -77,9 +77,9 @@ if (true) {
 //  can await the result.
 	(async () => {
 		try {
-			//const thePrompt = 'I want a sign on the wall that screams "Death to all dirty towels!';
+			const thePrompt = 'I want a sign on the wall that screams "Death to all dirty towels!';
 
-			const thePrompt = 'I want a sign that the car is not moving!'
+			// const thePrompt = 'I want a sign that the car is not moving!'
 
 			const result =
 				await chatCompletionImmediate(
