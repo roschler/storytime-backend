@@ -16,6 +16,8 @@ import {
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
+
+import {ChatCompletionChunk} from "completions.tx"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 
@@ -51,32 +53,22 @@ function extractImageGenerationPrompt(payload: any): string {
 	return 'A frog wearing a hat.'
 }
 
-// Create a completion stream from OpenAI and pipe it to the client
-async function handleImageGenAssistanceRequest(
-	client: WebSocket,
-	state: StateType,
-	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion },
-) {
-	const stream =
-		await assistUserWithImageGeneration(payload.prompt)
-	state.streaming_text = true
-
-	// TODO: just put this in Fireproof instead so it's easy to sync locally
-	// For now, we are just streaming the output to a file so we can show
-	// past generations to users on the front page in a future version!
-
+function extractOpenAiResponseDetails(state: StateType, stream: Stream<ChatCompletionChunk>, client: WebSocket, payload: {
+	prompt: string;
+	textCompletionParams: OpenAIParams_text_completion
+}) {
 	const fileName = state.current_request_id
-	const fullFileName = fileName + ".txt";
+	const fullFileName = fileName + ".txt"
 	const fullOutputFilename =
-		process.cwd() + "/output/text/" + fullFileName;
-	const dir = path.dirname(fullOutputFilename);
+		process.cwd() + "/output/text/" + fullFileName
+	const dir = path.dirname(fullOutputFilename)
 
 	console.info(CONSOLE_CATEGORY, `Writing text output to:\n${fullOutputFilename}`)
 
 
 	// Ensure the directory exists
 	if (!fs.existsSync(dir)) {
-		fs.mkdirSync(dir, { recursive: true });
+		fs.mkdirSync(dir, { recursive: true })
 	}
 
 	const localFile = createWriteStream(
@@ -140,6 +132,22 @@ async function handleImageGenAssistanceRequest(
 			// -------------------- END  : LLM OUTPUT RECEIVED, MAKE IMAGE GENERATION REQUEST ------------
 		}
 	}
+}
+
+// Create a completion stream from OpenAI and pipe it to the client
+async function handleImageGenAssistanceRequest(
+	client: WebSocket,
+	state: StateType,
+	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion },
+) {
+	const stream =
+		await assistUserWithImageGeneration(payload.prompt)
+	state.streaming_text = true
+
+	// TODO: just put this in Fireproof instead so it's easy to sync locally
+	// For now, we are just streaming the output to a file so we can show
+	// past generations to users on the front page in a future version!
+	extractOpenAiResponseDetails(state, stream, client, payload)
 }
 
 // Request some images from the Livepeer text-to-image API

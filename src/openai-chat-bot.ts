@@ -73,7 +73,7 @@ const g_TextCompletionParams =
  * @return {String} - Returns the system prompt to use in the
  *  upcoming text completion call.
  */
-function createChatBotSystemPrompt(userPrompt: string): string {
+export function createChatBotSystemPrompt(userPrompt: string): string {
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
