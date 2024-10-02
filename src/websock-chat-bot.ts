@@ -197,7 +197,7 @@ async function handleImageGenAssistanceRequest(
 	// TODO: just put this in Fireproof instead so it's easy to sync locally
 	// For now, we are just streaming the output to a file so we can show
 	// past generations to users on the front page in a future version!
-	extractOpenAiResponseDetails(state, stream, client, payload)
+	await extractOpenAiResponseDetails(state, stream, client, payload)
 }
 
 // Request some images from the Livepeer text-to-image API
