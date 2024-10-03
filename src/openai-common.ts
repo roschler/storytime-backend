@@ -59,7 +59,7 @@ export async function chatCompletionStream(
  * @param {string} intentDetectorId - The ID of the intent detector making the call.
  *  This must not be empty.
  * @param {string} systemPrompt - The prompt to use in the system role.
- * @param {string} userPrompt - The prompt entered by the user to be included with the system prompt.
+ * @param {string} userInput - The latest input from the user, to be included with the system prompt.
  * @param {OpenAIParams_text_completion} textCompletionParams - A valid OpenAI text completion call parameters object.
  * @param {boolean} bIsJsonResponseExpected - Set this to TRUE if
  *  the LLM is supposed to return a JSON object as its response,
@@ -75,13 +75,14 @@ export async function chatCompletionStream(
  * 		date_time_of_response: number}>
  * 	}
  *
- *  An object containing the fields above.  Note, the date_time_of_response
- *   field will be a Unix timestamp.
+ *  An object containing the fields above that comprise the
+ *   text completion response is returned.  Note, the
+ *   date_time_of_response field is a Unix timestamp.
  */
 export async function chatCompletionImmediate(
 	intentDetectorId: string,
 	systemPrompt: string,
-	userPrompt: string,
+	userInput: string,
 	textCompletionParams: OpenAIParams_text_completion,
 	bIsJsonResponseExpected: boolean
 ): Promise<{
@@ -104,7 +105,7 @@ export async function chatCompletionImmediate(
 	}
 
 	console.log(`Creating chat completion (non-streaming) with system prompt: ${systemPrompt}`);
-	console.log(`User prompt: ${userPrompt}`);
+	console.log(`User prompt: ${userInput}`);
 
 	const messages = [
 		{
@@ -113,7 +114,7 @@ export async function chatCompletionImmediate(
 		},
 		{
 			role: "user",
-			content: userPrompt,
+			content: userInput,
 		},
 	] as ChatCompletionMessageParam[];
 

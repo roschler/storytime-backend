@@ -48,6 +48,9 @@ NEEDED FROM LLM:
        After the contest, we can make it "approved addresses
        only"
 
+    ***** Create separate API key for plastic educator with
+     its own budget
+
     INTENT DETECTORS:
 
         - TEXT_ON_IMAGE: User prompt indicates text wanted on
@@ -60,7 +63,7 @@ NEEDED FROM LLM:
         _ USER_COMPLAINT_SPEED: User has made a speed of image
             generation speed complaint (too slow).
 
-        - USER_COMPLAINT_WRONG-CONTENT: The image content does not
+        - USER_COMPLAINT_WRONG_CONTENT: The image content does not
             match what the user wants
 
     >>>>> We will fire these off in a bulk Promise request since they
