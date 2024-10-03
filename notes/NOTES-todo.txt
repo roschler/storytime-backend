@@ -36,22 +36,17 @@ NEEDED FROM LLM:
      INTENT DETECTORS and make the appropriate changes
      that way.
 
-     Story Protocol: For the contest, the asset hierarchy
-      traversal and analysis idea will be for Story
-      assets that are ALREADY minted.
-
-      - We will not attempt to mint anything, that saves us
-       the Web3 wallet work involved
-      - We will not attempt to make a search front end into
-        Story's asset inventory, which would be needed to
-        help the user gather child assets to analyze
+     UPDATE-2: We are switching to a simple mint to Zora and
+      not pursuing Story Protocol any more.  Story Protocol
+      is a fascinating and powerful platform, but there is
+      not enough time in the contest to create a sophisticated
+      front-end to their IP management features.  Zora will
+      be mint and go.
 
       However, we will need some form of primitive protection
        or authorization to keep the service from being abused.
-       We can always bring back the Discord authorization,
-       but we will need to figure out how move the client
-       front-end server style operations required for OAuth
-       handshaking to our back-end server.  Save for last.
+       After the contest, we can make it "approved addresses
+       only"
 
     INTENT DETECTORS:
 
