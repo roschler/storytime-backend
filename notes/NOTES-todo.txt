@@ -20,6 +20,31 @@ NEEDED INFRASTRUCTURE:
 
 NEEDED FROM LLM:
 
+    UPDATE: Conversation modes are discarded.  There is only
+     one conversation mode.  Also, we are no longer going
+     to try and use the LLM to make any parameter or
+     model changes, only text prompt changes.  Instead,
+     we will use code to interpret the results from the
+     INTENT DETECTORS and make the appropriate changes
+     that way.
+
+     Story Protocol: For the contest, the asset hierarchy
+      traversal and analysis idea will be for Story
+      assets that are ALREADY minted.
+
+      - We will not attempt to mint anything, that saves us
+       the Web3 wallet work involved
+      - We will not attempt to make a search front end into
+        Story's asset inventory, which would be needed to
+        help the user gather child assets to analyze
+
+      However, we will need some form of primitive protection
+       or authorization to keep the service from being abused.
+       We can always bring back the Discord authorization,
+       but we will need to figure out how move the client
+       front-end server style operations required for OAuth
+       handshaking to our back-end server.  Save for last.
+
     INTENT DETECTORS:
 
         - TEXT_ON_IMAGE: User prompt indicates text wanted on
@@ -27,11 +52,25 @@ NEEDED FROM LLM:
             affect future generations.
 
         - USER_COMPLAINT_IMAGE_QUALITY: User has made an image
-            quality complaint. Return suggested model/parameter
-            change(s).
+            quality complaint.
 
-        _ BRAINSTORMING: Create suggestions for possible images,
-            using previous inputs as guides.
+        _ USER_COMPLAINT_SPEED: User has made a speed of image
+            generation speed complaint (too slow).
+
+        - USER_COMPLAINT_WRONG-CONTENT: The image content does not
+            match what the user wants
+
+    >>>>> We will fire these off in a bulk Promise request since they
+     are not serially dependent, and then do the final steps to
+     execute an image generation with the new image generation prompt,
+     and execute/store any new model or parameter changes for future
+     session volleys.
+
+    >>>>> Don't forget to grab the Hugging face negative prompts for
+     Lightning and Flux and incorporate them into the prompt we send
+     to Livepeer
+
+    NEED TO FIGURE OUT:
 
     * The actual image generation text prompt to send to Livepeer for image generation and to be forwarded to the client front-end for display
 
