@@ -3,7 +3,7 @@ import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 import { readTextFileSync } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
-import { enumIntentDetectorId, isValidenumIntentDetectorId } from "./intents/enum-intents"
+import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
 
@@ -140,7 +140,7 @@ export async function executeIntentCompletion(
 		textCompletionParams: OpenAIParams_text_completion,
 		userInput: string) {
 
-	if (!isValidenumIntentDetectorId(intentId))
+	if (!isValidEnumIntentDetectorId(intentId))
 		throw new Error(`Invalid intent ID: "${intentId}"`);
 
 	const trimmedUserInput: string = userInput.trim();

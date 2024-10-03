@@ -24,7 +24,7 @@ export enum enumIntentDetectorId {
  * This function returns TRUE if the given value is a valid
  *   enumIntentDetectorId value, FALSE if not.
  */
-export function isValidenumIntentDetectorId(enIntentDetectorId: string) {
+export function isValidEnumIntentDetectorId(enIntentDetectorId: string) {
 	return Object.values(enumIntentDetectorId).includes(enIntentDetectorId as enumIntentDetectorId);
 }
 
