@@ -2,6 +2,14 @@
 
 REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
 
+IMPORTANT!: Take heed this comment for the Livepeer category we
+    are targeting in the AI Video hackathon!:
+
+    Create a fun and engaging web app that utilizes Livepeer AI pipelines to provide a novel user experience with viral potential. High-quality entries will be easy to use and share with others.
+
+    I think it will be enough to add a typical "share bar".  See if
+     one exists already for React/Next.
+
 NEEDED INFRASTRUCTURE:
 
     - Maintain per-session array:
