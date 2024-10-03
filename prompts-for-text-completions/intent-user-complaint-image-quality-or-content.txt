@@ -22,6 +22,6 @@ NATURE OF COMPLAINT: Wrong content, in other words, the content of the image is 
 EXAMPLES: "I wanted a dog instead", "Not a car, a cart", "I wanted the man to look directly at the camera", "I wanted a portrait view, not a profile view", "Not a black dress, a white vest", etc.
 RESPONSE: { "complaint_type":  "wrong_content" }
 
-If you find a complaint that does not fit into the nature of complaint list I just gave you, create a response object with  a "complaint_type" of "other" and add a field named "complaint_text" with very terse description of the complaint made.
+If you find a complaint that does not fit into the nature of complaint list I just gave you, create a response object with  a "complaint_type" of "other" and add a field named "complaint_text" with a very terse description of the complaint made.
 
 Your final output should be a JSON array with one complaint object per complaint that you found.

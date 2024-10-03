@@ -12,12 +12,9 @@ export enum enumIntentDetectorId {
 	// User does or does not want text on the generated image.
 	IS_TEXT_WANTED_ON_IMAGE = "is_text_wanted_on_image",
 	// User is complaining about the image quality.
-	USER_COMPLAINT_IMAGE_QUALITY = "user_complaint_image_quality",
+	USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT= "user_complaint_image_quality_or_content",
 	// User is complaining about the generation speed.
-	USER_COMPLAINT_SPEED = "user_complaint_speed",
-	// The image content of the last image generated does not
-	// match what the user wants
-	USER_COMPLAINT_WRONG_CONTENT = "user_complaint_wrong-content",
+	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
 }
 
 /**

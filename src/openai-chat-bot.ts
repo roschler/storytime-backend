@@ -77,11 +77,28 @@ const g_AryIntentPrompts:
 				prompt_text: string }} = {};
 
 // Assign the correct resource name to each intent.
+
+// >>>>> INTENT: IS_TEXT_WANTED_ON_IMAGE
 g_AryIntentPrompts[enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE] =
 	{
 		primary_resource_name: "intent-detector-is-text-wanted-on-image.txt",
 		prompt_text: ""
 	};
+
+// >>>>> INTENT: USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT
+g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT] =
+	{
+		primary_resource_name: "intent-user-complaint-image-quality-or-content.txt",
+		prompt_text: ""
+	};
+
+// >>>>> INTENT: USER_COMPLAINT_IMAGE_GENERATION_SPEED
+g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED] =
+	{
+		primary_resource_name: "intent-user-complaint-image-generation-too-slow.txt",
+		prompt_text: ""
+	};
+
 
 // We iterate over all the intent values known to the system
 //  at this time to make sure that every one of them has a
@@ -165,7 +182,7 @@ export async function executeIntentCompletion(
 
 // This is the main system prompt uses to generate images.
 export const g_MainImageGenerationSystemPrompt =
-	readImageGenerationSubPromptOrDie('system-prompt-for-image-generation.txt');
+	readImageGenerationSubPromptOrDie('system-prompt-for-image-generation-1.txt');
 
 // Load the tips we got from Discord members on generating images.
 export const g_TipsFromDiscordMembersPrompt =
