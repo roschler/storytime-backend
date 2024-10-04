@@ -65,7 +65,7 @@ if (true) {
 
 			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
 
-			const userInput = "No I said I wanted the deer to be bright red, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera."
+			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera."
 
 			/*
 			const result =
@@ -119,8 +119,6 @@ if (true) {
 
 			// Type assertion to include 'revised_image_prompt'
 			const jsonResponse = textCompletion.json_response as { revised_image_prompt: string };
-
-			const x = jsonResponse.revised_image_prompt;
 
 			const revisedImageGenPrompt = jsonResponse.revised_image_prompt;
 
