@@ -2,13 +2,14 @@
 //  prompt interaction with the LLM.
 
 import {
-	createChatBotSystemPrompt,
+	createChatBotSystemPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
 import { enumIntentDetectorId } from "../src/intents/enum-intents"
 import { generateImages } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
+import { chatCompletionImmediate } from "../src/openai-common"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
 const CONSOLE_CATEGORY = 'test-directly-image-prompt';
@@ -64,7 +65,7 @@ if (true) {
 
 			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
 
-			const userInput = "No I said I wanted the deer to be bright red, not blue and why is the image out of focus?"
+			const userInput = "No I said I wanted the deer to be bright red, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera."
 
 			/*
 			const result =
@@ -79,28 +80,52 @@ if (true) {
 
 			// -------------------- BEGIN: INTENT DETECTOR PRE-STEP ------------
 
+			const bDoIntents = true;
 
-			// Run the user input by all intents.
-			const aryResultObjs =
-				await processAllIntents(
-					Object.values(enumIntentDetectorId),
-					g_TextCompletionParamsForIntentDetector,
-					userInput)
+			if (bDoIntents) {
 
-			// Dump the user input to the console.
-			console.info(CONSOLE_CATEGORY, `UserInput:\n\n${userInput}\n\n`)
+				// Run the user input by all intents.
+				const aryResultObjs =
+					await processAllIntents(
+						Object.values(enumIntentDetectorId),
+						g_TextCompletionParamsForIntentDetector,
+						userInput)
 
-			// Dump the results to the console.
-			showIntentResultObjects(aryResultObjs);
+				// Dump the user input to the console.
+				console.info(CONSOLE_CATEGORY, `UserInput:\n\n${userInput}\n\n`)
+
+				// Dump the results to the console.
+				showIntentResultObjects(aryResultObjs);
+			}
 
 			// -------------------- END  : INTENT DETECTOR PRE-STEP ------------
 
 			// -------------------- BEGIN: MAIN IMAGE GENERATOR PROMPT STEP ------------
 
+			console.info(CONSOLE_CATEGORY, `----------------------- MAIN LLM INTERACTION ---------------\n\n`)
+
 			// Now we need to get help from the LLM on creating or refining
 			//  a good prompt for the user.
-			const revisedImageGenPrompt =
+			const initialImageGenPrompt =
 				createChatBotSystemPrompt(userInput)
+
+			const textCompletion =
+				await chatCompletionImmediate(
+					'MAIN-IMAGE-GENERATION-PROMPT',
+					initialImageGenPrompt,
+					userInput,
+					g_TextCompletionParams,
+					true);
+
+			// Type assertion to include 'revised_image_prompt'
+			const jsonResponse = textCompletion.json_response as { revised_image_prompt: string };
+
+			const x = jsonResponse.revised_image_prompt;
+
+			const revisedImageGenPrompt = jsonResponse.revised_image_prompt;
+
+			if (revisedImageGenPrompt === null || revisedImageGenPrompt.length < 1)
+				throw new Error(`The revised image generation prompt is invalid or empty.`);
 
 			const aryImageUrls = await generateImages(revisedImageGenPrompt)
 
