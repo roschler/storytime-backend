@@ -10,6 +10,19 @@ IMPORTANT!: Take heed this comment for the Livepeer category we
     I think it will be enough to add a typical "share bar".  See if
      one exists already for React/Next.
 
+NEXT:
+
+Here is a seed prompt for the new main system prompt.  Take what is useful from the main tips document but leave out anything that overlaps the intent detectors.
+
+"Treat this document as a system prompt.  I will talk to you as if I am generating an image with stable diffusion.  Analyze my input as follow:
+
+ - If you find anything in my input that should result in me using a different stable diffusion model, suggest the right model to use.
+
+ - If you find anything in my input that should result in me changing the CFG or step model parameters, tell me what to do and how much to alter them
+
+ - If my input contains comments that indicate I want a change made to the image or that I am having a problem getting the image content I want, suggest a better prompt to help me do that.
+"
+
 TESTS TO RUN:
 
 - Need to figure out the sweet spot in CFG and STEPS for the FLUX model to get clear, legible text.  Use the prompt below and try the major CFG STEPS value pairs, writing the generated image to a file that bears the CFG and STEPS values in the primary file name.  Have GPT write the code.
