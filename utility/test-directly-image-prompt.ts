@@ -4,7 +4,7 @@
 import {
 	assistUserWithImageGeneration,
 	executeIntentCompletion,
-	g_TextCompletionParamsForIntentDetector,
+	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
 import { extractOpenAiResponseDetails } from "../src/websock-chat-bot"
 import { OpenAIParams_text_completion } from "../src/openai-parameter-objects"
@@ -23,6 +23,7 @@ if (true) {
 
 			// const userInput = 'I want a sign that the car is not moving!'
 
+			/*
 			const result =
 				await executeIntentCompletion(
 					enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
@@ -31,6 +32,17 @@ if (true) {
 
 			console.info(`${errPrefix}result object:`);
 			console.dir(result, {depth: null, colors: true});
+			 */
+
+			// Run the user input by all intents.
+			const aryResultObjs =
+				await processAllIntents(
+					Object.values(enumIntentDetectorId),
+					g_TextCompletionParamsForIntentDetector,
+					userInput)
+
+			// Dump the results to the console.
+			showIntentResultObjects(aryResultObjs);
 
 			// Initialize the state flags to make extractOpenAiResponseDetails()
 			//  happy.
@@ -41,8 +53,8 @@ if (true) {
 				current_request_id: "",
 			};
 
-			console.info(CONSOLE_CATEGORY, `JSON response received:\n${result.json_response}`)
-			console.info(CONSOLE_CATEGORY, `Done`)
+			// console.info(CONSOLE_CATEGORY, `JSON response received:\n${result.json_response}`)
+			// console.info(CONSOLE_CATEGORY, `Done`)
 		} catch (err) {
 			console.info(`${errPrefix}err object:`);
 			console.dir(err, {depth: null, colors: true});

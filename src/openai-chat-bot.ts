@@ -178,6 +178,77 @@ export async function executeIntentCompletion(
 		true)
 }
 
+/**
+ * Processes multiple intent completions in parallel.
+ *
+ * @param {string[]} aryIntentIds - An array of intent IDs to be processed.
+ * @param {OpenAIParams_text_completion} textCompletionsParams - The parameters to be passed to executeIntentCompletion.
+ * @param {string} userInput - The user input that is required for the execution of intents.
+ *
+ * @returns {Promise<Array<{ is_error: boolean, intent_id: string, result_or_error: any }>>} - Returns an array of objects where each object contains error or success status, the intentId, and the result or error object from the respective execution.
+ */
+export async function processAllIntents(
+	aryIntentIds: string[],
+	textCompletionsParams: OpenAIParams_text_completion,
+	userInput: string
+): Promise<Array<{ is_error: boolean, intent_id: string, result_or_error: any }>> {
+
+	// Validate that aryIntentIds has at least one non-empty element
+	if (!Array.isArray(aryIntentIds) || aryIntentIds.length === 0) {
+		throw new Error('aryIntentIds must be a non-empty array of intent IDs.');
+	}
+
+	// Validate that userInput is not empty after trimming
+	if (typeof userInput !== 'string' || userInput.trim().length === 0) {
+		throw new Error('userInput must be a non-empty string.');
+	}
+
+	// Validate that all intent IDs in aryIntentIds are valid
+	const invalidIntents = aryIntentIds.filter(id => !isValidEnumIntentDetectorId(id));
+	if (invalidIntents.length > 0) {
+		throw new Error(`Invalid intent IDs found: ${invalidIntents.join(', ')}`);
+	}
+
+	// Use Promise.all to execute all intents in parallel
+	const promises = aryIntentIds.map(async (intentId) => {
+		try {
+			const result =
+				await executeIntentCompletion(
+					intentId,
+					textCompletionsParams,
+					userInput);
+			return { is_error: false, intent_id: intentId, result_or_error: result }; // Successful result
+		} catch (error) {
+			return { is_error: true, intent_id: intentId, result_or_error: error }; // Capture error in the result object
+		}
+	});
+
+	// Wait for all promises to resolve
+	return Promise.all(promises);
+}
+
+/**
+ * Logs the contents of an array of intent result objects to the console.
+ *
+ * @param {Array<{ is_error: boolean, intent_id: string, result_or_error: any }>} aryIntentResultObjs -
+ * An array of objects representing the intent results. Each object contains the following fields:
+ *   - is_error: A boolean indicating if the result is an error.
+ *   - intent_id: The ID of the intent.
+ *   - result_or_error: The result object or error object associated with the intent.
+ *
+ * The function will log each object's contents in a pretty-printed format.
+ */
+export function showIntentResultObjects(
+	aryIntentResultObjs: Array<{ is_error: boolean, intent_id: string, result_or_error: any }>
+): void {
+	aryIntentResultObjs.forEach((obj, index) => {
+		console.log(`\nIntent Result Object #${index + 1}:`);
+		console.log('Intent ID:', obj.intent_id);
+		console.log('Is Error:', obj.is_error);
+		console.log('Result or Error:', JSON.stringify(obj.result_or_error, null, 2)); // Pretty-printing the result or error
+	});
+}
+
 // -------------------- END  : INTENT TO PROMPT TEXT MAPPING ------------
 
 // This is the main system prompt uses to generate images.
