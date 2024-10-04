@@ -18,7 +18,13 @@ if (true) {
 
 			// const userInput = 'I want a sign that the car is not moving!'
 
-			const userInput = `The image lacks details.  Also, can you make it brighter and why is it taking so long?`;
+			// const userInput = `The image lacks details.  Also, can you make it brighter and why is it taking so long?`;
+
+			// const userInput = "I can't read the letters on the sign and it's a little too bright."
+
+			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
+
+			const userInput = "No I said I wanted the deer to be bright red, not blue and why is the image out of focus?"
 
 			/*
 			const result =
