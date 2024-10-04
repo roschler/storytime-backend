@@ -2,13 +2,8 @@
 //  prompt interaction with the LLM.
 
 import {
-	assistUserWithImageGeneration,
-	executeIntentCompletion,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
-import { extractOpenAiResponseDetails } from "../src/websock-chat-bot"
-import { OpenAIParams_text_completion } from "../src/openai-parameter-objects"
-import { chatCompletionImmediate } from "../src/openai-common"
 import { enumIntentDetectorId } from "../src/intents/enum-intents"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
@@ -19,9 +14,11 @@ if (true) {
 //  can await the result.
 	(async () => {
 		try {
-			const userInput = 'I want a sign on the wall that screams "Death to all dirty towels!';
+			// const userInput = 'I want a sign on the wall that screams "Death to all dirty towels!';
 
 			// const userInput = 'I want a sign that the car is not moving!'
+
+			const userInput = `The image lacks details.  Also, can you make it brighter and why is it taking so long?`;
 
 			/*
 			const result =
@@ -40,6 +37,9 @@ if (true) {
 					Object.values(enumIntentDetectorId),
 					g_TextCompletionParamsForIntentDetector,
 					userInput)
+
+			// Dump the user input to the console.
+			console.info(CONSOLE_CATEGORY, `UserInput:\n\n${userInput}\n\n`)
 
 			// Dump the results to the console.
 			showIntentResultObjects(aryResultObjs);

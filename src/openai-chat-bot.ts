@@ -25,6 +25,7 @@ export const g_TextCompletionParamsForIntentDetector =
 		// Getting 400 unsupported value errors for o1-mini
 		// model_param_val: 'o1-mini'
 		model_param_val: 'gpt-4-turbo'
+		// model_param_val: 'gpt-4'
 	})
 
 // -------------------- END  : TEXT COMPLETION PARAMETER OBJECTS ------------
@@ -128,6 +129,9 @@ for (const intentId of Object.values(enumIntentDetectorId)) {
 
 	console.info(CONSOLE_CATEGORY, `Successfully initialized prompt text for intent ID: "${intentId}"`)
 }
+
+console.info(CONSOLE_CATEGORY, `All intents initialized.`)
+
 
 /**
  * Execute a text completion call for the desired intent
@@ -244,8 +248,22 @@ export function showIntentResultObjects(
 	aryIntentResultObjs.forEach((obj, index) => {
 		console.log(`\nIntent Result Object #${index + 1}:`);
 		console.log('Intent ID:', obj.intent_id);
-		console.log('Is Error:', obj.is_error);
-		console.log('Result or Error:', JSON.stringify(obj.result_or_error, null, 2)); // Pretty-printing the result or error
+
+		if (obj.is_error) {
+			// Pretty-print the entire result_or_error if it's an error
+			console.log('Error:', JSON.stringify(obj.result_or_error, null, 2));
+		} else {
+			// Show only specific fields if no error
+			const { intent_detector_id, text_response, json_response } = obj.result_or_error;
+			console.log('Intent Detector ID:', intent_detector_id);
+			console.log('Text Response:', text_response);
+
+			if (Array.isArray(json_response)) {
+				console.log(`ARRAY JSON RESPONSE.  Number of elements: ${json_response.length}`);
+			}
+
+			console.log('JSON Response:', JSON.stringify(json_response, null, 2)); // Pretty-print the JSON response
+		}
 	});
 }
 
