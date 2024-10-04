@@ -10,6 +10,12 @@ IMPORTANT!: Take heed this comment for the Livepeer category we
     I think it will be enough to add a typical "share bar".  See if
      one exists already for React/Next.
 
+TESTS TO RUN:
+
+- Need to figure out the sweet spot in CFG and STEPS for the FLUX model to get clear, legible text.  Use the prompt below and try the major CFG STEPS value pairs, writing the generated image to a file that bears the CFG and STEPS values in the primary file name.  Have GPT write the code.
+
+"A large polar bear in profile, looking down at a smaller seal, while the seal lies on a sandy beach making direct eye contact with the camera. Both are far from the ocean, with a vast stretch of beach behind them. The scene has a surreal, dreamlike atmosphere, with soft pastel-colored skies, and the ocean in the far background. A wooden sign nearby reads "Don't feed the seals!" in large easy to see letters. The polar bear is towering over the seal, with exaggerated size contrast, photorealistic details, soft shadows, and a vibrant, painterly style"
+
 NEEDED INFRASTRUCTURE:
 
     - Maintain per-session array:

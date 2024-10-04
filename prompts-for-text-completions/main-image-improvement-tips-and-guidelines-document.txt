@@ -399,3 +399,5 @@ With flux dev i've noticed lower steps makes the images much flatter but higher 
 Authority_Null [FG] Titan — Today at 12:41 AM
 
 I really like the SG161222/RealVisXL_V4.0_Lightning model for quality and black-forest-labs/FLUX.1-dev for text generation within the image
+
+ME: Too many steps actually makes text WORSE with the flux model.  Too few is also bad.  There's a goldilocks zone.  20 seems to be about right.  100 was definitely too much.  
