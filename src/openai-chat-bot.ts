@@ -278,9 +278,12 @@ export const g_TipsFromDiscordMembersPrompt =
 	readImageGenerationSubPromptOrDie('image-generation-tips-from-discord-members.txt')
 
 // Load the main document we have that contains the main image generation
-//  FAQ content.
+//  FAQ content, but use the variant that does not have video specific
+//  tips in it or tips related to tweaking parameters or changing
+//  models, since we have the intent detectors and regular code
+//  to handle that.
 export const g_MainImageGenerationFaqPrompt =
-	readImageGenerationSubPromptOrDie('main-image-improvement-tips-and-guidelines-document.txt')
+	readImageGenerationSubPromptOrDie('main-image-improvement-tips-and-guidelines-document-no-parameter-tips.txt')
 
 // -------------------- END  : LOAD PROMPT BUILDER TEXT FILES ------------
 
@@ -305,9 +308,10 @@ export function createChatBotSystemPrompt(userPrompt: string): string {
 	const arySubPrompts = [];
 
 	arySubPrompts.push(g_MainImageGenerationSystemPrompt)
-	arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
+	// Not using this prompt for now.  Needs curation.
+	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
 	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
-	arySubPrompts.push(useUserPrompt)
+	arySubPrompts.push('CURRENT USER INPUT:' + useUserPrompt)
 
 	return arySubPrompts.join(' ')
 }

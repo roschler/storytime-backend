@@ -2,12 +2,52 @@
 //  prompt interaction with the LLM.
 
 import {
+	createChatBotSystemPrompt,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
 import { enumIntentDetectorId } from "../src/intents/enum-intents"
+import { generateImages } from "../src/system/handlers"
+import fs from "fs"
+import path from "node:path"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
 const CONSOLE_CATEGORY = 'test-directly-image-prompt';
+
+// Function to generate HTML content to a temp file for
+//  easy viewing of generated images.
+function generateHTML(imageUrls: string[]) {
+	const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .image-row {
+      margin-bottom: 20px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Gallery</h1>
+  ${imageUrls.map(url => `
+    <div class="image-row">
+      <img src="${url}" alt="Image from ${url}" />
+    </div>
+  `).join('')}
+</body>
+</html>
+  `;
+	return htmlContent;
+}
 
 if (true) {
 	// Use an immediate invoked function expression, so that we
@@ -59,7 +99,25 @@ if (true) {
 
 			// Now we need to get help from the LLM on creating or refining
 			//  a good prompt for the user.
+			const revisedImageGenPrompt =
+				createChatBotSystemPrompt(userInput)
 
+			const aryImageUrls = await generateImages(revisedImageGenPrompt)
+
+			// Generate the HTML
+			const htmlContent = generateHTML(aryImageUrls);
+
+			// Define the output file path
+			const outputPath = path.join('C:', 'temp', 'image-gen-out.html');
+
+			// Write the HTML to the file
+			fs.writeFile(outputPath, htmlContent, 'utf8', (err) => {
+				if (err) {
+					console.error('Error writing file:', err);
+				} else {
+					console.log('HTML file successfully created at:', outputPath);
+				}
+			});
 
 			// -------------------- END  : MAIN IMAGE GENERATOR PROMPT STEP ------------
 
