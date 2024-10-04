@@ -37,6 +37,9 @@ if (true) {
 			console.dir(result, {depth: null, colors: true});
 			 */
 
+			// -------------------- BEGIN: INTENT DETECTOR PRE-STEP ------------
+
+
 			// Run the user input by all intents.
 			const aryResultObjs =
 				await processAllIntents(
@@ -49,6 +52,16 @@ if (true) {
 
 			// Dump the results to the console.
 			showIntentResultObjects(aryResultObjs);
+
+			// -------------------- END  : INTENT DETECTOR PRE-STEP ------------
+
+			// -------------------- BEGIN: MAIN IMAGE GENERATOR PROMPT STEP ------------
+
+			// Now we need to get help from the LLM on creating or refining
+			//  a good prompt for the user.
+
+
+			// -------------------- END  : MAIN IMAGE GENERATOR PROMPT STEP ------------
 
 			// Initialize the state flags to make extractOpenAiResponseDetails()
 			//  happy.

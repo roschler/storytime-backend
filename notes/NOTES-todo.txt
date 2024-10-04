@@ -10,7 +10,13 @@ IMPORTANT!: Take heed this comment for the Livepeer category we
     I think it will be enough to add a typical "share bar".  See if
      one exists already for React/Next.
 
+FUTURE FEATURES:
+
+- Incorporate the augmentation parameter some stable diffusion models support
+- Incorporate LoRA model usage
+
 NEXT:
+
 
 Here is a seed prompt for the new main system prompt.  Take what is useful from the main tips document but leave out anything that overlaps the intent detectors.
 
