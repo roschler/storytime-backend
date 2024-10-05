@@ -17,6 +17,24 @@ FUTURE FEATURES:
 
 NEXT:
 
+- Almost done with full chat volley pipeline:
+
+    1) Don't worry about websocket route yet.  Just get the
+      test harness working
+    2) At the top of the test harness, using a default user id,
+        open the ChatHistory json file for that iD.  If one
+        does not exist yet, use CurrentChatState.createDefaultObject()
+        to create the starting chat state. Otherwise, use ChatHistory.getLastVolley() to get the most recent chat volley and
+        use its CurrentChatState object as the starting chat
+        state object.
+    3) Do the current intent detector, main LLM interaction, and
+       image generation processing.
+    4) Then write a new chat volley object immediately, do not
+        wait for the images to be generated.
+
+        + >>>>> Need code to make changes to the final chat state based on intent detector triggered model or model parameter adjustments
+
+
 
 Here is a seed prompt for the new main system prompt.  Take what is useful from the main tips document but leave out anything that overlaps the intent detectors.
 
