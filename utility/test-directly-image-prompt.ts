@@ -6,7 +6,7 @@ import {
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
 import { enumIntentDetectorId } from "../src/intents/enum-intents"
-import { generateImages } from "../src/system/handlers"
+import { generateImages_storytime } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
 import { chatCompletionImmediate } from "../src/openai-common"
@@ -125,7 +125,7 @@ if (true) {
 			if (revisedImageGenPrompt === null || revisedImageGenPrompt.length < 1)
 				throw new Error(`The revised image generation prompt is invalid or empty.`);
 
-			const aryImageUrls = await generateImages(revisedImageGenPrompt)
+			const aryImageUrls = await generateImages_storytime(revisedImageGenPrompt)
 
 			// Generate the HTML
 			const htmlContent = generateHTML(aryImageUrls);

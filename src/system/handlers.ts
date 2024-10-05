@@ -10,6 +10,7 @@ import {
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
+import { CurrentChatState } from "../chat-volleys/chat-volleys"
 
 // Pull in all of our environment variables
 // and set defaults if any of them are missing
@@ -30,19 +31,20 @@ const livePeerRequestOptions = {
 }
 
 /**
- * Make an image generation request against the Livepeer service.
+ * Make an image generation request against the Livepeer service
+ *  for the Storytime app.
  *
  * @param {String} prompt - The prompt to pass to the Livepeer
  *  image generation API.
  *
  * @return {Promise<*>}
  */
-export const generateImages = async (prompt: string): Promise<any> => {
+export const generateImages_storytime = async (prompt: string): Promise<any> => {
 	let urls
 	const body = {
 		prompt,
 		model_id,
-		guidance_scale, // NOTE: looks like it works now!
+		guidance_scale,
 		negative_prompt,
 		width: image_size,
 		height: image_size,
@@ -67,6 +69,53 @@ export const generateImages = async (prompt: string): Promise<any> => {
 	}
 	return urls
 }
+
+/**
+ * Make an image generation request against the Livepeer service
+ *  for the Chatbot app.
+ *
+ * @param prompt - The prompt to pass to the image generator model.
+ * @param negative_prompt - The negative prompt to pass to the image generator model.
+ * @param chatStateObj - The current state of the
+ *  chat session.
+ *
+ * @return {Promise<*>}
+ */
+export const generateImages_chat_bot =
+	async (chatStateObj: CurrentChatState): Promise<any> => {
+
+	let urls
+
+	const body = {
+		prompt: prompt,
+		model_id: chatStateObj.model_id,
+		lora: chatStateObj.lora_model_id,
+		guidance_scale: chatStateObj.guidance_scale,
+		negative_prompt: negative_prompt,
+		width: image_size,
+		height: image_size,
+		num_images_per_prompt: num_images,
+	}
+	const request = await _request({
+		...livePeerRequestOptions,
+		body: JSON.stringify(body),
+	})
+
+	const { images } = await request.json()
+	if (!images || images.length === 0) {
+		throw new Error("No images returned from Livepeer")
+	}
+
+	try {
+		urls = images.map((image: LivepeerImage) => {
+			return image.url
+		})
+	} catch (e) {
+		console.error("Error parsing image URLs", e)
+	}
+	return urls
+}
+
 
 /**
  * Create a request object for our use.

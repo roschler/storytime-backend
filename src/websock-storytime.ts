@@ -7,7 +7,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify"
 import { generateStory } from "./openai-storytime"
 import { Genre, StateType, ErrorType, RequestPayload_storytime } from "./system/types"
 import {
-	generateImages,
+	generateImages_storytime,
 	sendStateMessage,
 	sendErrorMessage,
 	sendImageMessage,
@@ -109,7 +109,7 @@ async function handleImageRequest_storytime(
 ) {
 	const prompt = payload.prompt
 	console.log(`Requesting images for prompt: ${prompt}`)
-	const urls = await generateImages(prompt)
+	const urls = await generateImages_storytime(prompt)
 	sendImageMessage(client, { urls })
 	saveImageURLs(state.current_request_id, urls)
 }

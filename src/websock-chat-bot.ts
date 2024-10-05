@@ -8,7 +8,7 @@ import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
 import { StateType, ErrorType, RequestPayload_chat_bot } from "./system/types"
 import {
-	generateImages,
+	generateImages_storytime,
 	sendStateMessage,
 	sendErrorMessage,
 	sendImageMessage,
@@ -208,7 +208,7 @@ async function handleImageRequest(
 ) {
 	const prompt = payload.prompt
 	console.log(`Requesting images for prompt: ${prompt}`)
-	const urls = await generateImages(prompt)
+	const urls = await generateImages_storytime(prompt)
 	sendImageMessage(client, { urls })
 	saveImageURLs(state.current_request_id, urls)
 }

@@ -4,6 +4,7 @@
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
+import { getUnixTimestamp } from "./common-routines"
 
 export const oai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
@@ -96,14 +97,6 @@ export async function chatCompletionImmediate(
 		throw new Error("The intentDetectorId must not be empty.");
 	}
 
-	/**
-	 * Helper function to get the current Unix timestamp.
-	 * @returns {number} - The current Unix timestamp.
-	 */
-	function getTimestampOfTextCompletion(): number {
-		return Math.floor(Date.now() / 1000);
-	}
-
 	console.log(`Creating chat completion (non-streaming) with system prompt: ${systemPrompt}`);
 	console.log(`User prompt: ${userInput}`);
 
@@ -150,7 +143,7 @@ export async function chatCompletionImmediate(
 					error_message: `JSON parse error: ${parseError.message}`,
 					text_response: textResponse,
 					json_response: {},
-					date_time_of_response: getTimestampOfTextCompletion(),
+					date_time_of_response: getUnixTimestamp(),
 				};
 			}
 		}
@@ -161,7 +154,7 @@ export async function chatCompletionImmediate(
 			error_message: '',
 			text_response: textResponse,
 			json_response: jsonResponse,
-			date_time_of_response: getTimestampOfTextCompletion(),
+			date_time_of_response: getUnixTimestamp(),
 		};
 	} catch (error: any) {
 		// Error handling
@@ -174,7 +167,7 @@ export async function chatCompletionImmediate(
 			error_message: `Error ${statusCode}: ${errorMessage}`,
 			text_response: '',
 			json_response: {},
-			date_time_of_response: getTimestampOfTextCompletion(),
+			date_time_of_response: getUnixTimestamp(),
 		};
 	}
 }

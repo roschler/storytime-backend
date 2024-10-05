@@ -60,3 +60,12 @@ export function writeTextFileSync(fullFilePath: string, strContent: string): boo
 	}
 }
 
+
+/**
+ * Helper function to get the current Unix timestamp.
+ *
+ * @returns {number} - The current Unix timestamp.
+ */
+export function getUnixTimestamp(): number {
+	return Math.floor(Date.now() / 1000);
+}
