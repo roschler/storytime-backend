@@ -32,7 +32,9 @@ NEXT:
         use its CurrentChatState object as the starting chat
         state object.
     3) Do the current intent detector, main LLM interaction, and
-       image generation processing.
+       image generation processing. NEED to add recent chat history
+       to the interstitial prompt with the prefix "Here is your recent
+       chat history with the user."
     4) Then write a new chat volley object immediately, do not
         wait for the images to be generated.
 

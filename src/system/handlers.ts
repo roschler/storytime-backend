@@ -92,7 +92,7 @@ export const generateImages_chat_bot =
 	const body = {
 		prompt: prompt,
 		model_id: chatStateObj.model_id,
-		lora: chatStateObj.lora_model_id,
+		lora: chatStateObj.loras,
 		guidance_scale: chatStateObj.guidance_scale,
 		negative_prompt: negative_prompt,
 		width: image_size,

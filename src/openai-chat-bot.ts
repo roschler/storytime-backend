@@ -4,6 +4,7 @@ import { readTextFileSync } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
+import { ChatHistory } from "./chat-volleys/chat-volleys"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
 
@@ -291,12 +292,14 @@ export const g_MainImageGenerationFaqPrompt =
  * Given a user prompt and the current image generation parameters,
  *  create a new image generation prompt.
  *
- * @param {String} userPrompt - The current prompt from the user.
+ * @param userPrompt - The current prompt from the user.
+ * @param - The chat history object for the current
+ *  user.
  *
- * @return {String} - Returns the system prompt to use in the
+ * @return Returns the system prompt to use in the
  *  upcoming text completion call.
  */
-export function createChatBotSystemPrompt(userPrompt: string): string {
+export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: ChatHistory): string {
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
@@ -304,14 +307,29 @@ export function createChatBotSystemPrompt(userPrompt: string): string {
 
 	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
 
+	// Extract the most recent chat history and create
+	//  a block of plain text from it.
+	const chatHistorySummaryAsText =
+		chatHistoryObj.buildChatHistoryPrompt()
+
+
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];
 
-	arySubPrompts.push(g_MainImageGenerationSystemPrompt)
 	// Not using this prompt for now.  Needs curation.
 	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
+
+	// Main image generation system prompt.
+	arySubPrompts.push(g_MainImageGenerationSystemPrompt)
+
+	// Chat history.
+	arySubPrompts.push(chatHistorySummaryAsText)
+
+	// Main tips document.
 	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
-	arySubPrompts.push('CURRENT USER INPUT:' + useUserPrompt)
+
+	// The user prompt
+	arySubPrompts.push(useUserPrompt)
 
 	return arySubPrompts.join(' ')
 }
@@ -321,15 +339,17 @@ export function createChatBotSystemPrompt(userPrompt: string): string {
  *  image with generative AI and the help of an assistant
  *  LLM.
  *
- * @param {String} userPrompt - The prompt the user
+ * @param userPrompt - The prompt the user
  *  entered.
+ * @param chatHistoryObj - The chat history object associated
+ *  with the user.
  */
-export async function assistUserWithImageGeneration(userPrompt: string) {
+export async function assistUserWithImageGeneration(userPrompt: string, chatHistoryObj: ChatHistory) {
 	console.log(
 		`OpenAI settings: top_p=${g_TextCompletionParams.top_p_param_val}, max_tokens=${g_TextCompletionParams.max_tokens_param_val}, temperature=${g_TextCompletionParams.temperature_param_val}, presence_penalty=${g_TextCompletionParams.presence_penalty_param_val}, frequency_penalty=${g_TextCompletionParams.frequency_penalty_param_val}`,
 	)
 	
-	const systemPrompt = createChatBotSystemPrompt(userPrompt)
+	const systemPrompt = buildChatBotSystemPrompt(userPrompt, chatHistoryObj)
 
 	return chatCompletionStream(systemPrompt, userPrompt, g_TextCompletionParams)
 }

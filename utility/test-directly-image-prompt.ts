@@ -2,7 +2,7 @@
 //  prompt interaction with the LLM.
 
 import {
-	createChatBotSystemPrompt, g_TextCompletionParams,
+	buildChatBotSystemPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
 import { enumIntentDetectorId } from "../src/intents/enum-intents"
@@ -10,12 +10,22 @@ import { generateImages_storytime } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
 import { chatCompletionImmediate } from "../src/openai-common"
+import {
+	ChatHistory,
+	CurrentChatState,
+	readChatHistory,
+	readOrCreateChatHistory,
+} from "../src/chat-volleys/chat-volleys"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
 const CONSOLE_CATEGORY = 'test-directly-image-prompt';
 
-// Function to generate HTML content to a temp file for
-//  easy viewing of generated images.
+/**
+ * Create a simple page to view the images created
+ *  during the test harness session.
+ *
+ * @param imageUrls - The URLs to show on the page.
+ */
 function generateHTML(imageUrls: string[]) {
 	const htmlContent = `
 <!DOCTYPE html>
@@ -55,6 +65,19 @@ if (true) {
 //  can await the result.
 	(async () => {
 		try {
+			const dummyUserId = 'the_user';
+
+			// We need a starting chat state.  If we have a
+			//  chat history for the user, load it and use
+			//  the last (most recent) chat volley object's
+			//  ending state.  If not, create a default
+			//  chat state object.
+			const  chatHistoryObj =
+				await readOrCreateChatHistory(dummyUserId)
+
+			let chatState_start =
+				chatHistoryObj.getLastVolley() ?? CurrentChatState.createDefaultObject()
+
 			// const userInput = 'I want a sign on the wall that screams "Death to all dirty towels!';
 
 			// const userInput = 'I want a sign that the car is not moving!'
@@ -65,7 +88,7 @@ if (true) {
 
 			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
 
-			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera."
+			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera.";
 
 			/*
 			const result =
@@ -85,7 +108,7 @@ if (true) {
 			if (bDoIntents) {
 
 				// Run the user input by all intents.
-				const aryResultObjs =
+				const aryIntentDetectResultObjs =
 					await processAllIntents(
 						Object.values(enumIntentDetectorId),
 						g_TextCompletionParamsForIntentDetector,
@@ -95,7 +118,16 @@ if (true) {
 				console.info(CONSOLE_CATEGORY, `UserInput:\n\n${userInput}\n\n`)
 
 				// Dump the results to the console.
-				showIntentResultObjects(aryResultObjs);
+				showIntentResultObjects(aryIntentDetectResultObjs);
+
+				// -------------------- BEGIN: INTENT DETECTIONS TO STATE CHANGES ------------
+
+				// Now we examine the intent detections to see if we
+				//  should make any state changes.
+
+
+
+				// -------------------- END  : INTENT DETECTIONS TO STATE CHANGES ------------
 			}
 
 			// -------------------- END  : INTENT DETECTOR PRE-STEP ------------
@@ -107,7 +139,7 @@ if (true) {
 			// Now we need to get help from the LLM on creating or refining
 			//  a good prompt for the user.
 			const initialImageGenPrompt =
-				createChatBotSystemPrompt(userInput)
+				buildChatBotSystemPrompt(userInput, chatHistoryObj)
 
 			const textCompletion =
 				await chatCompletionImmediate(

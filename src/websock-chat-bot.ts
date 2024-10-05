@@ -190,6 +190,11 @@ async function handleImageGenAssistanceRequest(
 	state: StateType,
 	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion },
 ) {
+	// Load the chat history object for this user.
+	//  If one has not been created yet, create a
+	//  brand new one.
+
+
 	const stream =
 		await assistUserWithImageGeneration(payload.prompt)
 	state.streaming_text = true
@@ -209,9 +214,11 @@ async function handleImageRequest(
 
 	console.log(`Requesting images:\nprompt -> : ${payload.prompt}`)
 
-	const urls = await generateImages_chat_bot(
-		prompt,
-		)
+	let urls: string[] = []
+	// const urls = await generateImages_chat_bot(prompt,)
+	throw new Error(`Not implemented yet.`);
+
+
 	sendImageMessage(client, { urls })
 	saveImageURLs(state.current_request_id, urls)
 }

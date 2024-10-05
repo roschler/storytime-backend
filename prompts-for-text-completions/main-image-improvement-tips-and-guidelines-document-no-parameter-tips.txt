@@ -1,3 +1,5 @@
+Here are a set of tips to help you improve the user's prompt.
+
 **Extensive FAQ on Using stabilityai/stable-video-diffusion-img2vid-1-1 WITHOUT parameter tips**
 
 ---

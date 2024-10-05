@@ -10,7 +10,7 @@ import { getUnixTimestamp } from "../common-routines"
 const DEFAULT_IMAGE_GENERATION_MODEL_ID = 'RealVisXL_V4.0_Lightning';
 // If this value is empty, then we are not using a LoRA
 //  model by default.
-const DEFAULT_LORA_MODEL_ID = '';
+// const DEFAULT_LORA_MODEL_ID = '';
 const DEFAULT_GUIDANCE_SCALE = 7.5;
 const DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS  = 20;
 /*
@@ -41,11 +41,12 @@ export class CurrentChatState {
 	public model_id: string;
 
 	/**
-	 * The LoRA model ID currently selected.  If an empty
-	 *  string then we are not using a LoRA model
-	 *  currently.
+	 * The LoRA models object.  If any LoRA objects have
+	 *  been selected, there will be a property for each
+	 *  one where the property name is the LoRA model ID
+	 *  and property value is the version number.
 	 */
-	public lora_model_id: string;
+	public loras: {};
 
 	/**
 	 * The current value set for the context free guidance parameter.
@@ -65,18 +66,18 @@ export class CurrentChatState {
 	/**
 	 * Constructs an instance of CurrentChatState.
 	 *
-	 * @param {string} model_id - The model currently selected for image generation.
-	 * @param {string} lora_model_id - The LoRA model ID currently selected.
-	 * @param {number} guidance_scale - The current value set for the context free guidance parameter.
-	 * @param {number} steps - The current value set for the number of steps to use when generating an image.
+	 * @param model_id - The model currently selected for image generation.
+	 * @param loras - The LoRA object that has the currently selected, if any, LoRA models.
+	 * @param guidance_scale - The current value set for the context free guidance parameter.
+	 * @param steps - The current value set for the number of steps to use when generating an image.
 	 */
 	constructor(
 			model_id: string,
-			lora_model_id: string,
+			loras: object,
 			guidance_scale: number,
 			steps: number) {
 		this.model_id = model_id;
-		this.lora_model_id = lora_model_id;
+		this.loras = loras;
 		this.guidance_scale = guidance_scale;
 		this.steps = steps;
 	}
@@ -89,7 +90,7 @@ export class CurrentChatState {
 		const newObj =
 			new CurrentChatState(
 				DEFAULT_IMAGE_GENERATION_MODEL_ID,
-				DEFAULT_LORA_MODEL_ID,
+				{},
 				DEFAULT_GUIDANCE_SCALE,
 				DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS
 			);
@@ -216,6 +217,24 @@ export class ChatVolley {
 
 		return deltaChatStates;
 	}
+
+	/**
+	 * This function creates a JSON object but as a
+	 *  plain string that will be passed to the LLM
+	 *  as part of the recent chat history.
+	 *
+	 * NOTE!:  Make sure the format matches that we
+	 *  illustrated in the main system prompt!
+	 */
+	public buildChatVolleySummary() {
+		return `
+		    {\n
+		    	"    user_input": ${this.user_input},\n
+		    	"    prompt": ${this.prompt},\n
+		    	"    negative_prompt": ${this.negative_prompt}\n
+		    }\n
+		`
+	}
 }
 
 // -------------------- END  : ChatVolley ------------
@@ -268,6 +287,31 @@ export class ChatHistory {
 	public addChatVolley(newChatVolley: ChatVolley): void {
 		this.aryChatVolleys.push(newChatVolley);
 	}
+
+	/**
+	 * Builds a pure text summary of the recent chat history
+	 *  with the user, to be passed on to the LLM as part
+	 *  of the prompt text.
+	 *
+	 * @param numChatVolleys - The number of chat volleys
+	 *  to include in the history.  The most recent ones
+	 *  will be chosen from the end of the array up to
+	 *  the number available.
+	 */
+	public buildChatHistoryPrompt(numChatVolleys: number = 4): string {
+		if (numChatVolleys < 1)
+			throw new Error(`The number of chat volleys must be greater than 0.`);
+		if (!Number.isInteger(numChatVolleys))
+			throw new Error(`The number of chat volleys must be an integer.`);
+
+		const aryChatVolleysSlice =
+			this.aryChatVolleys.slice(-1 * numChatVolleys)
+		const strChatHistory =
+			 aryChatVolleysSlice.map(
+				 obj => obj.buildChatVolleySummary()).join('/n')
+
+		return strChatHistory
+	}
 }
 
 // -------------------- END  : ChatHistory ------------
@@ -312,9 +356,9 @@ export function buildChatHistoryFilename(userId: string): string {
  *
  * @param {string} userId - The user ID whose chat history should be read.
  *
- * @returns {ChatHistory} The chat history object for the given user.
+ * @returns {ChatHistory|null} The chat history object for the given user or NULL if one does not exist yet.
  */
-export async function readChatHistory(userId: string): Promise<ChatHistory> {
+export async function readChatHistory(userId: string): Promise<ChatHistory|null> {
 	const trimmedUserId = userId.trim();
 
 	// Validate that the userId is not empty
@@ -327,7 +371,7 @@ export async function readChatHistory(userId: string): Promise<ChatHistory> {
 
 	// Check if the file exists
 	if (!fs.existsSync(fullPathToJsonFile)) {
-		throw new Error(`Chat history file does not exist for user ID: ${trimmedUserId}`);
+		return null
 	}
 
 	// Cast to unknown first, then to ChatHistory
@@ -361,3 +405,54 @@ export async function writeChatHistory(userId: string, chatHistoryObj: ChatHisto
 }
 
 // -------------------- END  : READ/WRITE ChatHistory OBJECTS ------------
+
+// -------------------- BEGIN: UTILITY FUNCTIONS ------------
+
+/**
+ * This function will return the existing chat history object
+ *  associated with the given user ID, if one has been
+ *  created already.  If not, it will return a brand
+ *  new chat history object.
+ *
+ * @param userId - The ID of the user to get or create a
+ *  chat history object for.
+ */
+export async function readOrCreateChatHistory(userId: string): Promise<ChatHistory> {
+
+	if (userId.trim().length < 1)
+		throw new Error(`The user ID is empty or invalid.`);
+
+	let chatHistoryObj;
+
+	const chatHistoryObjOrNull =
+		await readChatHistory(userId)
+
+	if (chatHistoryObjOrNull === null) {
+		// Create a brand new chat history object.
+		chatHistoryObj = new ChatHistory()
+	} else {
+		// Use the most recent chat state.
+		chatHistoryObj = chatHistoryObjOrNull as unknown as ChatHistory
+	}
+
+	return chatHistoryObj
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -------------------- END  : UTILITY FUNCTIONS ------------
