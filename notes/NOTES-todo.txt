@@ -17,6 +17,10 @@ FUTURE FEATURES:
 
 NEXT:
 
+    NOTE: Need to update the field "lora" to "loras" and make it an object
+     where each property is a lora model ID with its value being set to
+     the correct version number, and then maintain that field.
+
 - Almost done with full chat volley pipeline:
 
     1) Don't worry about websocket route yet.  Just get the
