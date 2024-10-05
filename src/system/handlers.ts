@@ -82,7 +82,10 @@ export const generateImages_storytime = async (prompt: string): Promise<any> => 
  * @return {Promise<*>}
  */
 export const generateImages_chat_bot =
-	async (chatStateObj: CurrentChatState): Promise<any> => {
+	async (
+		prompt: string,
+		negative_prompt: string,
+		chatStateObj: CurrentChatState): Promise<any> => {
 
 	let urls
 

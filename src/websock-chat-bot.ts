@@ -14,7 +14,7 @@ import {
 	sendImageMessage,
 	sendTextMessage,
 	saveImageURLs,
-	saveMetaData_chat_bot,
+	saveMetaData_chat_bot, generateImages_chat_bot,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -206,9 +206,12 @@ async function handleImageRequest(
 	state: StateType,
 	payload: RequestPayload_chat_bot,
 ) {
-	const prompt = payload.prompt
-	console.log(`Requesting images for prompt: ${prompt}`)
-	const urls = await generateImages_storytime(prompt)
+
+	console.log(`Requesting images:\nprompt -> : ${payload.prompt}`)
+
+	const urls = await generateImages_chat_bot(
+		prompt,
+		)
 	sendImageMessage(client, { urls })
 	saveImageURLs(state.current_request_id, urls)
 }
