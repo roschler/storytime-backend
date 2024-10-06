@@ -64,3 +64,64 @@ export class OpenAIParams_text_completion {
 		}
 	}
 }
+
+// -------------------- BEGIN: TEXT COMPLETION RESPONSE INTERFACE ------------
+
+// This interface describes the object we build from the OpenAI
+//  text completion response and pass around the application.
+export interface TextCompletionResponse {
+	/**
+	 * The ID of the intent the text completion is for.
+	 */
+	intent_detector_id: string;
+
+	/**
+	 * TRUE if an error occurred during the text completion call,
+	 *  FALSE if not.
+	 */
+	is_error: boolean;
+
+	/**
+	 * If an error occurred, the error details will be put in this
+	 *  property.
+	 */
+	error_message: string;
+
+	/**
+	 * The response received for the text completion call in
+	 *  pure text format.
+	 */
+	text_response: string;
+
+	/**
+	 * The response received for the text completion call in
+	 *  JSON format, if the call was marked as expecting a JSON
+	 *  object response from the text completion call.
+	 */
+	json_response: object;
+
+	/**
+	 * The date/time the response was received in Unix timestamp
+	 *  format.
+	 */
+	date_time_of_response: number;
+}
+
+// -------------------- END  : TEXT COMPLETION RESPONSE INTERFACE ------------
+
+// -------------------- BEGIN: EXPECTED JSON RESPONSE OBJECT FORMAT FOR LLM TEXT COMPLETIONS ------------
+
+// This interface describes the JSON object we tell the image generator
+//  prompt LLM to produce.
+//
+// NOTE: Remember to update this object if we change the image generator
+//  LLM system prompt!
+export interface ImageGeneratorLlmJsonResponse
+{
+	"prompt": string,
+	"negative_prompt": string,
+	"user_input_has_complaints": boolean
+}
+
+
+// -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LLM TEXT COMPLETIONS ------------

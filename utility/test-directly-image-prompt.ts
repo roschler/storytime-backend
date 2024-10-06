@@ -11,17 +11,18 @@ import {
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "../src/intents/enum-intents"
-import { generateImages_storytime } from "../src/system/handlers"
+import { generateImages_chat_bot, generateImages_storytime } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
 import { chatCompletionImmediate } from "../src/openai-common"
 import {
-	ChatHistory,
+	ChatHistory, ChatVolley,
 	CurrentChatState,
 	readChatHistory,
-	readOrCreateChatHistory,
+	readOrCreateChatHistory, writeChatHistory,
 } from "../src/chat-volleys/chat-volleys"
 import { enumImageGenerationModelId } from "../src/enum-image-generation-models"
+import { ImageGeneratorLlmJsonResponse } from "../src/openai-parameter-objects"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
 const CONSOLE_CATEGORY = 'test-directly-image-prompt';
@@ -214,7 +215,7 @@ if (true) {
 				await readOrCreateChatHistory(dummyUserId)
 
 			const chatState_start =
-				chatHistoryObj.getLastVolley() ?? CurrentChatState.createDefaultObject()
+				chatHistoryObj.getLastVolley()?.chat_state_at_start ?? CurrentChatState.createDefaultObject()
 
 			// Make a clone of the starting chat state so we can
 			//  have it as a reference as we make state changes.
@@ -253,6 +254,10 @@ if (true) {
 			//  what changes we made to the chat session state.
 			const aryChangeDescriptions = [];
 
+			// The array of intent detector JSON response objects
+			//  will be put here.
+			let aryIntentDetectorJsonResponseObjs = [];
+
 			if (bDoIntents) {
 
 				// Run the user input by all intents.
@@ -281,7 +286,7 @@ if (true) {
 
 				// Create an array of the intent detector JSON response
 				//  objects.
-				const aryJsonResponseObjs =
+				aryIntentDetectorJsonResponseObjs =
 					aryIntentDetectResultObjs.map(
 						(intentResultObj) => {
 							// Merge the intent detector ID into the
@@ -294,7 +299,7 @@ if (true) {
 						}
 					)
 
-				if (aryJsonResponseObjs.length < 1)
+				if (aryIntentDetectorJsonResponseObjs.length < 1)
 					throw new Error(`${errPrefix}The array of intent detectors JSON response objects is empty.`);
 
 				// -------------------- BEGIN: INTENT DETECTIONS TO STATE CHANGES ------------
@@ -306,7 +311,7 @@ if (true) {
 				// >>>>> Text on image wanted?
 				const bIsTextOnImageDesired =
 					getBooleanIntentDetectionValue(
-						aryJsonResponseObjs,
+						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
 						'is_text_wanted_on_image'
 						);
@@ -332,7 +337,7 @@ if (true) {
 				// >>>>> Blurry image or lack of detail?
 				const bIsImageBlurry =
 					isStringIntentDetectionValueEqualTo(
-						aryJsonResponseObjs,
+						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 						'complaint_type',
 						'blurry'
@@ -351,7 +356,7 @@ if (true) {
 				// >>>>> Image generation too slow?
 				const bIsImageGenerationTooSlow =
 					isStringIntentDetectionValueEqualTo(
-						aryJsonResponseObjs,
+						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
 						'complaint_type',
 						'generate_image_too_slow'
@@ -372,7 +377,7 @@ if (true) {
 				//  via a "wrong_content" complaint
 				const bIsWrongContent =
 					isStringIntentDetectionValueEqualTo(
-						aryJsonResponseObjs,
+						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 						'complaint_type',
 						'wrong_content'
@@ -391,7 +396,7 @@ if (true) {
 				// >>>>> User wants more variation
 				const bIsImageBoring =
 					isStringIntentDetectionValueEqualTo(
-						aryJsonResponseObjs,
+						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_IS_BORING,
 						'complaint_type',
 						'boring'
@@ -431,14 +436,22 @@ if (true) {
 					true);
 
 			// Type assertion to include 'revised_image_prompt'
-			const jsonResponse = textCompletion.json_response as { revised_image_prompt: string };
+			const jsonResponse = textCompletion.json_response as ImageGeneratorLlmJsonResponse;
 
-			const revisedImageGenPrompt = jsonResponse.revised_image_prompt;
+			const revisedImageGenPrompt = jsonResponse.prompt;
 
 			if (revisedImageGenPrompt === null || revisedImageGenPrompt.length < 1)
 				throw new Error(`The revised image generation prompt is invalid or empty.`);
 
-			const aryImageUrls = await generateImages_storytime(revisedImageGenPrompt)
+			// The negative prompt may be empty.
+			const revisedImageGenNegativePrompt =
+				jsonResponse.negative_prompt ?? '';
+
+			const aryImageUrls =
+				await generateImages_chat_bot(
+					revisedImageGenPrompt,
+					jsonResponse.negative_prompt,
+					chatState_current)
 
 			// Generate the HTML
 			const htmlContent = generateHTML(aryImageUrls);
@@ -457,12 +470,10 @@ if (true) {
 
 			// -------------------- END  : MAIN IMAGE GENERATOR PROMPT STEP ------------
 
-			// -------------------- BEGIN: MOCK CLIENT RESPONSE ------------
+			// -------------------- BEGIN: CREATE RESPONSE FOR USER ------------
 
-			// Here we emulate what we would do if this was not
-			//  the test harness but instead, we were handling
-			//  a client websocket request.
-
+			// We build a response to be shown to the user by the
+			//  client using what we have so far.
 			// Build the response we send to the user.  We show
 			//  them the prompt the LLM gave us that we sent
 			//  to the image generation model, and the
@@ -470,19 +481,49 @@ if (true) {
 			//  did in response to feedback they gave us
 			//  about the last image generation.
 
-			let responseToClient: string =
+			let responseSentToClient: string =
 				`Here is the new image request we just made:\n${revisedImageGenPrompt}\n`
 
 			if (aryChangeDescriptions.length > 0)
-				responseToClient +=
+				responseSentToClient +=
 					`and the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
 
-			responseToClient = `Let's see how this one turns out`
+			responseSentToClient += `Let's see how this one turns out`
 
-			console.info(CONSOLE_CATEGORY, `SIMULATED CLIENT RESPONSE:\n${responseToClient}`)
+			// -------------------- END  : CREATE RESPONSE FOR USER ------------
+
+			// -------------------- BEGIN: UPDATE CHAT HISTORY ------------
+
+			const newChatVolleyObj =
+				new ChatVolley(
+					false,
+					null,
+					userInput,
+					revisedImageGenPrompt,
+					revisedImageGenNegativePrompt,
+					textCompletion,
+					responseSentToClient,
+					chatState_start,
+					chatState_current,
+					aryIntentDetectorJsonResponseObjs,
+				)
+
+			chatHistoryObj.addChatVolley(newChatVolleyObj)
+
+			// Update storage.
+			await writeChatHistory(dummyUserId, chatHistoryObj)
+
+			// -------------------- END  : UPDATE CHAT HISTORY ------------
+
+			// -------------------- BEGIN: MOCK CLIENT RESPONSE ------------
+
+			// Here we emulate what we would do if this was not
+			//  the test harness but instead, we were handling
+			//  a client websocket request.
+
+			console.info(CONSOLE_CATEGORY, `SIMULATED CLIENT RESPONSE:\n${responseSentToClient}`)
 
 			// -------------------- END  : MOCK CLIENT RESPONSE ------------
-
 			// Initialize the state flags to make extractOpenAiResponseDetails()
 			//  happy.
 			const state = {

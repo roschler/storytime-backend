@@ -49,6 +49,8 @@ NEXT:
       text areas vertically, make sure we have a nice busy
       animation while waiting for image requests
 
+- Do we need to store the images in an S3 bucket for the contest?
+
 TESTS TO RUN:
 
 - Need to figure out the sweet spot in CFG and STEPS for the FLUX model to get clear, legible text.  Use the prompt below and try the major CFG STEPS value pairs, writing the generated image to a file that bears the CFG and STEPS values in the primary file name.  Have GPT write the code.

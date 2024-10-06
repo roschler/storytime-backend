@@ -30,6 +30,7 @@ const DEFAULT_NEGATIVE_PROMPT = '(octane render, render, drawing, anime, bad pho
 import fs from "fs"
 import path from "node:path"
 import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
+import { TextCompletionResponse } from "../openai-parameter-objects"
 
 /**
  * Represents the current state of the chat, particularly for image generation settings.
@@ -130,7 +131,7 @@ export class ChatVolley {
 	/**
 	 * The response from our system.
 	 */
-	public system_response: string;
+	public text_completion_response: TextCompletionResponse;
 
 	/**
 	 * The state of the chat at the start of the volley.
@@ -178,8 +179,8 @@ export class ChatVolley {
 	 * @param user_input - The user input received that began the volley.
 	 * @param prompt - The prompt that was passed to the image generator model.
 	 * @param negative_prompt - The negative prompt that was passed to the image generator model.
-	 * @param system_response - The response from the LLM.
-	 * @param response_to_user - The response we sent to the user.
+	 * @param text_completion_response - The whole response from the image generator prompt maker LLM.
+	 * @param response_sent_to_client - The response we sent to the user via the client websocket connection.
 	 * @param chat_state_at_start - The state of the chat at the start of the volley.
 	 * @param chat_state_at_end - The state of the chat at the end of the volley.
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
@@ -190,8 +191,8 @@ export class ChatVolley {
 		user_input: string,
 		prompt: string,
 		negative_prompt: string,
-		system_response: string,
-		response_to_user: string,
+		text_completion_response: TextCompletionResponse,
+		response_sent_to_client: string,
 		chat_state_at_start: CurrentChatState,
 		chat_state_at_end: CurrentChatState,
 		array_of_intent_detections: { complaint_type: string; complaint_text: string}[]
@@ -206,13 +207,13 @@ export class ChatVolley {
 				: getUnixTimestamp();
 
 		this.user_input = user_input;
-		this.system_response = system_response;
+		this.text_completion_response = text_completion_response;
 		this.chat_state_at_start = chat_state_at_start;
 		this.chat_state_at_end = chat_state_at_end;
 		this.array_of_intent_detections = array_of_intent_detections;
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
-		this.response_to_user = response_to_user;
+		this.response_to_user = response_sent_to_client;
 	}
 
 	/**

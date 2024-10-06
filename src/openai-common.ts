@@ -3,7 +3,7 @@
 
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions"
-import { OpenAIParams_text_completion } from "./openai-parameter-objects"
+import { OpenAIParams_text_completion, TextCompletionResponse } from "./openai-parameter-objects"
 import { getUnixTimestamp } from "./common-routines"
 
 export const oai = new OpenAI({
@@ -130,13 +130,7 @@ export async function chatCompletionImmediate(
 	userInput: string,
 	textCompletionParams: OpenAIParams_text_completion,
 	bIsJsonResponseExpected: boolean
-): Promise<{
-		intent_detector_id: string;
-		is_error: boolean;
-		error_message: string;
-		text_response: string;
-		json_response: object;
-		date_time_of_response: number }> {
+): Promise<TextCompletionResponse> {
 	if (!intentDetectorId) {
 		throw new Error("The intentDetectorId must not be empty.");
 	}

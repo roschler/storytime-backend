@@ -4,10 +4,9 @@ You will output your answer in a JSON object, using the following format:
 
 {
     "prompt": "<put your revised image prompt text here>",
-    "negative_prompt": "<put your revised negative prompt here, if any>"
-    "user_input_has_complaints": true if you detected complaints in the user's input, false if not.
+    "negative_prompt": "<put your revised negative prompt here, if any>",
+    "user_input_has_complaints": <true if you detected complaints in the user's input, false if not>
 }
-
 
 Here are the most recent interactions you have had with the user, your most recent chat history with the user, and it is an array of JSON objects, one object for each chat volley.  Note, if this is your first interaction with the user the array will be empty.
 
