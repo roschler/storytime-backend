@@ -25,3 +25,16 @@ export function isValidEnumImageGenerationModelId(enImageGenerationModelId: stri
 }
 
 // -------------------- END  : enumIntentDetectorId ------------
+
+// Some helpful types.
+
+/**
+ * This interface describes the temporary objects we
+ *  create from an of intent detector responses to
+ *  help us with analyzing the detections.
+ */
+export interface IntentJsonResponseObject {
+	intent_detector_id: string,
+	array_child_objects: object[]
+}
+

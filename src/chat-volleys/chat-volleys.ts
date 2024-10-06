@@ -31,6 +31,7 @@ import fs from "fs"
 import path from "node:path"
 import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
 import { TextCompletionResponse } from "../openai-parameter-objects"
+import { IntentJsonResponseObject } from "../enum-image-generation-models"
 
 /**
  * Represents the current state of the chat, particularly for image generation settings.
@@ -162,9 +163,10 @@ export class ChatVolley {
 	public response_to_user: string;
 
 	/**
-	 * Array of intent detections including complaint type and complaint text.
+	 * Array of intent detection JSON response objects that
+	 *  were provided by the LLM response.
 	 */
-	public array_of_intent_detections: { complaint_type: string; complaint_text: string }[];
+	public array_of_intent_detections: IntentJsonResponseObject[];
 
 	/**
 	 * Constructs an instance of ChatVolley.
@@ -195,7 +197,7 @@ export class ChatVolley {
 		response_sent_to_client: string,
 		chat_state_at_start: CurrentChatState,
 		chat_state_at_end: CurrentChatState,
-		array_of_intent_detections: { complaint_type: string; complaint_text: string}[]
+		array_of_intent_detections: IntentJsonResponseObject[]
 	) {
 		this.is_new_image = is_new_image;
 

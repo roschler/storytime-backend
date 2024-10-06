@@ -20,6 +20,13 @@ export const MIN_STEPS = 1;
 
 /**
  * Enum that contains all the intent detector IDs
+ *
+ * NOTE: Some detected attributes, for example,
+ * the "boring" image detection, is part of a
+ * large detection.  In the "boring" example,
+ * that attribute is one of the detections of the
+ * USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT
+ * intent detector.
  */
 export enum enumIntentDetectorId {
 	// User does or does not want text on the generated image.
@@ -28,8 +35,6 @@ export enum enumIntentDetectorId {
 	USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT = "user_complaint_image_quality_or_content",
 	// User is complaining about the generation speed.
 	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
-	// User wants more creativity or variation
-	USER_COMPLAINT_IMAGE_IS_BORING = "user_complaint_image_is_boring",
 }
 
 /**

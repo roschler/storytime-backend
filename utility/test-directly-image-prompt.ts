@@ -21,7 +21,7 @@ import {
 	readChatHistory,
 	readOrCreateChatHistory, writeChatHistory,
 } from "../src/chat-volleys/chat-volleys"
-import { enumImageGenerationModelId } from "../src/enum-image-generation-models"
+import { enumImageGenerationModelId, IntentJsonResponseObject } from "../src/enum-image-generation-models"
 import { ImageGeneratorLlmJsonResponse } from "../src/openai-parameter-objects"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
@@ -72,12 +72,12 @@ function generateHTML(imageUrls: string[]) {
 /**
  * Validates the boolean value for a given intent detector id and property name from an array of response objects.
  *
- * @param aryResponseObjs - The array of response objects to iterate over.
+ * @param aryJsonResponseObjs - The array of intent detector JSON response objects to iterate over.
  * @param intentDetectorId - The intent detector ID to search for.
  * @param propName - The property name to check within the matching object.
  */
 function getBooleanIntentDetectionValue(
-	aryResponseObjs: object[],
+	aryJsonResponseObjs: IntentJsonResponseObject[],
 	intentDetectorId: string,
 	propName: string
 ): boolean | null {
@@ -91,42 +91,57 @@ function getBooleanIntentDetectionValue(
 		throw new Error('The propName cannot be empty.');
 	}
 
-	// Iterate over aryResponseObjs
-	for (const obj of aryResponseObjs) {
+	let retValue: boolean | null = null
+
+	// Iterate over the extended JSON response objects
+	for (const jsonResponseObjExt of aryJsonResponseObjs) {
+
 		// Check if the object's intent_detector_id matches the provided intentDetectorId
-		if ((obj as any).intent_detector_id === intentDetectorId) {
-			// Check if the object has the property propName
-			if (!(propName in obj)) {
-				throw new Error(`The property '${propName}' does not exist in object with intent_detector_id '${intentDetectorId}'.`);
-			}
+		if (jsonResponseObjExt.intent_detector_id === intentDetectorId) {
 
-			const value = (obj as any)[propName];
+			// Iterate its child objects and look for a child object
+			//  with the desired property name.
+			jsonResponseObjExt.array_child_objects.forEach(
+				(childObj) => {
+					// Does the child object have a property with the desired
+					//  name?
+					const propValue = (childObj as any)[propName]
 
-			// Check if the value is boolean
-			if (typeof value !== 'boolean') {
-				throw new Error(`The property '${propName}' in object with intent_detector_id '${intentDetectorId}' is not a boolean.`);
-			}
+					if (typeof propValue !== 'undefined') {
+						// Check if the value is boolean
+						if (typeof propValue !== 'boolean') {
+							throw new Error(`The property '${propName}' in the child object with intent_detector_id '${intentDetectorId}' is not boolean.`);
+						}
+					}
 
-			return value;
+					// Found it.  We add the functionally unnecessary
+					//  because Typescript is not figuring out due
+					//  to the "undefined" check above, that propValue
+					//  must be boolean at this point.
+					retValue =
+						typeof propValue === 'undefined'
+							? null : propValue
+				}
+			)
 		}
 	}
 
 	// If no object with the matching intentDetectorId is found,
 	//  return NULL to let the caller know this.
-	return null;
+	return retValue;
 }
 
 /**
  * Retrieves the string value for a given intent detector id and property name from an array of response objects.
  *
- * @param {object[]} aryResponseObjs - The array of response objects to iterate over.
- * @param {string} intentDetectorId - The intent detector ID to search for.
- * @param {string} propName - The property name to check within the matching object.
+ * @param aryJsonResponseObjs - The array of JSON response objects to iterate over.
+ * @param intentDetectorId - The intent detector ID to search for.
+ * @param propName - The property name to check within the matching object.
+
  * @returns {string | null} - The string value found in the object for the given intent detector ID and property, or null if no match is found.
- * @throws {Error} If the property value is not a string or if the property is missing.
  */
 function getStringIntentDetectionValue(
-	aryResponseObjs: object[],
+	aryJsonResponseObjs: IntentJsonResponseObject[],
 	intentDetectorId: string,
 	propName: string
 ): string | null {
@@ -140,62 +155,111 @@ function getStringIntentDetectionValue(
 		throw new Error('The propName cannot be empty.');
 	}
 
-	// Iterate over aryResponseObjs
-	for (const obj of aryResponseObjs) {
+	let retValue: string | null = null
+
+	// Iterate over the extended JSON response objects
+	for (const jsonResponseObjExt of aryJsonResponseObjs) {
+
 		// Check if the object's intent_detector_id matches the provided intentDetectorId
-		if ((obj as any).intent_detector_id === intentDetectorId) {
-			// Check if the object has the property propName
-			if (!(propName in obj)) {
-				throw new Error(`The property '${propName}' does not exist in object with intent_detector_id '${intentDetectorId}'.`);
-			}
+		if (jsonResponseObjExt.intent_detector_id === intentDetectorId) {
 
-			const value = (obj as any)[propName];
+			// Iterate its child objects and look for a child object
+			//  with the desired property name.
+			jsonResponseObjExt.array_child_objects.forEach(
+				(childObj) => {
+					// Does the child object have a property with the desired
+					//  name?
+					const propValue = (childObj as any)[propName]
 
-			// Check if the value is a string
-			if (typeof value !== 'string') {
-				throw new Error(`The property '${propName}' in object with intent_detector_id '${intentDetectorId}' is not a string.`);
-			}
+					if (typeof propValue !== 'undefined') {
+						// Check if the value is a string
+						if (typeof propValue !== 'string') {
+							throw new Error(`The property '${propName}' in the child object with intent_detector_id '${intentDetectorId}' is not a string.`);
+						}
+					}
 
-			return value;
+					// Found it.  We add the functionally unnecessary
+					//  because Typescript is not figuring out due
+					//  to the "undefined" check above, that propValue
+					//  must be a string at this point.
+					retValue =
+						typeof propValue === 'undefined'
+							? null : propValue
+				}
+			)
 		}
 	}
 
-	// If no object with the matching intentDetectorId is found, return null
+	// If no object with the matching intentDetectorId is found,
+	//  return NULL to let the caller know this.
 	return null;
 }
 
 /**
- * Checks if the string value for a given intent detector ID and property name is equal to the desired value.
+ * Searches the array of JSON response objects for a JSON response
+ * object that has the desired property name and the desired
+ * property value to match.
  *
- * @param {object[]} aryResponseObjs - The array of response objects to iterate over.
- * @param {string} intentDetectorId - The intent detector ID to search for.
- * @param {string} propName - The property name to check within the matching object.
- * @param {string} desiredVal - The value to compare the string property value against.
- * @returns {boolean} - True if the property value matches the desired value, false otherwise.
- * @throws {Error} If the desiredVal is an empty string.
+ * @param aryJsonResponseObjs - The array of JSON response objects to iterate over.
+ * @param intentDetectorId - The intent detector ID to search for.
+ * @param propName - The property name to check within the matching object.
+ * @param desiredPropValue - The value we want to match for the property with
+ *  the desire property name.
+
+ * @returns {boolean} - Returns TRUE if a JSON response object has a child
+ *  object with the desired property name and matching property value.
+ *  FALSE if not.
  */
-function isStringIntentDetectionValueEqualTo(
-	aryResponseObjs: object[],
+function isStringIntentDetectedWithMatchingValue(
+	aryJsonResponseObjs: IntentJsonResponseObject[],
 	intentDetectorId: string,
 	propName: string,
-	desiredVal: string
+	desiredPropValue: string
 ): boolean {
-	// Validate desiredVal
-	if (!desiredVal.trim()) {
-		throw new Error('The desired value cannot be empty.');
+	// Validate intentDetectorId
+	if (!intentDetectorId.trim()) {
+		throw new Error('The intentDetectorId cannot be empty.');
 	}
 
-	// Get the string value or null from the getStringIntentDetectionValue function
-	const strValOrNull = getStringIntentDetectionValue(aryResponseObjs, intentDetectorId, propName);
-
-	// If no string value is found, return false
-	if (strValOrNull === null) {
-		return false;
+	// Validate propName
+	if (!propName.trim()) {
+		throw new Error('The propName cannot be empty.');
 	}
 
-	// Return whether the found value matches the desired value
-	return strValOrNull === desiredVal;
+	let retValue = false
+
+	// Iterate over the extended JSON response objects
+	for (const jsonResponseObjExt of aryJsonResponseObjs) {
+		// Check if the object's intent_detector_id matches the provided intentDetectorId
+		if (jsonResponseObjExt.intent_detector_id === intentDetectorId) {
+			// Iterate its child objects and look for a child object
+			//  with the desired property name.
+			retValue =
+				jsonResponseObjExt.array_child_objects.some(
+					(childObj) => {
+						// Does the child object have a property with the desired
+						//  name?
+						const propValue = (childObj as any)[propName]
+
+						if (typeof propValue !== 'undefined') {
+							// Check if the value is a string
+							if (typeof propValue !== 'string') {
+								throw new Error(`The property '${propName}' in the child object with intent_detector_id '${intentDetectorId}' is not a string.`);
+							}
+						}
+
+						// Does it match the desired value?
+						return propValue === desiredPropValue
+					}
+				)
+			}
+		}
+
+	// If no object with the matching intentDetectorId is found,
+	//  return NULL to let the caller know this.
+	return retValue
 }
+
 
 // -------------------- END  : INTENT DETECTOR RESULT ARRAY HELPER FUNCTIONS ------------
 
@@ -256,7 +320,7 @@ if (true) {
 
 			// The array of intent detector JSON response objects
 			//  will be put here.
-			let aryIntentDetectorJsonResponseObjs = [];
+			const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
 			if (bDoIntents) {
 
@@ -279,25 +343,25 @@ if (true) {
 				// TODO: Add recovery or mitigation code instead.
 				if (aryIntentDetectResultObjs.some(
 					(intentResultObj) =>
-						intentResultObj.is_error !== true
+						intentResultObj.is_error === true
 				)) {
 					throw new Error(`${errPrefix}One or more of the intent detector calls failed.`)
 				}
 
 				// Create an array of the intent detector JSON response
 				//  objects.
-				aryIntentDetectorJsonResponseObjs =
-					aryIntentDetectResultObjs.map(
-						(intentResultObj) => {
-							// Merge the intent detector ID into the
-							//  JSON response object.
-							const jsonResponseObj =
-								intentResultObj.result_or_error.json_response;
-							jsonResponseObj.intent_detector_id = intentResultObj.result_or_error.intent_detector_id
-
-							return jsonResponseObj
+				aryIntentDetectResultObjs.forEach(
+					(intentResultObj) => {
+						// Merge the intent detector ID into the
+						//  JSON response object.
+						const jsonResponseObj = {
+							intent_detector_id:  intentResultObj.result_or_error.intent_detector_id,
+							array_child_objects: intentResultObj.result_or_error.json_response
 						}
-					)
+
+						aryIntentDetectorJsonResponseObjs.push(jsonResponseObj)
+					}
+				)
 
 				if (aryIntentDetectorJsonResponseObjs.length < 1)
 					throw new Error(`${errPrefix}The array of intent detectors JSON response objects is empty.`);
@@ -336,7 +400,7 @@ if (true) {
 
 				// >>>>> Blurry image or lack of detail?
 				const bIsImageBlurry =
-					isStringIntentDetectionValueEqualTo(
+					isStringIntentDetectedWithMatchingValue(
 						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 						'complaint_type',
@@ -355,7 +419,7 @@ if (true) {
 
 				// >>>>> Image generation too slow?
 				const bIsImageGenerationTooSlow =
-					isStringIntentDetectionValueEqualTo(
+					isStringIntentDetectedWithMatchingValue(
 						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
 						'complaint_type',
@@ -376,7 +440,7 @@ if (true) {
 				// >>>>> User wants less variation, usually
 				//  via a "wrong_content" complaint
 				const bIsWrongContent =
-					isStringIntentDetectionValueEqualTo(
+					isStringIntentDetectedWithMatchingValue(
 						aryIntentDetectorJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 						'complaint_type',
@@ -395,9 +459,9 @@ if (true) {
 
 				// >>>>> User wants more variation
 				const bIsImageBoring =
-					isStringIntentDetectionValueEqualTo(
+					isStringIntentDetectedWithMatchingValue(
 						aryIntentDetectorJsonResponseObjs,
-						enumIntentDetectorId.USER_COMPLAINT_IMAGE_IS_BORING,
+						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 						'complaint_type',
 						'boring'
 					);

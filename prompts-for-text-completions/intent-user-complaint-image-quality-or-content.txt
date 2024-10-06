@@ -5,7 +5,7 @@ Task:
 Read the user's message and identify all complaints they mention about the image.
 For each complaint, determine the appropriate complaint type from the list below.
 
-Output a JSON array with one object per complaint.  Do not include any additional text outside the JSON response.
+Output a JSON array with one object per complaint.  Do not include any additional text outside the JSON response.  If you don't detect any complaints, then just output an empty array.
 
 Complaint Types:
 
