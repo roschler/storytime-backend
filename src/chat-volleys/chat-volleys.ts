@@ -155,6 +155,12 @@ export class ChatVolley {
 	public negative_prompt: string;
 
 	/**
+	 * The response that was shown to the user in the
+	 *  client.
+	 */
+	public response_to_user: string;
+
+	/**
 	 * Array of intent detections including complaint type and complaint text.
 	 */
 	public array_of_intent_detections: { complaint_type: string; complaint_text: string }[];
@@ -172,7 +178,8 @@ export class ChatVolley {
 	 * @param user_input - The user input received that began the volley.
 	 * @param prompt - The prompt that was passed to the image generator model.
 	 * @param negative_prompt - The negative prompt that was passed to the image generator model.
-	 * @param system_response - The response from our system.
+	 * @param system_response - The response from the LLM.
+	 * @param response_to_user - The response we sent to the user.
 	 * @param chat_state_at_start - The state of the chat at the start of the volley.
 	 * @param chat_state_at_end - The state of the chat at the end of the volley.
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
@@ -184,6 +191,7 @@ export class ChatVolley {
 		prompt: string,
 		negative_prompt: string,
 		system_response: string,
+		response_to_user: string,
 		chat_state_at_start: CurrentChatState,
 		chat_state_at_end: CurrentChatState,
 		array_of_intent_detections: { complaint_type: string; complaint_text: string}[]
@@ -204,6 +212,7 @@ export class ChatVolley {
 		this.array_of_intent_detections = array_of_intent_detections;
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
+		this.response_to_user = response_to_user;
 	}
 
 	/**

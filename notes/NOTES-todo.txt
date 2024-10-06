@@ -2,6 +2,10 @@
 
 REMEMBER!: tsconfig.json has sections that control the approved image download URLs!  We will need to add our AWS S3 bucket to this list.
 
+TRIAGE: Save the LoRA implementation for a micro-grant.  Don't try
+ to add it to the contest entry.  Save that time for Zora NFT
+ minting.
+
 IMPORTANT!: Take heed this comment for the Livepeer category we
     are targeting in the AI Video hackathon!:
 
@@ -13,7 +17,7 @@ IMPORTANT!: Take heed this comment for the Livepeer category we
 FUTURE FEATURES:
 
 - Incorporate the augmentation parameter some stable diffusion models support
-- Incorporate LoRA model usage
+- Incorporate LoRA model usage (micro-grant)
 - Detect new image creation session.  If that happens, reset the current state object for the chat session.
 
 NEXT:
@@ -26,41 +30,24 @@ NEXT:
       do still make the un-awaited async call to create an
       image.
 
+    > Use non-streamed text completions.
+
     NOTE: Need to update the field "lora" to "loras" and make it an object
      where each property is a lora model ID with its value being set to
      the correct version number, and then maintain that field.
 
 - Almost done with full chat volley pipeline:
 
-    1) Don't worry about websocket route yet.  Just get the
-      test harness working
-    2) At the top of the test harness, using a default user id,
-        open the ChatHistory json file for that iD.  If one
-        does not exist yet, use CurrentChatState.createDefaultObject()
-        to create the starting chat state. Otherwise, use ChatHistory.getLastVolley() to get the most recent chat volley and
-        use its CurrentChatState object as the starting chat
-        state object.
-    3) Do the current intent detector, main LLM interaction, and
-       image generation processing. NEED to add recent chat history
-       to the interstitial prompt with the prefix "Here is your recent
-       chat history with the user."
-    4) Then write a new chat volley object immediately, do not
+    1) Write a new chat volley object immediately, do not
         wait for the images to be generated.
 
-        + >>>>> Need code to make changes to the final chat state based on intent detector triggered model or model parameter adjustments
+    2) Integrate the test harness code into the websocket
+      request flow.
 
-
-
-Here is a seed prompt for the new main system prompt.  Take what is useful from the main tips document but leave out anything that overlaps the intent detectors.
-
-"Treat this document as a system prompt.  I will talk to you as if I am generating an image with stable diffusion.  Analyze my input as follow:
-
- - If you find anything in my input that should result in me using a different stable diffusion model, suggest the right model to use.
-
- - If you find anything in my input that should result in me changing the CFG or step model parameters, tell me what to do and how much to alter them
-
- - If my input contains comments that indicate I want a change made to the image or that I am having a problem getting the image content I want, suggest a better prompt to help me do that.
-"
+    3) Update the client to handle the new payloads from the
+      back-end server, flip the user input and system response
+      text areas vertically, make sure we have a nice busy
+      animation while waiting for image requests
 
 TESTS TO RUN:
 
@@ -70,7 +57,9 @@ TESTS TO RUN:
 
 FEATURES FOR AFTER CONTEST:
 
-We currently do detect when the user wants text on an image and then switch to the Flux model in that case.  But we don't have code to detect when they DON'T want text on an image anymore and to switch to another model, or at least no longer constrain the model choice to flux.
+* We currently do detect when the user wants text on an image and then switch to the Flux model in that case.  But we don't have code to detect when they DON'T want text on an image anymore and to switch to another model, or at least no longer constrain the model choice to flux.
+
+* Tag each image in the Carousel with the chat volley ID it is associated with, the one that generated it.  Then, when the scroll through the images, change the response window to the response belonging to the image.  If they enter a prompt, pass in the chat history using the associated chat volley (so use that index and BEFORE to build the chat history, not from the end of the chat history).
 
 NEEDED INFRASTRUCTURE:
 
