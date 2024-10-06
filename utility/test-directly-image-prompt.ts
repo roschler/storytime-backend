@@ -19,7 +19,7 @@ import {
 	ChatHistory, ChatVolley,
 	CurrentChatState,
 	readChatHistory,
-	readOrCreateChatHistory, writeChatHistory,
+	writeChatHistory,
 } from "../src/chat-volleys/chat-volleys"
 import { enumImageGenerationModelId, IntentJsonResponseObject } from "../src/enum-image-generation-models"
 import { ImageGeneratorLlmJsonResponse } from "../src/openai-parameter-objects"
@@ -276,7 +276,7 @@ if (true) {
 			//  ending state.  If not, create a default
 			//  chat state object.
 			const  chatHistoryObj =
-				await readOrCreateChatHistory(dummyUserId)
+				await readChatHistory(dummyUserId)
 
 			const chatState_start =
 				chatHistoryObj.getLastVolley()?.chat_state_at_start ?? CurrentChatState.createDefaultObject()

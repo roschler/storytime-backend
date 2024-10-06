@@ -98,6 +98,32 @@ export class CurrentChatState {
 
 		return newObj
 	}
+
+	// -------------------- BEGIN: SERIALIZATION METHODS ------------
+
+	// Serialization method
+	toJSON() {
+		return {
+			__type: 'CurrentChatState',
+			model_id: this.model_id,
+			loras: this.loras,
+			guidance_scale: this.guidance_scale,
+			steps: this.steps,
+			timestamp: this.timestamp,
+		};
+	}
+
+	// Deserialization method
+	static fromJSON(json: any): CurrentChatState {
+		return new CurrentChatState(
+			json.model_id,
+			json.loras,
+			json.guidance_scale,
+			json.steps
+		);
+	}
+
+	// -------------------- END  : SERIALIZATION METHODS ------------
 }
 
 
@@ -246,6 +272,43 @@ export class ChatVolley {
 		    }\n
 		`
 	}
+
+	// -------------------- BEGIN: SERIALIZATION METHODS ------------
+
+	// Serialization method
+	toJSON() {
+		return {
+			__type: 'ChatVolley',
+			is_new_image: this.is_new_image,
+			timestamp: this.timestamp,
+			user_input: this.user_input,
+			text_completion_response: this.text_completion_response,
+			chat_state_at_start: this.chat_state_at_start.toJSON(),
+			chat_state_at_end: this.chat_state_at_end.toJSON(),
+			prompt: this.prompt,
+			negative_prompt: this.negative_prompt,
+			response_to_user: this.response_to_user,
+			array_of_intent_detections: this.array_of_intent_detections,
+		};
+	}
+
+	// Deserialization method
+	static fromJSON(json: any): ChatVolley {
+		return new ChatVolley(
+			json.is_new_image,
+			json.timestamp,
+			json.user_input,
+			json.prompt,
+			json.negative_prompt,
+			json.text_completion_response,
+			json.response_to_user,
+			CurrentChatState.fromJSON(json.chat_state_at_start),
+			CurrentChatState.fromJSON(json.chat_state_at_end),
+			json.array_of_intent_detections
+		);
+	}
+
+	// -------------------- END  : SERIALIZATION METHODS ------------
 }
 
 // -------------------- END  : ChatVolley ------------
@@ -323,6 +386,25 @@ export class ChatHistory {
 
 		return strChatHistory
 	}
+
+	// -------------------- BEGIN: SERIALIZATION METHODS ------------
+
+	// Serialization method
+	toJSON() {
+		return {
+			__type: 'ChatHistory',
+			aryChatVolleys: this.aryChatVolleys.map(volley => volley.toJSON()),
+		};
+	}
+
+	// Deserialization method
+	static fromJSON(json: any): ChatHistory {
+		const history = new ChatHistory();
+		history.aryChatVolleys = json.aryChatVolleys.map((volley: any) => ChatVolley.fromJSON(volley));
+		return history;
+	}
+
+	// -------------------- END  : SERIALIZATION METHODS ------------
 }
 
 // -------------------- END  : ChatHistory ------------
@@ -362,15 +444,29 @@ export function buildChatHistoryFilename(userId: string): string {
 	return path.join(DIR_CHAT_HISTORY_FILES, filename);
 }
 
+// ***********************************************
+/**
+ * Writes the ChatHistory object to disk as a JSON file.
+ *
+ * @param {string} userId - The user ID associated with the chat history.
+ * @param {ChatHistory} chatHistory - The chat history object to write to disk.
+ */
+export async function writeChatHistory(userId: string, chatHistory: ChatHistory): Promise<void> {
+	const filename = buildChatHistoryFilename(userId);
+	const jsonData = JSON.stringify(chatHistory, null, 2);  // Pretty print the JSON
+
+	await writeJsonFile(filename, jsonData);
+}
+
 /**
  * Reads the chat history for a given user.
  *
  * @param {string} userId - The user ID whose chat history should be read.
  *
- * @returns {ChatHistory|null} The chat history object for the given user or NULL if one does not exist yet.
+ * @returns {ChatHistory} The chat history object for the given user.  If one does not exist yet a brand new chat history object will be returned.
  */
-export async function readChatHistory(userId: string): Promise<ChatHistory|null> {
-	const trimmedUserId = userId.trim();
+export async function readChatHistory(userId: string): Promise<ChatHistory>  {
+	const trimmedUserId = userId.trim()
 
 	// Validate that the userId is not empty
 	if (!trimmedUserId) {
@@ -381,89 +477,28 @@ export async function readChatHistory(userId: string): Promise<ChatHistory|null>
 	const fullPathToJsonFile = buildChatHistoryFilename(trimmedUserId);
 
 	// Check if the file exists
-	if (!fs.existsSync(fullPathToJsonFile)) {
-		return null
-	}
+	if (fs.existsSync(fullPathToJsonFile)) {
+		// -------------------- BEGIN: LOAD EXISTING FILE ------------
 
-	// Cast to unknown first, then to ChatHistory
-	const chatHistory =
-		await readJsonFile(fullPathToJsonFile) as unknown as ChatHistory;
+		const filename = buildChatHistoryFilename(userId);
+		const jsonData = await readJsonFile(filename);
+		const parsedData = JSON.parse(jsonData);
 
-	return chatHistory;
-}
+		if (parsedData.__type === 'ChatHistory') {
+			return ChatHistory.fromJSON(parsedData);
+		} else {
+			throw new Error("Invalid ChatHistory file format");
+		}
 
-/**
- * Writes the chat history for a given user.
- *
- * @param {string} userId - The user ID whose chat history should be written.
- * @param {ChatHistory} chatHistoryObj - The chat history object to write to the file.
- * @throws {Error} If the user ID is empty.
- */
-export async function writeChatHistory(userId: string, chatHistoryObj: ChatHistory): Promise<void> {
-	const trimmedUserId = userId.trim();
-
-	// Validate that the userId is not empty
-	if (!trimmedUserId) {
-		throw new Error('User ID cannot be empty.');
-	}
-
-	// Build the full path to the chat history file
-	const fullPathToJsonFile = buildChatHistoryFilename(trimmedUserId);
-
-	// Write the chat history object to the file
-
-	await writeJsonFile(fullPathToJsonFile, chatHistoryObj);
-}
-
-// -------------------- END  : READ/WRITE ChatHistory OBJECTS ------------
-
-// -------------------- BEGIN: UTILITY FUNCTIONS ------------
-
-/**
- * This function will return the existing chat history object
- *  associated with the given user ID, if one has been
- *  created already.  If not, it will return a brand
- *  new chat history object.
- *
- * @param userId - The ID of the user to get or create a
- *  chat history object for.
- */
-export async function readOrCreateChatHistory(userId: string): Promise<ChatHistory> {
-
-	if (userId.trim().length < 1)
-		throw new Error(`The user ID is empty or invalid.`);
-
-	let chatHistoryObj;
-
-	const chatHistoryObjOrNull =
-		await readChatHistory(userId)
-
-	if (chatHistoryObjOrNull === null) {
-		// Create a brand new chat history object.
-		chatHistoryObj = new ChatHistory()
+		// -------------------- END  : LOAD EXISTING FILE ------------
 	} else {
-		// Use the most recent chat state.
-		chatHistoryObj = chatHistoryObjOrNull as unknown as ChatHistory
+		// -------------------- BEGIN: BRAND NEW USER ------------
+
+		return new ChatHistory()
+
+		// -------------------- END  : BRAND NEW USER ------------
 	}
-
-	return chatHistoryObj
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // -------------------- END  : UTILITY FUNCTIONS ------------

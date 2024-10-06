@@ -98,6 +98,7 @@ export const generateImages_chat_bot =
 		// Including the loras field causes 400 Bad Request error at the current time
 		// loras: chatStateObj.loras,
 		// loras: {},
+		lora_models: {},
 		guidance_scale: chatStateObj.guidance_scale,
 		negative_prompt: negative_prompt,
 		width: image_size,
@@ -110,6 +111,11 @@ export const generateImages_chat_bot =
 	})
 
 	if (request.status !== StatusCodes.OK) {
+		/**
+		 * Remember, the Livepeer network returns a 503 service
+		 *  unavailable error if you pass in an invalid model ID.
+		 *  It does not mean (necessarily) that Livepeer is down.
+		 */
 		// The request failed.  Show the status text and throw an error.
 		const errMsg =
 			`(generateImages_chat_bot) The image request failed with status code(${request.status}) and this status text: ${request.statusText}\nService URL: ${request.url}`
