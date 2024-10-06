@@ -334,7 +334,7 @@ export class ChatHistory {
  * @constant
  * @type {string}
  */
-export const DIR_CHAT_HISTORY_FILES = 'chat-history-files';
+export const DIR_CHAT_HISTORY_FILES = '../chat-history-files';
 
 /**
  * Builds the full path to the user's chat history file.

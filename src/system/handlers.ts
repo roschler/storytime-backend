@@ -120,9 +120,8 @@ export const generateImages_chat_bot =
 	}
 
 	const { images } = await request.json()
-
-			if (!images || images.length === 0) {
-		throw new Error("No images returned from Livepeer")
+		if (!images || images.length === 0) {
+			throw new Error("No images returned from Livepeer")
 	}
 
 	try {
