@@ -5,7 +5,12 @@ import {
 	buildChatBotSystemPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
-import { enumIntentDetectorId, MIN_STEPS, NUM_STEPS_ADJUSTMENT_VALUE } from "../src/intents/enum-intents"
+import {
+	enumIntentDetectorId,
+	MIN_STEPS,
+	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
+	NUM_STEPS_ADJUSTMENT_VALUE,
+} from "../src/intents/enum-intents"
 import { generateImages_storytime } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
@@ -226,7 +231,7 @@ if (true) {
 
 			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
 
-			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus and too dark?  Also, I want the deer to be looking at the camera.";
+			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus and too dark?  Also, I want the deer to be looking at the camera.  Also, the image is really unimaginative.";
 
 			/*
 			const result =
@@ -349,7 +354,7 @@ if (true) {
 						aryJsonResponseObjs,
 						enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
 						'complaint_type',
-						'???'
+						'generate_image_too_slow'
 					);
 
 				if (bIsImageGenerationTooSlow) {
@@ -361,6 +366,46 @@ if (true) {
 
 					aryChangeDescriptions.push(
 						`I have increased the time spent on image generation to make the image look better.`)
+				}
+
+				// >>>>> User wants less variation, usually
+				//  via a "wrong_content" complaint
+				const bIsWrongContent =
+					isStringIntentDetectionValueEqualTo(
+						aryJsonResponseObjs,
+						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+						'complaint_type',
+						'wrong_content'
+					);
+
+				if (bIsWrongContent) {
+					// TODO: There should be an upper limit here.
+
+					// Increase the guidance value.
+					chatState_current.guidance_scale += NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
+
+					aryChangeDescriptions.push(
+						`I have told the engine to be less creative.`)
+				}
+
+				// >>>>> User wants more variation
+				const bIsImageBoring =
+					isStringIntentDetectionValueEqualTo(
+						aryJsonResponseObjs,
+						enumIntentDetectorId.USER_COMPLAINT_IMAGE_IS_BORING,
+						'complaint_type',
+						'boring'
+					);
+
+				if (bIsImageBoring) {
+					// Decrease the guidance value.
+					chatState_current.guidance_scale -= NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
+
+					if (chatState_current.steps < MIN_STEPS)
+						chatState_current.steps = MIN_STEPS;
+
+					aryChangeDescriptions.push(
+						`I have told the engine to be more creative.`)
 				}
 
 				// -------------------- END  : INTENT DETECTIONS TO STATE CHANGES ------------
@@ -411,6 +456,32 @@ if (true) {
 			});
 
 			// -------------------- END  : MAIN IMAGE GENERATOR PROMPT STEP ------------
+
+			// -------------------- BEGIN: MOCK CLIENT RESPONSE ------------
+
+			// Here we emulate what we would do if this was not
+			//  the test harness but instead, we were handling
+			//  a client websocket request.
+
+			// Build the response we send to the user.  We show
+			//  them the prompt the LLM gave us that we sent
+			//  to the image generation model, and the
+			//  text we assembled to tell the user what we
+			//  did in response to feedback they gave us
+			//  about the last image generation.
+
+			let responseToClient: string =
+				`Here is the new image request we just made:\n${revisedImageGenPrompt}\n`
+
+			if (aryChangeDescriptions.length > 0)
+				responseToClient +=
+					`and the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
+
+			responseToClient = `Let's see how this one turns out`
+
+			console.info(CONSOLE_CATEGORY, `SIMULATED CLIENT RESPONSE:\n${responseToClient}`)
+
+			// -------------------- END  : MOCK CLIENT RESPONSE ------------
 
 			// Initialize the state flags to make extractOpenAiResponseDetails()
 			//  happy.

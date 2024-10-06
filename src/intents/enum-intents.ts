@@ -5,6 +5,10 @@
 //  request by, up or down, based on feedback from the user.
 export const NUM_STEPS_ADJUSTMENT_VALUE = 3;
 
+// This is the amount to adjust the guidance scale during
+// an image generation, up or down, based on feedback from the user.
+export const NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE = 3;
+
 // This is the minimum number of steps we will make an
 //  image generation call with.
 export const MIN_STEPS = 1;
@@ -25,7 +29,7 @@ export enum enumIntentDetectorId {
 	// User is complaining about the generation speed.
 	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
 	// User wants more creativity or variation
-	USER_COMPLAINT_BORING = "user_complaint_boring",
+	USER_COMPLAINT_IMAGE_IS_BORING = "user_complaint_image_is_boring",
 }
 
 /**

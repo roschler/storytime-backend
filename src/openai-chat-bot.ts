@@ -5,6 +5,7 @@ import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
 import { ChatHistory } from "./chat-volleys/chat-volleys"
+import { WebSocket } from "ws"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
 
@@ -339,17 +340,27 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
  *  image with generative AI and the help of an assistant
  *  LLM.
  *
- * @param userPrompt - The prompt the user
- *  entered.
+ * @param client - The websocket client that sent the request
+ * @param userInput - The most recent input from the user
  * @param chatHistoryObj - The chat history object associated
- *  with the user.
+ *  with the user
  */
-export async function assistUserWithImageGeneration(userPrompt: string, chatHistoryObj: ChatHistory) {
+export async function assistUserWithImageGeneration(
+		client: WebSocket,
+		userInput: string,
+		chatHistoryObj: ChatHistory) {
 	console.log(
 		`OpenAI settings: top_p=${g_TextCompletionParams.top_p_param_val}, max_tokens=${g_TextCompletionParams.max_tokens_param_val}, temperature=${g_TextCompletionParams.temperature_param_val}, presence_penalty=${g_TextCompletionParams.presence_penalty_param_val}, frequency_penalty=${g_TextCompletionParams.frequency_penalty_param_val}`,
 	)
-	
-	const systemPrompt = buildChatBotSystemPrompt(userPrompt, chatHistoryObj)
 
-	return chatCompletionStream(systemPrompt, userPrompt, g_TextCompletionParams)
+	console.info(CONSOLE_CATEGORY, `Client ready state: ${client.readyState}`)
+	console.info(CONSOLE_CATEGORY, `userPrompt: ${userInput}`)
+	console.info(CONSOLE_CATEGORY, `Recent chat history:\n${chatHistoryObj.buildChatHistoryPrompt()}`)
+
+	// Once the test harness code is done.  Create a shareable
+	//  function that does what it does and call it here, but
+	//  with sending the post-processed LLM response to the
+	//  client immediately, and then calling without await
+	//  the image generation request.
+	throw new Error(`assistUserWithImageGeneration: Not implemented yet.`);
 }

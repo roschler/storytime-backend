@@ -11,7 +11,8 @@ export const oai = new OpenAI({
 })
 
 /**
- * This call makes the actual text completion call to the LLM.
+ * This call makes the actual text completion call to the LLM
+ *  and returns a streaming text completion.
  *
  * @param {String} systemPrompt - The prompt to use in the
  *  system role.
@@ -54,6 +55,49 @@ export async function chatCompletionStream(
 	})
 }
 
+/**
+ * This call makes the actual text completion call to the LLM
+ *  and returns a non-streamed completion.
+ *
+ * @param {String} systemPrompt - The prompt to use in the
+ *  system role.
+ * @param {String} userPrompt - The prompt entered by the user
+ *  to be included with the system prompt.
+ * @param {OpenAIParams_text_completion} textCompletionParams - A
+ *  valid OpenAI text completion call parameters object.
+ */
+export async function chatCompletionStatic(
+	systemPrompt: string,
+	userPrompt: string,
+	textCompletionParams: OpenAIParams_text_completion)
+{
+	console.log(
+		`Creating chat completion stream with system prompt: ${systemPrompt}`,
+	)
+	console.log(`User prompt: ${userPrompt}`)
+	const messages = [
+		{
+			role: "system",
+			content: systemPrompt,
+		},
+		{
+			role: "user",
+			content: userPrompt,
+		},
+	] as ChatCompletionMessageParam[]
+
+	// Call OpenAI's text completion API endpoint.
+	return oai.chat.completions.create({
+		model: textCompletionParams.model_param_val,
+		messages,
+		frequency_penalty: textCompletionParams.frequency_penalty_param_val,
+		presence_penalty: textCompletionParams.presence_penalty_param_val,
+		stream: false,
+		temperature: textCompletionParams.temperature_param_val,
+		max_tokens: textCompletionParams.max_tokens_param_val,
+		top_p: textCompletionParams.top_p_param_val,
+	})
+}
 /**
  * This call makes a non-streaming text completion call to the LLM.
  *

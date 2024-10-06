@@ -198,14 +198,10 @@ async function handleImageGenAssistanceRequest(
 
 	const stream =
 		await assistUserWithImageGeneration(
+			client,
 			payload.prompt,
 			chatHistoryObj)
-	state.streaming_text = true
-
-	// TODO: just put this in Fireproof instead so it's easy to sync locally
-	// For now, we are just streaming the output to a file so we can show
-	// past generations to users on the front page in a future version!
-	await extractOpenAiResponseDetails(state, stream, client, payload)
+	state.streaming_text = false
 }
 
 // Request some images from the Livepeer text-to-image API
