@@ -102,7 +102,7 @@ export class CurrentChatState {
 	// -------------------- BEGIN: SERIALIZATION METHODS ------------
 
 	// Serialization method
-	toJSON() {
+	public toJSON() {
 		return {
 			__type: 'CurrentChatState',
 			model_id: this.model_id,
@@ -121,6 +121,12 @@ export class CurrentChatState {
 			json.guidance_scale,
 			json.steps
 		);
+	}
+
+	// Use the serialization methods to clone a current chat state
+	//  object, to avoid unwanted couplings between objects.
+	public clone() {
+		return CurrentChatState.fromJSON(this.toJSON())
 	}
 
 	// -------------------- END  : SERIALIZATION METHODS ------------
@@ -276,7 +282,7 @@ export class ChatVolley {
 	// -------------------- BEGIN: SERIALIZATION METHODS ------------
 
 	// Serialization method
-	toJSON() {
+	public toJSON() {
 		return {
 			__type: 'ChatVolley',
 			is_new_image: this.is_new_image,
@@ -390,7 +396,7 @@ export class ChatHistory {
 	// -------------------- BEGIN: SERIALIZATION METHODS ------------
 
 	// Serialization method
-	toJSON() {
+	public toJSON() {
 		return {
 			__type: 'ChatHistory',
 			aryChatVolleys: this.aryChatVolleys.map(volley => volley.toJSON()),

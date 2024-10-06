@@ -281,10 +281,10 @@ if (true) {
 			const chatState_start =
 				chatHistoryObj.getLastVolley()?.chat_state_at_start ?? CurrentChatState.createDefaultObject()
 
-			// Make a clone of the starting chat state so we can
+			// Make a clone of the starting chat state so that we can
 			//  have it as a reference as we make state changes.
 			const chatState_current =
-				JSON.parse(JSON.stringify(chatState_start));
+				chatState_start.clone()
 
 			// const userInput = 'I want a sign on the wall that screams "Death to all dirty towels!';
 
@@ -428,7 +428,7 @@ if (true) {
 
 				if (bIsImageGenerationTooSlow) {
 					// Decrease the number of steps used.
-					chatState_current.step -= NUM_STEPS_ADJUSTMENT_VALUE
+					chatState_current.steps -= NUM_STEPS_ADJUSTMENT_VALUE
 
 					if (chatState_current.steps < MIN_STEPS)
 						chatState_current.steps = MIN_STEPS;
