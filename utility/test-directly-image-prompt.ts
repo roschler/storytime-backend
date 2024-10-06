@@ -5,7 +5,7 @@ import {
 	buildChatBotSystemPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector, processAllIntents, showIntentResultObjects,
 } from "../src/openai-chat-bot"
-import { enumIntentDetectorId } from "../src/intents/enum-intents"
+import { enumIntentDetectorId, MIN_STEPS, NUM_STEPS_ADJUSTMENT_VALUE } from "../src/intents/enum-intents"
 import { generateImages_storytime } from "../src/system/handlers"
 import fs from "fs"
 import path from "node:path"
@@ -16,6 +16,7 @@ import {
 	readChatHistory,
 	readOrCreateChatHistory,
 } from "../src/chat-volleys/chat-volleys"
+import { enumImageGenerationModelId } from "../src/enum-image-generation-models"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
 const CONSOLE_CATEGORY = 'test-directly-image-prompt';
@@ -60,6 +61,138 @@ function generateHTML(imageUrls: string[]) {
 	return htmlContent;
 }
 
+// -------------------- BEGIN: INTENT DETECTOR RESULT ARRAY HELPER FUNCTIONS ------------
+
+/**
+ * Validates the boolean value for a given intent detector id and property name from an array of response objects.
+ *
+ * @param aryResponseObjs - The array of response objects to iterate over.
+ * @param intentDetectorId - The intent detector ID to search for.
+ * @param propName - The property name to check within the matching object.
+ */
+function getBooleanIntentDetectionValue(
+	aryResponseObjs: object[],
+	intentDetectorId: string,
+	propName: string
+): boolean | null {
+	// Validate intentDetectorId
+	if (!intentDetectorId.trim()) {
+		throw new Error('The intentDetectorId cannot be empty.');
+	}
+
+	// Validate propName
+	if (!propName.trim()) {
+		throw new Error('The propName cannot be empty.');
+	}
+
+	// Iterate over aryResponseObjs
+	for (const obj of aryResponseObjs) {
+		// Check if the object's intent_detector_id matches the provided intentDetectorId
+		if ((obj as any).intent_detector_id === intentDetectorId) {
+			// Check if the object has the property propName
+			if (!(propName in obj)) {
+				throw new Error(`The property '${propName}' does not exist in object with intent_detector_id '${intentDetectorId}'.`);
+			}
+
+			const value = (obj as any)[propName];
+
+			// Check if the value is boolean
+			if (typeof value !== 'boolean') {
+				throw new Error(`The property '${propName}' in object with intent_detector_id '${intentDetectorId}' is not a boolean.`);
+			}
+
+			return value;
+		}
+	}
+
+	// If no object with the matching intentDetectorId is found,
+	//  return NULL to let the caller know this.
+	return null;
+}
+
+/**
+ * Retrieves the string value for a given intent detector id and property name from an array of response objects.
+ *
+ * @param {object[]} aryResponseObjs - The array of response objects to iterate over.
+ * @param {string} intentDetectorId - The intent detector ID to search for.
+ * @param {string} propName - The property name to check within the matching object.
+ * @returns {string | null} - The string value found in the object for the given intent detector ID and property, or null if no match is found.
+ * @throws {Error} If the property value is not a string or if the property is missing.
+ */
+function getStringIntentDetectionValue(
+	aryResponseObjs: object[],
+	intentDetectorId: string,
+	propName: string
+): string | null {
+	// Validate intentDetectorId
+	if (!intentDetectorId.trim()) {
+		throw new Error('The intentDetectorId cannot be empty.');
+	}
+
+	// Validate propName
+	if (!propName.trim()) {
+		throw new Error('The propName cannot be empty.');
+	}
+
+	// Iterate over aryResponseObjs
+	for (const obj of aryResponseObjs) {
+		// Check if the object's intent_detector_id matches the provided intentDetectorId
+		if ((obj as any).intent_detector_id === intentDetectorId) {
+			// Check if the object has the property propName
+			if (!(propName in obj)) {
+				throw new Error(`The property '${propName}' does not exist in object with intent_detector_id '${intentDetectorId}'.`);
+			}
+
+			const value = (obj as any)[propName];
+
+			// Check if the value is a string
+			if (typeof value !== 'string') {
+				throw new Error(`The property '${propName}' in object with intent_detector_id '${intentDetectorId}' is not a string.`);
+			}
+
+			return value;
+		}
+	}
+
+	// If no object with the matching intentDetectorId is found, return null
+	return null;
+}
+
+/**
+ * Checks if the string value for a given intent detector ID and property name is equal to the desired value.
+ *
+ * @param {object[]} aryResponseObjs - The array of response objects to iterate over.
+ * @param {string} intentDetectorId - The intent detector ID to search for.
+ * @param {string} propName - The property name to check within the matching object.
+ * @param {string} desiredVal - The value to compare the string property value against.
+ * @returns {boolean} - True if the property value matches the desired value, false otherwise.
+ * @throws {Error} If the desiredVal is an empty string.
+ */
+function isStringIntentDetectionValueEqualTo(
+	aryResponseObjs: object[],
+	intentDetectorId: string,
+	propName: string,
+	desiredVal: string
+): boolean {
+	// Validate desiredVal
+	if (!desiredVal.trim()) {
+		throw new Error('The desired value cannot be empty.');
+	}
+
+	// Get the string value or null from the getStringIntentDetectionValue function
+	const strValOrNull = getStringIntentDetectionValue(aryResponseObjs, intentDetectorId, propName);
+
+	// If no string value is found, return false
+	if (strValOrNull === null) {
+		return false;
+	}
+
+	// Return whether the found value matches the desired value
+	return strValOrNull === desiredVal;
+}
+
+// -------------------- END  : INTENT DETECTOR RESULT ARRAY HELPER FUNCTIONS ------------
+
 if (true) {
 	// Use an immediate invoked function expression, so that we
 //  can await the result.
@@ -75,8 +208,13 @@ if (true) {
 			const  chatHistoryObj =
 				await readOrCreateChatHistory(dummyUserId)
 
-			let chatState_start =
+			const chatState_start =
 				chatHistoryObj.getLastVolley() ?? CurrentChatState.createDefaultObject()
+
+			// Make a clone of the starting chat state so we can
+			//  have it as a reference as we make state changes.
+			const chatState_current =
+				JSON.parse(JSON.stringify(chatState_start));
 
 			// const userInput = 'I want a sign on the wall that screams "Death to all dirty towels!';
 
@@ -88,7 +226,7 @@ if (true) {
 
 			// const userInput = "I want there to be a sentence on the side of the horse and can you make the images generate faster?"
 
-			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus?  Also, I want the deer to be looking at the camera.";
+			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus and too dark?  Also, I want the deer to be looking at the camera.";
 
 			/*
 			const result =
@@ -105,6 +243,11 @@ if (true) {
 
 			const bDoIntents = true;
 
+			// This array will accumulate the text we should
+			//  add to the response to the user, that describe
+			//  what changes we made to the chat session state.
+			const aryChangeDescriptions = [];
+
 			if (bDoIntents) {
 
 				// Run the user input by all intents.
@@ -120,12 +263,105 @@ if (true) {
 				// Dump the results to the console.
 				showIntentResultObjects(aryIntentDetectResultObjs);
 
+				// If any of the results errored out, for now, we throw
+				//  an error.
+				//
+				// TODO: Add recovery or mitigation code instead.
+				if (aryIntentDetectResultObjs.some(
+					(intentResultObj) =>
+						intentResultObj.is_error !== true
+				)) {
+					throw new Error(`${errPrefix}One or more of the intent detector calls failed.`)
+				}
+
+				// Create an array of the intent detector JSON response
+				//  objects.
+				const aryJsonResponseObjs =
+					aryIntentDetectResultObjs.map(
+						(intentResultObj) => {
+							// Merge the intent detector ID into the
+							//  JSON response object.
+							const jsonResponseObj =
+								intentResultObj.result_or_error.json_response;
+							jsonResponseObj.intent_detector_id = intentResultObj.result_or_error.intent_detector_id
+
+							return jsonResponseObj
+						}
+					)
+
+				if (aryJsonResponseObjs.length < 1)
+					throw new Error(`${errPrefix}The array of intent detectors JSON response objects is empty.`);
+
 				// -------------------- BEGIN: INTENT DETECTIONS TO STATE CHANGES ------------
 
-				// Now we examine the intent detections to see if we
-				//  should make any state changes.
+				// Now we examine the JSON response objects received from
+				//  the intent detections to see if we should make any
+				//  state changes.
 
+				// >>>>> Text on image wanted?
+				const bIsTextOnImageDesired =
+					getBooleanIntentDetectionValue(
+						aryJsonResponseObjs,
+						enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
+						'is_text_wanted_on_image'
+						);
 
+				if (bIsTextOnImageDesired) {
+					// Switch to the FLUX model since it is
+					//  much better for text on images.
+					chatState_current.model_id =
+						enumImageGenerationModelId.FLUX
+
+					aryChangeDescriptions.push(
+						`I will use an engine that is good at creating text on images.`
+					)
+				} else {
+					// We don't switch away from flux to
+					//  another model just because the
+					//  user did not indicate they want
+					//  text on images this volley.  This
+					//  may be a continuation of a current
+					//  text on image generation session.
+				}
+
+				// >>>>> Blurry image or lack of detail?
+				const bIsImageBlurry =
+					isStringIntentDetectionValueEqualTo(
+						aryJsonResponseObjs,
+						enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+						'complaint_type',
+						'blurry'
+					);
+
+				if (bIsImageBlurry) {
+					// TODO: There should be an upper limit here.
+
+					// Increase the number of steps used.
+					chatState_current.steps += NUM_STEPS_ADJUSTMENT_VALUE;
+
+					aryChangeDescriptions.push(
+						`I have increased the time spent on image generation to make the image look better.`)
+				}
+
+				// >>>>> Image generation too slow?
+				const bIsImageGenerationTooSlow =
+					isStringIntentDetectionValueEqualTo(
+						aryJsonResponseObjs,
+						enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
+						'complaint_type',
+						'???'
+					);
+
+				if (bIsImageGenerationTooSlow) {
+					// Decrease the number of steps used.
+					chatState_current.step -= NUM_STEPS_ADJUSTMENT_VALUE
+
+					if (chatState_current.steps < MIN_STEPS)
+						chatState_current.steps = MIN_STEPS;
+
+					aryChangeDescriptions.push(
+						`I have increased the time spent on image generation to make the image look better.`)
+				}
 
 				// -------------------- END  : INTENT DETECTIONS TO STATE CHANGES ------------
 			}

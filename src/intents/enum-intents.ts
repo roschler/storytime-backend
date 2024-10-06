@@ -1,4 +1,13 @@
-// This module contains the IDs for the intents we created.
+// This module contains the IDs for the intents we created and some other
+//  elements related to changes we make because of detected intents.
+
+// This is the number of steps to adjust an image generation
+//  request by, up or down, based on feedback from the user.
+export const NUM_STEPS_ADJUSTMENT_VALUE = 3;
+
+// This is the minimum number of steps we will make an
+//  image generation call with.
+export const MIN_STEPS = 1;
 
 // -------------------- BEGIN: enumIntentDetectorId ------------
 
@@ -15,6 +24,8 @@ export enum enumIntentDetectorId {
 	USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT = "user_complaint_image_quality_or_content",
 	// User is complaining about the generation speed.
 	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
+	// User wants more creativity or variation
+	USER_COMPLAINT_BORING = "user_complaint_boring",
 }
 
 /**

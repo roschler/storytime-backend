@@ -8,13 +8,12 @@ import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
 import { StateType, ErrorType, RequestPayload_chat_bot } from "./system/types"
 import {
-	generateImages_storytime,
 	sendStateMessage,
 	sendErrorMessage,
 	sendImageMessage,
 	sendTextMessage,
 	saveImageURLs,
-	saveMetaData_chat_bot, generateImages_chat_bot,
+	saveMetaData_chat_bot
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -23,6 +22,7 @@ import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
+import { readOrCreateChatHistory } from "./chat-volleys/chat-volleys"
 
 // What do we say when the user is trying to be problematic?
 
@@ -188,15 +188,18 @@ export async function extractOpenAiResponseDetails(state: StateType, stream: Str
 async function handleImageGenAssistanceRequest(
 	client: WebSocket,
 	state: StateType,
-	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion },
+	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion, user_id: string },
 ) {
 	// Load the chat history object for this user.
 	//  If one has not been created yet, create a
 	//  brand new one.
-
+	const chatHistoryObj =
+		await readOrCreateChatHistory(payload.user_id)
 
 	const stream =
-		await assistUserWithImageGeneration(payload.prompt)
+		await assistUserWithImageGeneration(
+			payload.prompt,
+			chatHistoryObj)
 	state.streaming_text = true
 
 	// TODO: just put this in Fireproof instead so it's easy to sync locally
@@ -277,11 +280,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 			await handleImageGenAssistanceRequest(client, state, message.payload);
 
 			// Extract the image generation prompt from the response.
-			const imageGenerationPrompt =
-				extractImageGenerationPrompt(message)
-
-			// Now generate the image.
-			handleImageRequest(client, state, {prompt: imageGenerationPrompt });
+			// const imageGenerationPrompt = extractImageGenerationPrompt(message)
 		}
 	});
 }

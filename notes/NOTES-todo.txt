@@ -14,8 +14,17 @@ FUTURE FEATURES:
 
 - Incorporate the augmentation parameter some stable diffusion models support
 - Incorporate LoRA model usage
+- Detect new image creation session.  If that happens, reset the current state object for the chat session.
 
 NEXT:
+
+    - CAN'T USE STREAMING LLM COMPLETIONS. We are not piping the
+      text received from the LLm to the client as it comes in
+      like Storytime does because expects a story.  Instead, we
+      receive the improved prompt text from the LLM and send
+      it to the client after post-processing it.  However, we
+      do still make the un-awaited async call to create an
+      image.
 
     NOTE: Need to update the field "lora" to "loras" and make it an object
      where each property is a lora model ID with its value being set to
@@ -58,6 +67,10 @@ TESTS TO RUN:
 - Need to figure out the sweet spot in CFG and STEPS for the FLUX model to get clear, legible text.  Use the prompt below and try the major CFG STEPS value pairs, writing the generated image to a file that bears the CFG and STEPS values in the primary file name.  Have GPT write the code.
 
 "A large polar bear in profile, looking down at a smaller seal, while the seal lies on a sandy beach making direct eye contact with the camera. Both are far from the ocean, with a vast stretch of beach behind them. The scene has a surreal, dreamlike atmosphere, with soft pastel-colored skies, and the ocean in the far background. A wooden sign nearby reads "Don't feed the seals!" in large easy to see letters. The polar bear is towering over the seal, with exaggerated size contrast, photorealistic details, soft shadows, and a vibrant, painterly style"
+
+FEATURES FOR AFTER CONTEST:
+
+We currently do detect when the user wants text on an image and then switch to the Flux model in that case.  But we don't have code to detect when they DON'T want text on an image anymore and to switch to another model, or at least no longer constrain the model choice to flux.
 
 NEEDED INFRASTRUCTURE:
 
