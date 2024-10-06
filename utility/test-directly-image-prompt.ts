@@ -437,7 +437,15 @@ if (true) {
 						`I have increased the time spent on image generation to make the image look better.`)
 				}
 
-				// >>>>> User wants less variation, usually
+				// -------------------- BEGIN: VARIATION UP/DOWN TRIAGE ------------
+
+				// If the user reports wrong content at the same time the
+				//  want more variation, the two opposing adjustments to
+				//  guidance_scale will conflict.  Therefore, we check for
+				//  those two intent detections together, before taking
+				//  action on them.
+
+				// >>>>> Check for the user wanting less variation, usually
 				//  via a "wrong_content" complaint
 				const bIsWrongContent =
 					isStringIntentDetectedWithMatchingValue(
@@ -447,17 +455,7 @@ if (true) {
 						'wrong_content'
 					);
 
-				if (bIsWrongContent) {
-					// TODO: There should be an upper limit here.
-
-					// Increase the guidance value.
-					chatState_current.guidance_scale += NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
-
-					aryChangeDescriptions.push(
-						`I have told the engine to be less creative.`)
-				}
-
-				// >>>>> User wants more variation
+				// >>>>> Check for the user wanting more variation
 				const bIsImageBoring =
 					isStringIntentDetectedWithMatchingValue(
 						aryIntentDetectorJsonResponseObjs,
@@ -466,7 +464,25 @@ if (true) {
 						'boring'
 					);
 
-				if (bIsImageBoring) {
+				// We favor the wrong content complaint over the image is
+				//  boring complaint.
+				if (bIsWrongContent) {
+					// TODO: There should be an upper limit here.
+
+					// Increase the guidance value.
+					chatState_current.guidance_scale += NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
+
+					let changeDescription =
+						`I have told the engine to be less creative.`
+
+					// If we also have a boring image complaint, modify the change
+					//  description to tell the user that we will concentrate on
+					//  getting the image content correct first.
+					if (bIsImageBoring)
+						changeDescription += ` Let's concentrate on getting the image content correct before trying to be more creative.`
+
+					aryChangeDescriptions.push(changeDescription)
+				} else if (bIsImageBoring) {
 					// Decrease the guidance value.
 					chatState_current.guidance_scale -= NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
 
@@ -476,6 +492,8 @@ if (true) {
 					aryChangeDescriptions.push(
 						`I have told the engine to be more creative.`)
 				}
+
+				// -------------------- END  : VARIATION UP/DOWN TRIAGE ------------
 
 				// -------------------- END  : INTENT DETECTIONS TO STATE CHANGES ------------
 			}
@@ -512,10 +530,12 @@ if (true) {
 				jsonResponse.negative_prompt ?? '';
 
 			const aryImageUrls =
+				// https://dream-gateway.livepeer.cloud/text-to-image
 				await generateImages_chat_bot(
 					revisedImageGenPrompt,
 					jsonResponse.negative_prompt,
 					chatState_current)
+				// await generateImages_storytime(revisedImageGenPrompt)
 
 			// Generate the HTML
 			const htmlContent = generateHTML(aryImageUrls);

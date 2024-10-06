@@ -313,7 +313,6 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
 	const chatHistorySummaryAsText =
 		chatHistoryObj.buildChatHistoryPrompt()
 
-
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];
 

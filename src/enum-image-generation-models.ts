@@ -26,6 +26,17 @@ export function isValidEnumImageGenerationModelId(enImageGenerationModelId: stri
 
 // -------------------- END  : enumIntentDetectorId ------------
 
+// Some defaults.
+// This model leads to a service unavailable message: 502
+// const DEFAULT_IMAGE_GENERATION_MODEL_ID = 'RealVisXL_V4.0_Lightning';
+export const DEFAULT_IMAGE_GENERATION_MODEL_ID = enumImageGenerationModelId.LIGHTNING;
+// If this value is empty, then we are not using a LoRA
+//  model by default.
+// const DEFAULT_LORA_MODEL_ID = '';
+export const DEFAULT_GUIDANCE_SCALE = 7.5;
+export const DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS  = 20;
+
+
 // Some helpful types.
 
 /**

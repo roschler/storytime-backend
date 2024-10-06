@@ -38,6 +38,11 @@ NEXT:
 
 - Almost done with full chat volley pipeline:
 
+    FUN PROBLEM: Currently the intent detectors can lead to conflicting
+     adjustments, like when the user says the image boring but also
+     reports a "wrong_content" complaint.  The former decreases
+     guidance_scale and the latter increases it.
+
     1) Write a new chat volley object immediately, do not
         wait for the images to be generated.
 

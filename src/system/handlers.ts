@@ -11,6 +11,7 @@ import {
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
 import { CurrentChatState } from "../chat-volleys/chat-volleys"
+import { StatusCodes } from 'http-status-codes';
 
 // Pull in all of our environment variables
 // and set defaults if any of them are missing
@@ -89,10 +90,14 @@ export const generateImages_chat_bot =
 
 	let urls
 
+	let x= negative_prompt
+
 	const body = {
 		prompt: prompt,
 		model_id: chatStateObj.model_id,
-		lora: chatStateObj.loras,
+		// Including the loras field causes 400 Bad Request error at the current time
+		// loras: chatStateObj.loras,
+		// loras: {},
 		guidance_scale: chatStateObj.guidance_scale,
 		negative_prompt: negative_prompt,
 		width: image_size,
@@ -104,8 +109,19 @@ export const generateImages_chat_bot =
 		body: JSON.stringify(body),
 	})
 
+	if (request.status !== StatusCodes.OK) {
+		// The request failed.  Show the status text and throw an error.
+		const errMsg =
+			`(generateImages_chat_bot) The image request failed with status code(${request.status}) and this status text: ${request.statusText}\nService URL: ${request.url}`
+
+		console.error(errMsg)
+
+		throw new Error(errMsg);
+	}
+
 	const { images } = await request.json()
-	if (!images || images.length === 0) {
+
+			if (!images || images.length === 0) {
 		throw new Error("No images returned from Livepeer")
 	}
 

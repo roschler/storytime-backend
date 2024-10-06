@@ -7,12 +7,6 @@
 //  generation parameters.
 import { getUnixTimestamp } from "../common-routines"
 
-const DEFAULT_IMAGE_GENERATION_MODEL_ID = 'RealVisXL_V4.0_Lightning';
-// If this value is empty, then we are not using a LoRA
-//  model by default.
-// const DEFAULT_LORA_MODEL_ID = '';
-const DEFAULT_GUIDANCE_SCALE = 7.5;
-const DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS  = 20;
 /*
 The parentheses in the recommended negative prompt are part of the syntax used to influence how strongly the model weighs certain words or phrases. Here's a breakdown:
 
@@ -31,7 +25,12 @@ import fs from "fs"
 import path from "node:path"
 import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
 import { TextCompletionResponse } from "../openai-parameter-objects"
-import { IntentJsonResponseObject } from "../enum-image-generation-models"
+import {
+	DEFAULT_GUIDANCE_SCALE,
+	DEFAULT_IMAGE_GENERATION_MODEL_ID, DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS,
+	enumImageGenerationModelId,
+	IntentJsonResponseObject,
+} from "../enum-image-generation-models"
 
 /**
  * Represents the current state of the chat, particularly for image generation settings.
@@ -97,7 +96,7 @@ export class CurrentChatState {
 				DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS
 			);
 
-		return newObj;
+		return newObj
 	}
 }
 
