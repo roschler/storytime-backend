@@ -21,7 +21,7 @@ const model_id = process.env.LIVEPEER_SD_MODEL_ID ?? "ByteDance/SDXL-Lightning"
 const negative_prompt = process.env.LIVEPEER_SD_NEGATIVE_PROMPT ?? undefined
 const image_size = Number(process.env.LIVEPEER_SD_IMAGE_SIZE ?? "1024")
 const guidance_scale = Number(process.env.LIVEPEER_SD_GUIDANCE ?? "15")
-const num_images = Number(process.env.LIVEPEER_SD_IMAGE_COUNT ?? "2")
+const num_images = Number(process.env.LIVEPEER_SD_IMAGE_COUNT ?? "1")
 
 const livePeerRequestOptions = {
 	method: "POST",

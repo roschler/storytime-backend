@@ -531,7 +531,7 @@ export async function processChatVolley(
 		responseSentToClient +=
 			`and the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
 
-	responseSentToClient += `Let's see how this one turns out`
+	responseSentToClient += `\nLet's see how this one turns out`
 
 	// Now send the response message to the client while we make
 	//  the image request.

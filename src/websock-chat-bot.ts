@@ -225,10 +225,10 @@ async function wsConnection(
 				// Every request must have a user ID and user input fields.
 				const { user_id, prompt } = message.payload;
 
-				if (user_id.trim().length < 1)
+				if (!user_id || user_id.trim().length < 1)
 					throw new Error(`BAD REQUEST: User ID is missing.`);
 
-				if (prompt.trim().length < 1)
+				if (!prompt || prompt.trim().length < 1)
 					throw new Error(`BAD REQUEST: User input is missing.`);
 
 				// Create a unique request ID.
