@@ -69,8 +69,17 @@ if (true) {
 
 			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus and too dark?  Also, I want the deer to be looking at the camera.  Also, the image is really unimaginative.";
 
+			// processChatVolley needs a state object.
+			const initialState = {
+				streaming_audio: false,
+				streaming_text: false,
+				waiting_for_images: false,
+				current_request_id: "",
+				state_change_message: ""
+			};
+
 			const aryImageUrls =
-				await processChatVolley(dummyUserId, userInput)
+				await processChatVolley(null, initialState, dummyUserId, userInput)
 
 			// Generate the HTML
 			const htmlContent = generateHTML(aryImageUrls);

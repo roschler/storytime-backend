@@ -233,14 +233,14 @@ function isStringIntentDetectedWithMatchingValue(
  * @param userId_in - The ID of the current user.
  * @param userInput_in - The latest input from that user.
  *
- * @return - Returns TRUE if the chat volley worked
- *  properly, FALSE if not.
+ * @return - Returns the array of images generated if
+ *  successful, throws an error if not.
  */
 export async function processChatVolley(
-		client: WebSocket,
+		client: WebSocket | null,
 		initialState: StateType,
 		userId_in: string,
-		userInput_in: string): Promise<boolean> {
+		userInput_in: string): Promise<string[]> {
 
 	const userId = userId_in.trim()
 
@@ -601,7 +601,7 @@ export async function processChatVolley(
 		current_request_id: "",
 	};
 
-	return true
+	return aryImageUrls
 }
 
 // -------------------- END  : MAIN FUNCTION ------------
