@@ -90,14 +90,9 @@ export const generateImages_chat_bot =
 
 	let urls
 
-	let x= negative_prompt
-
 	const body = {
 		prompt: prompt,
 		model_id: chatStateObj.model_id,
-		// Including the loras field causes 400 Bad Request error at the current time
-		// loras: chatStateObj.loras,
-		// loras: {},
 		lora_models: {},
 		guidance_scale: chatStateObj.guidance_scale,
 		negative_prompt: negative_prompt,
@@ -105,6 +100,10 @@ export const generateImages_chat_bot =
 		height: image_size,
 		num_images_per_prompt: num_images,
 	}
+
+	// Test SG161222/RealVisXL_V4.0_Lightning model.
+		body.model_id = 'SG161222/RealVisXL_V4.0_Lightning'
+
 	const request = await _request({
 		...livePeerRequestOptions,
 		body: JSON.stringify(body),
