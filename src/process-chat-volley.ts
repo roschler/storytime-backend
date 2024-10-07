@@ -1,5 +1,6 @@
 // This module includes code for processing a chat volley.
 
+import type WebSocket from "ws"
 import { ChatVolley, CurrentChatState, readChatHistory, writeChatHistory } from "./chat-volleys/chat-volleys"
 import { enumImageGenerationModelId, IntentJsonResponseObject } from "./enum-image-generation-models"
 import {
@@ -16,7 +17,8 @@ import {
 } from "./intents/enum-intents"
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse } from "./openai-parameter-objects"
-import { generateImages_chat_bot } from "./system/handlers"
+import { generateImages_chat_bot, sendStateMessage } from "./system/handlers"
+import { StateType } from "./system/types"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -223,10 +225,17 @@ function isStringIntentDetectedWithMatchingValue(
  * This function processes one chat volley for the given
  *  user.
  *
- * @param userId_in - The ID of the current user
- * @param userInput_in - The latest input from that user
+ * @param client - The client WebSocket connection we are
+ *  servicing.  Pass NULL if this call is being made from
+ *  a test harness.
+ * @param initialState - The initial state of the session
+ *  at the top of this call, before we (may) alter it
+ * @param userId_in - The ID of the current user.
+ * @param userInput_in - The latest input from that user.
  */
 export async function processChatVolley(
+		client: WebSocket,
+		initialState: StateType,
 		userId_in: string,
 		userInput_in: string): Promise<string[]> {
 
@@ -281,6 +290,16 @@ export async function processChatVolley(
 	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
 	if (bDoIntents) {
+		// >>>>> Status message: Tell the client we are thinking.
+		if (client) {
+			let newState = initialState
+
+			// We haven't started the image request yet but
+			//  overall, we are indeed waiting for images.
+			newState.waiting_for_images = true
+
+			sendStateMessage(client, newState)
+		}
 
 		// Run the user input by all intents.
 		const aryIntentDetectResultObjs =

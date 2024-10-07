@@ -38,6 +38,8 @@ NEXT:
 
 - Almost done with full chat volley pipeline:
 
+    NEED DEFAULT NEGATIVE PROMPT!
+
     FUN PROBLEM: Currently the intent detectors can lead to conflicting
      adjustments, like when the user says the image boring but also
      reports a "wrong_content" complaint.  The former decreases

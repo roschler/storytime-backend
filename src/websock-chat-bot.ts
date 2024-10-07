@@ -22,7 +22,7 @@ import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { readOrCreateChatHistory } from "./chat-volleys/chat-volleys"
+import { readChatHistory } from "./chat-volleys/chat-volleys"
 
 // What do we say when the user is trying to be problematic?
 
@@ -184,44 +184,6 @@ export async function extractOpenAiResponseDetails(state: StateType, stream: Str
 	return allTextElements;
 }
 
-// Create a completion stream from OpenAI and pipe it to the client
-async function handleImageGenAssistanceRequest(
-	client: WebSocket,
-	state: StateType,
-	payload: { prompt: string, textCompletionParams: OpenAIParams_text_completion, user_id: string },
-) {
-	// Load the chat history object for this user.
-	//  If one has not been created yet, create a
-	//  brand new one.
-	const chatHistoryObj =
-		await readOrCreateChatHistory(payload.user_id)
-
-	const stream =
-		await assistUserWithImageGeneration(
-			client,
-			payload.prompt,
-			chatHistoryObj)
-	state.streaming_text = false
-}
-
-// Request some images from the Livepeer text-to-image API
-async function handleImageRequest(
-	client: WebSocket,
-	state: StateType,
-	payload: RequestPayload_chat_bot,
-) {
-
-	console.log(`Requesting images:\nprompt -> : ${payload.prompt}`)
-
-	let urls: string[] = []
-	// const urls = await generateImages_chat_bot(prompt,)
-	throw new Error(`Not implemented yet.`);
-
-
-	sendImageMessage(client, { urls })
-	saveImageURLs(state.current_request_id, urls)
-}
-
 /**
  * This is the WebSocket connection handler.
  *
@@ -248,8 +210,13 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 
 	// The handler for new messages.
 	client.on("message", async (raw) => {
+
+		// Parse out the JSON message object.
 		const message = JSON.parse(raw.toString());
+
+		// Is it a request message/
 		if (message.type === "request") {
+			// Yes.  Process a chat volley.
 			const { prompt } = message.payload;
 			state.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
@@ -260,7 +227,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 				console.log(`User prompt was flagged as harmful: ${prompt}`);
 
 				// Tell the client the prompt was considered harmful
-				//  so it can notify the user.
+				//  so that it can notify the user.
 				sendErrorMessage(client, {
 					error: badPromptError,
 				});
@@ -269,11 +236,10 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 
 			// Submit the request to the LLM to get the image prompt
 			//  we should send to Livepeer for image generation purposes.
-			//
-			// NOTE: We await the call because we need to know what the
-			//  prompt for the image generation request is before making
-			//  the request to Livepeer.
-			await handleImageGenAssistanceRequest(client, state, message.payload);
+
+
+
+			// await handleImageGenAssistanceRequest(client, state, message.payload);
 
 			// Extract the image generation prompt from the response.
 			// const imageGenerationPrompt = extractImageGenerationPrompt(message)
