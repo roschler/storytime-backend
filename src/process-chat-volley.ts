@@ -525,7 +525,7 @@ export async function processChatVolley(
 	//  about the last image generation.
 
 	let responseSentToClient: string =
-		`Here is the new image request we just made:\n${revisedImageGenPrompt}\n`
+		`Here is the new image request we just made:\n\n"${revisedImageGenPrompt}"\n`
 
 	if (aryChangeDescriptions.length > 0)
 		responseSentToClient +=
@@ -534,17 +534,29 @@ export async function processChatVolley(
 	responseSentToClient += `\nLet's see how this one turns out`
 
 	// Now send the response message to the client while we make
-	//  the image request.
+	//  the image generation request.
 	//
-	// >>>>> Status message: Tell the client the prompt we created
-	//   and that we are waiting for the image to generate.
+	// >>>>> Status message: Tell the client we have made the
+	//  image request
 	if (client) {
+		let newState = initialState
+
+		// Make sure the "waiting for images" state is set
+		newState.waiting_for_images = false
+		newState.state_change_message = 'Requesting image from Livepeer...'
+
+		sendStateMessage(
+			client,
+			newState
+		)
 		sendTextMessage(
 				client,
 			{
 				delta: responseSentToClient
 			}
 		)
+
+
 	}
 
 	// -------------------- END  : CREATE RESPONSE FOR USER ------------
@@ -588,7 +600,15 @@ export async function processChatVolley(
 	console.info(CONSOLE_CATEGORY, `SIMULATED CLIENT RESPONSE:\n${responseSentToClient}`)
 
 	if (client) {
+		let newState = initialState
+
 		sendImageMessage(client, { urls: aryImageUrls})
+
+		// Make sure the "waiting for images" state is set
+		newState.waiting_for_images = false
+		newState.state_change_message = ''
+
+		sendStateMessage(client, newState)
 	}
 
 	// -------------------- END  : SEND IMAGE RESULT TO CLIENT ------------
