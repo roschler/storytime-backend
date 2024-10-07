@@ -17,8 +17,8 @@ import {
 } from "./intents/enum-intents"
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse } from "./openai-parameter-objects"
-import { generateImages_chat_bot, sendStateMessage } from "./system/handlers"
-import { StateType } from "./system/types"
+import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
+import { StateType, TextType } from "./system/types"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -232,12 +232,15 @@ function isStringIntentDetectedWithMatchingValue(
  *  at the top of this call, before we (may) alter it
  * @param userId_in - The ID of the current user.
  * @param userInput_in - The latest input from that user.
+ *
+ * @return - Returns TRUE if the chat volley worked
+ *  properly, FALSE if not.
  */
 export async function processChatVolley(
 		client: WebSocket,
 		initialState: StateType,
 		userId_in: string,
-		userInput_in: string): Promise<string[]> {
+		userInput_in: string): Promise<boolean> {
 
 	const userId = userId_in.trim()
 
@@ -249,7 +252,7 @@ export async function processChatVolley(
 	if (userInput.length < 1)
 		throw new Error(`The user input is empty or invalid.`);
 
-	// We need a starting chat state.  If we have a
+	// We need a starting chat state. If we have a
 	//  chat history for the user, load it and use
 	//  the last (most recent) chat volley object's
 	//  ending state.  If not, create a default
@@ -290,13 +293,15 @@ export async function processChatVolley(
 	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
 	if (bDoIntents) {
-		// >>>>> Status message: Tell the client we are thinking.
+		// >>>>> Status message: Tell the client we are thinking as
+		//  we make the intent detector calls.
 		if (client) {
 			let newState = initialState
 
 			// We haven't started the image request yet but
 			//  overall, we are indeed waiting for images.
 			newState.waiting_for_images = true
+			newState.state_change_message = 'Thinking...'
 
 			sendStateMessage(client, newState)
 		}
@@ -506,13 +511,6 @@ export async function processChatVolley(
 	const revisedImageGenNegativePrompt =
 		jsonResponse.negative_prompt ?? '';
 
-	const aryImageUrls =
-		// https://dream-gateway.livepeer.cloud/text-to-image
-		await generateImages_chat_bot(
-			revisedImageGenPrompt,
-			jsonResponse.negative_prompt,
-			chatState_current)
-
 	// -------------------- END  : MAIN IMAGE GENERATOR PROMPT STEP ------------
 
 	// -------------------- BEGIN: CREATE RESPONSE FOR USER ------------
@@ -534,6 +532,20 @@ export async function processChatVolley(
 			`and the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
 
 	responseSentToClient += `Let's see how this one turns out`
+
+	// Now send the response message to the client while we make
+	//  the image request.
+	//
+	// >>>>> Status message: Tell the client the prompt we created
+	//   and that we are waiting for the image to generate.
+	if (client) {
+		sendTextMessage(
+				client,
+			{
+				delta: responseSentToClient
+			}
+		)
+	}
 
 	// -------------------- END  : CREATE RESPONSE FOR USER ------------
 
@@ -560,17 +572,28 @@ export async function processChatVolley(
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
-	// -------------------- BEGIN: MOCK CLIENT RESPONSE ------------
+	// -------------------- BEGIN: MAKE IMAGE REQUEST ------------
 
-	// Here we emulate what we would do if this was not
-	//  the test harness but instead, we were handling
-	//  a client websocket request.
+	const aryImageUrls =
+		// https://dream-gateway.livepeer.cloud/text-to-image
+		await generateImages_chat_bot(
+			revisedImageGenPrompt,
+			jsonResponse.negative_prompt,
+			chatState_current)
+
+	// -------------------- END  : MAKE IMAGE REQUEST ------------
+
+	// -------------------- BEGIN: SEND IMAGE RESULT TO CLIENT ------------
 
 	console.info(CONSOLE_CATEGORY, `SIMULATED CLIENT RESPONSE:\n${responseSentToClient}`)
 
-	// -------------------- END  : MOCK CLIENT RESPONSE ------------
-	// Initialize the state flags to make extractOpenAiResponseDetails()
-	//  happy.
+	if (client) {
+		sendImageMessage(client, { urls: aryImageUrls})
+	}
+
+	// -------------------- END  : SEND IMAGE RESULT TO CLIENT ------------
+
+	// Clear flags.
 	const state = {
 		streaming_audio: false,
 		streaming_text: false,
@@ -578,7 +601,7 @@ export async function processChatVolley(
 		current_request_id: "",
 	};
 
-	return aryImageUrls
+	return true
 }
 
 // -------------------- END  : MAIN FUNCTION ------------

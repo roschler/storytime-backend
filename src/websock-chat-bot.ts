@@ -23,6 +23,7 @@ import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 import { readChatHistory } from "./chat-volleys/chat-volleys"
+import { processChatVolley } from "./process-chat-volley"
 
 // What do we say when the user is trying to be problematic?
 
@@ -192,57 +193,85 @@ export async function extractOpenAiResponseDetails(state: StateType, stream: Str
  * @param {FastifyRequest} request - The Fastify
  *  request object to process.
  */
-async function wsConnection(connection: SocketStream, request: FastifyRequest) {
+async function wsConnection(
+		connection: SocketStream,
+		request: FastifyRequest) {
 
 	// Initialize the state flags.
-	const state = {
+	const initialState = {
 		streaming_audio: false,
 		streaming_text: false,
 		waiting_for_images: false,
 		current_request_id: "",
+		state_change_message: ""
 	};
 
 	// Use the `connection.socket` instead of `client`
 	const client = connection.socket;
 
-	sendStateMessage(client, state);
+	sendStateMessage(client, initialState);
 	console.log(`Client connected: ${request.ip}`);
 
 	// The handler for new messages.
 	client.on("message", async (raw) => {
+		try {
+			// Parse out the JSON message object.
+			const message = JSON.parse(raw.toString());
 
-		// Parse out the JSON message object.
-		const message = JSON.parse(raw.toString());
+			// Is it a request message?
+			if (message.type === "request") {
+				// Yes.  Process a chat volley.
+				//
+				// Every request must have a user ID and user input fields.
+				const { user_id, prompt } = message.payload;
 
-		// Is it a request message/
-		if (message.type === "request") {
-			// Yes.  Process a chat volley.
-			const { prompt } = message.payload;
-			state.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+				if (user_id.trim().length < 1)
+					throw new Error(`BAD REQUEST: User ID is missing.`);
 
-			// Check if the prompt is flagged as harmful before
-			//  passing the request to AI handlers
-			const flagged = await isFlagged(prompt);
-			if (flagged) {
-				console.log(`User prompt was flagged as harmful: ${prompt}`);
+				if (prompt.trim().length < 1)
+					throw new Error(`BAD REQUEST: User input is missing.`);
 
-				// Tell the client the prompt was considered harmful
-				//  so that it can notify the user.
-				sendErrorMessage(client, {
-					error: badPromptError,
-				});
-				return; // Exit
+				// Create a unique request ID.
+				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+
+				// Check if the prompt is flagged as harmful before
+				//  passing the request to AI handlers
+				const flagged = await isFlagged(prompt);
+				if (flagged) {
+					console.log(`User prompt was flagged as harmful: ${prompt}`);
+
+					// Tell the client the prompt was considered harmful
+					//  so that it can notify the user.
+					sendErrorMessage(client, {
+						error: badPromptError,
+					});
+
+					return false; // Exit
+				}
+
+				// Submit the request to the LLM to get the image prompt
+				//  we should send to Livepeer for image generation purposes.
+				const isChatVolleySuccessful =
+					await processChatVolley(client, initialState, user_id, prompt)
+
+				// await handleImageGenAssistanceRequest(client, state, message.payload);
+
+				// Extract the image generation prompt from the response.
+				// const imageGenerationPrompt = extractImageGenerationPrompt(message)
+
+				return isChatVolleySuccessful
+			} else {
+				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
 			}
+		} catch (err) {
+			const errMsg =
+				`Failure during chat volley processing.  Details: ${err.message}`
 
-			// Submit the request to the LLM to get the image prompt
-			//  we should send to Livepeer for image generation purposes.
+			sendErrorMessage(client, { error: errMsg})
 
+			console.error(err);
 
-
-			// await handleImageGenAssistanceRequest(client, state, message.payload);
-
-			// Extract the image generation prompt from the response.
-			// const imageGenerationPrompt = extractImageGenerationPrompt(message)
+			return false
 		}
 	});
 }

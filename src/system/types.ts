@@ -8,6 +8,7 @@ export interface StateType {
 	streaming_text: boolean
 	waiting_for_images: boolean
 	current_request_id: string
+	state_change_message: string
 }
 
 export interface ErrorType {

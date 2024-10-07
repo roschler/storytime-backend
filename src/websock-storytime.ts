@@ -120,6 +120,7 @@ async function wsConnection(connection: SocketStream, request: FastifyRequest) {
 		streaming_text: false,
 		waiting_for_images: false,
 		current_request_id: "",
+		state_change_message: ""
 	};
 
 	// Use the `connection.socket` instead of `client`
