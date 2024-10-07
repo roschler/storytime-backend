@@ -219,9 +219,26 @@ function isStringIntentDetectedWithMatchingValue(
 
 // -------------------- BEGIN: MAIN FUNCTION ------------
 
+/**
+ * This function processes one chat volley for the given
+ *  user.
+ *
+ * @param userId_in - The ID of the current user
+ * @param userInput_in - The latest input from that user
+ */
 export async function processChatVolley(
-		userId: string,
-		userInput: string): Promise<string[]> {
+		userId_in: string,
+		userInput_in: string): Promise<string[]> {
+
+	const userId = userId_in.trim()
+
+	if (userId.length < 1)
+		throw new Error(`The user ID is empty or invalid.`);
+
+	const userInput = userInput_in.trim()
+
+	if (userInput.length < 1)
+		throw new Error(`The user input is empty or invalid.`);
 
 	// We need a starting chat state.  If we have a
 	//  chat history for the user, load it and use
