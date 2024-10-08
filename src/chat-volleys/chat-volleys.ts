@@ -5,7 +5,7 @@
 
 // These are the default choices we make for various image
 //  generation parameters.
-import { getUnixTimestamp } from "../common-routines"
+import { getCurrentOrAncestorPathForSubDirOrDie, getUnixTimestamp } from "../common-routines"
 
 /*
 The parentheses in the recommended negative prompt are part of the syntax used to influence how strongly the model weighs certain words or phrases. Here's a breakdown:
@@ -501,20 +501,14 @@ export function buildChatHistoryFilename(userId: string): string {
 		throw new Error('User ID contains invalid characters for a file name.');
 	}
 
-	// Get the current working directory
-	const cwd = process.cwd();
-
-	console.info(CONSOLE_CATEGORY, `CWD:\n${cwd}`)
+	// Get the subdirectory for chat history files.
+	const resolvedFilePath =
+		getCurrentOrAncestorPathForSubDirOrDie(CONSOLE_CATEGORY, DIR_CHAT_HISTORY_FILES);
 
 	// Build the full path to the chat history file
 	const primaryFileName = `${trimmedUserId}-chat-history.json`;
 
 	// Construct the path dynamically
-	const resolvedFilePath =
-		path.resolve(cwd, DIR_CHAT_HISTORY_FILES);
-
-	console.info(CONSOLE_CATEGORY, `resolvedFilePaht:\n${resolvedFilePath}`)
-
 	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
 
 	return fullFilePath

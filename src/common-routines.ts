@@ -1,6 +1,7 @@
 // This module contains some utility functions.
 
 import * as fs from 'fs';
+import path from "node:path"
 
 /**
  * Reads the given string content from the specified file path.
@@ -68,4 +69,54 @@ export function writeTextFileSync(fullFilePath: string, strContent: string): boo
  */
 export function getUnixTimestamp(): number {
 	return Math.floor(Date.now() / 1000);
+}
+
+
+/**
+ * This function was created to cope with the variance between
+ *  directory trees between development and production builds,
+ *  since in production.
+ *
+ * @param consoleCategory - The console category to use for
+ *  emitting console messages
+ *
+ * @param subDirToFind - The subdirectory to locate
+ *
+ * @returns - Returns the fully resolved path to where the
+ *  subdirectory was found, or throws an error if it could
+ *  not be found.
+ */
+export function getCurrentOrAncestorPathForSubDirOrDie(consoleCategory: string, subDirToFind: string) {
+	// Get the current working directory
+	const cwd = process.cwd();
+
+	console.info(consoleCategory, `Attempting to resolve sub-directory:\n${subDirToFind}`)
+
+	const devOrProdDirCheck = subDirToFind;
+	let subDirFound =  devOrProdDirCheck
+
+	if (!fs.existsSync(subDirToFind)) {
+		// Check the ancestor directory.
+		const ancestorPath =
+			path.join('..', devOrProdDirCheck)
+
+		if (fs.existsSync(ancestorPath)) {
+			subDirFound = ancestorPath
+		} else {
+			const errMsg =
+				`Unable to find needed sub-directory:\n${devOrProdDirCheck}`
+			console.error(consoleCategory, errMsg)
+
+			throw new Error(errMsg);
+		}
+	}
+
+	// Construct the path dynamically
+	const resolvedFilePath =
+		// path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
+		path.resolve(cwd, subDirFound);
+
+	console.info(consoleCategory, `resolvedFilePath:\n${resolvedFilePath}`)
+
+	return resolvedFilePath
 }

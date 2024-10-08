@@ -1,6 +1,6 @@
 import { chatCompletionImmediate, chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { readTextFileSync } from "./common-routines"
+import { getCurrentOrAncestorPathForSubDirOrDie, readTextFileSync } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
@@ -52,17 +52,18 @@ const DIR_FOR_IMAGE_GENERATION_PROMPTS = 'prompts-for-text-completions'
  *  file.
  */
 export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
-	// Get the current working directory
-	const cwd = process.cwd();
-
-	// Construct the path dynamically
+	// Check for existence of needed subdirectory.
 	const resolvedFilePath =
-		// path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
-		path.resolve(cwd, DIR_FOR_IMAGE_GENERATION_PROMPTS);
+		getCurrentOrAncestorPathForSubDirOrDie(CONSOLE_CATEGORY, DIR_FOR_IMAGE_GENERATION_PROMPTS);
+
 	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
 
-	if (!fs.existsSync(fullFilePath))
+	if (!fs.existsSync(fullFilePath)) {
+		// We may be running in production.  Check one
+		//  sub-directory upwards.
+
 		throw new Error(`Unable to find image generation sub-prompt using file name:\n${fullFilePath}`);
+	}
 
 	const textContent = readTextFileSync(fullFilePath);
 
