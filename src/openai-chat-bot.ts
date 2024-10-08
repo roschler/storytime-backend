@@ -58,7 +58,7 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 	// Construct the path dynamically
 	const resolvedFilePath =
 		// path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
-		path.resolve(cwd, 'prompts-for-text-completions');
+		path.resolve(cwd, DIR_FOR_IMAGE_GENERATION_PROMPTS);
 	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
 
 	if (!fs.existsSync(fullFilePath))

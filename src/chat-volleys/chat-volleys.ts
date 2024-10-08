@@ -499,9 +499,19 @@ export function buildChatHistoryFilename(userId: string): string {
 		throw new Error('User ID contains invalid characters for a file name.');
 	}
 
+	// Get the current working directory
+	const cwd = process.cwd();
+
 	// Build the full path to the chat history file
-	const filename = `${trimmedUserId}-chat-history.json`;
-	return path.join(DIR_CHAT_HISTORY_FILES, filename);
+	const primaryFileName = `${trimmedUserId}-chat-history.json`;
+
+	// Construct the path dynamically
+	const resolvedFilePath =
+		path.resolve(cwd, DIR_CHAT_HISTORY_FILES);
+
+	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
+
+	return fullFilePath
 }
 
 // ***********************************************
