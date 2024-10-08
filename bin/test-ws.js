@@ -8,7 +8,8 @@ const dotenv = require("dotenv")
 dotenv.config()
 
 const port = process.env.BACKEND_SERVER_PORT || 3001
-const testPath = process.env.BACKEND_SERVER_PATH || `ws://localhost:${port}/storytime`;
+// const testPath = process.env.BACKEND_SERVER_PATH || `ws://localhost:${port}/storytime`;
+const testPath = 'wss://plasticeducator.com'
 
 console.info(`Opening websocket using path:\n${testPath}`)
 

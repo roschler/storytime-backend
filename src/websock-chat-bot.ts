@@ -275,10 +275,13 @@ async function wsConnection(
 		}
 	});
 
-	// The handler for when the websocket closes.
-	client.on('close', () => {
-		console.log('***** Client disconnected ***** ');
+	// The handler for when the WebSocket closes.
+	client.on('close', (code, reason) => {
+		console.log('***** Client disconnected *****');
+		console.log(`Close code: ${code}`);
+		console.log(`Close reason: ${reason.toString()}`);
 	});
+
 
 	// The handler for when an error occurs.
 	client.on('error', (err) => {
