@@ -292,6 +292,8 @@ export async function processChatVolley(
 	//  will be put here.
 	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
+	let bIsStartNewImage = false;
+
 	if (bDoIntents) {
 		// >>>>> Status message: Tell the client we are thinking as
 		//  we make the intent detector calls.
@@ -353,6 +355,17 @@ export async function processChatVolley(
 		// Now we examine the JSON response objects received from
 		//  the intent detections to see if we should make any
 		//  state changes.
+
+		// >>>>> Start new image?
+		const bIsStartNewImageDetected =
+			getBooleanIntentDetectionValue(
+				aryIntentDetectorJsonResponseObjs,
+				enumIntentDetectorId.START_NEW_IMAGE,
+				'start_new_image'
+			);
+
+		if (bIsStartNewImageDetected == true)
+			bIsStartNewImage = true;
 
 		// >>>>> Text on image wanted?
 		const bIsTextOnImageDesired =
@@ -513,7 +526,7 @@ export async function processChatVolley(
 	// Now we need to get help from the LLM on creating or refining
 	//  a good prompt for the user.
 	const fullPromptToLLM =
-		buildChatBotSystemPrompt(userInput, chatHistoryObj)
+		buildChatBotSystemPrompt(userInput, chatHistoryObj, bIsStartNewImage)
 
 	const textCompletion =
 		await chatCompletionImmediate(

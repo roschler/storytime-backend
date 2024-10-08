@@ -88,6 +88,13 @@ g_AryIntentPrompts[enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE] =
 		prompt_text: ""
 	};
 
+// >>>>> INTENT: START_NEW_IMAGE
+g_AryIntentPrompts[enumIntentDetectorId.START_NEW_IMAGE] =
+	{
+		primary_resource_name: "intent-start-new-image.txt",
+		prompt_text: ""
+	};
+
 // >>>>> INTENT: USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT
 g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT] =
 	{
@@ -294,13 +301,21 @@ export const g_MainImageGenerationFaqPrompt =
  *  create a new image generation prompt.
  *
  * @param userPrompt - The current prompt from the user.
- * @param - The chat history object for the current
+ * @param chatHistoryObj - The chat history object for the current
  *  user.
+ * @param bIsStartNewImage - If TRUE, then the user wants to
+ *  start a completely new image, so we won't pass in the
+ *  last image generation prompt to the image prompt LLM.
+ *  Otherwise, we consider this the continuation of an
+ *  existing image session and we will pass it.
  *
  * @return Returns the system prompt to use in the
  *  upcoming text completion call.
  */
-export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: ChatHistory): string {
+export function buildChatBotSystemPrompt(
+		userPrompt: string,
+		chatHistoryObj: ChatHistory,
+		bIsStartNewImage: boolean): string {
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	const useUserPrompt = userPrompt.trim();
@@ -315,8 +330,35 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
 	//
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
-	const chatHistorySummaryAsText =
-		chatHistoryObj.buildChatHistoryPrompt()
+	// const chatHistorySummaryAsText =
+	//	chatHistoryObj.buildChatHistoryPrompt()
+
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
+	let previousImageGenerationPromptOrNothing = ''
+
+	if (!bIsStartNewImage) {
+		// Get the last chat volley.
+		const lastChatVolleyObj =
+			chatHistoryObj.getLastVolley()
+
+		if (lastChatVolleyObj) {
+			// Build the last prompt information the LLM needs to
+			//  modify the existing content.
+			previousImageGenerationPromptOrNothing =
+				`
+				Here is the last prompt you created for the image generator.  Use the current user input to modify and improve it:\n
+				${lastChatVolleyObj.prompt}
+				`
+			if (lastChatVolleyObj.negative_prompt.length > 0) {
+				previousImageGenerationPromptOrNothing +=
+					`
+				Here is the last negative prompt you created for the image generator:\n
+				${lastChatVolleyObj.prompt}
+				`
+			}
+		}
+	}
 
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];

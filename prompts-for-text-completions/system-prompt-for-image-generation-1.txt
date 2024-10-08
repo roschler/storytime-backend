@@ -8,8 +8,6 @@ You will output your answer in a JSON object, using the following format:
     "user_input_has_complaints": <true if you detected complaints in the user's input, false if not>
 }
 
-${chatHistorySummaryAsText}
-
-Here is the latest request from the user:
+${previousImageGenerationPromptOrNothing}
 
 ${useUserPrompt}
