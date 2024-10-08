@@ -8,14 +8,8 @@ You will output your answer in a JSON object, using the following format:
     "user_input_has_complaints": <true if you detected complaints in the user's input, false if not>
 }
 
-Here are the most recent interactions you have had with the user, your most recent chat history with the user, and it is an array of JSON objects, one object for each chat volley.  Note, if this is your first interaction with the user the array will be empty.
+${chatHistorySummaryAsText}
 
-A chat volley object contains these fields:
+Here is the latest request from the user:
 
-user_input - This is the user input that you responded to
-prompt - This is the enhanced prompt you created from the user's input that was sent to the image generator
-negative_prompt - This is the negative prompt you created from the user's input that was sent to the image generator.  It may be empty if you did not suggest a negative prompt
-
-Use the chat history to help you craft an even better prompt and negative prompt, or to help the user with a complaint they have made
-
-
+${useUserPrompt}

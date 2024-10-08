@@ -278,7 +278,7 @@ export class ChatVolley {
 	 * NOTE!:  Make sure the format matches that we
 	 *  illustrated in the main system prompt!
 	 */
-	public buildChatVolleySummary() {
+	public buildChatVolleySummary_json() {
 		return `
 		    {\n
 		    	"    user_input": ${this.user_input},\n
@@ -286,6 +286,22 @@ export class ChatVolley {
 		    	"    negative_prompt": ${this.negative_prompt}\n
 		    }\n
 		`
+	}
+
+	/**
+	 * This function creates a text block that
+	 *   will be passed to the LLM as part of
+	 *   the recent chat history.
+	 *
+	 * NOTE!:  Make sure the format matches that we
+	 *  illustrated in the main system prompt!
+	 */
+	public buildChatVolleySummary_text() {
+		const strSummary =
+		    	`USER INPUT: ${this.user_input},\n
+		    	 SYSTEM RESPONSE: ${this.prompt},\n
+		    	 NEGATIVE PROMPT: ${this.negative_prompt}\n`
+		return strSummary
 	}
 
 	// -------------------- BEGIN: SERIALIZATION METHODS ------------
@@ -395,11 +411,35 @@ export class ChatHistory {
 		if (!Number.isInteger(numChatVolleys))
 			throw new Error(`The number of chat volleys must be an integer.`);
 
-		const aryChatVolleysSlice =
-			this.aryChatVolleys.slice(-1 * numChatVolleys)
-		const strChatHistory =
-			 aryChatVolleysSlice.map(
-				 obj => obj.buildChatVolleySummary()).join('/n')
+		let strChatHistory = ''
+
+		if (this.aryChatVolleys.length > 0) {
+			const aryChatVolleysSlice =
+				this.aryChatVolleys.slice(-1 * numChatVolleys)
+
+			const aryChatSummaries: string[] = [];
+
+			aryChatVolleysSlice.forEach(
+				obj => {
+					aryChatSummaries.push(
+						obj.buildChatVolleySummary_text())
+				})
+
+			const preamble =
+				`
+Below is your chat history with the user    
+
+What they said to you is prefixed by the string "USER INPUT:"
+  
+Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
+  
+Use the chat history to help guide your efforts.  Here it is now:
+
+				`
+
+			strChatHistory =
+				preamble + aryChatSummaries.join('\n')
+		}
 
 		return strChatHistory
 	}

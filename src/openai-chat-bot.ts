@@ -301,6 +301,8 @@ export const g_MainImageGenerationFaqPrompt =
  *  upcoming text completion call.
  */
 export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: ChatHistory): string {
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
@@ -310,6 +312,9 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
 
 	// Extract the most recent chat history and create
 	//  a block of plain text from it.
+	//
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
 	const chatHistorySummaryAsText =
 		chatHistoryObj.buildChatHistoryPrompt()
 
@@ -319,19 +324,23 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
 	// Not using this prompt for now.  Needs curation.
 	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
 
-	// Main image generation system prompt.
-	arySubPrompts.push(g_MainImageGenerationSystemPrompt)
+	// Main image generation system prompt.  Use it as a
+	//  template string so that we can insert the needed values
+	//  in the right place.
 
-	arySubPrompts.push('Here is your recent chat history with the user:\n\n')
+	// NOTE: Because they are only found in the system
+	//  prompt eval string, the IDE will incorrectly
+	//  flag them as unused variables.
+	const evalStr =
+		'`' + g_MainImageGenerationSystemPrompt + '`';
 
-	// Chat history.
-	arySubPrompts.push(chatHistorySummaryAsText)
+	const evaluatedSystemPrompt =
+		eval(evalStr)
+
+	arySubPrompts.push(evaluatedSystemPrompt)
 
 	// Main tips document.
 	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
-
-	// The user prompt
-	arySubPrompts.push(useUserPrompt)
 
 	return arySubPrompts.join(' ')
 }
