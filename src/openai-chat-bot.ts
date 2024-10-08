@@ -38,7 +38,7 @@ export const g_TextCompletionParamsForIntentDetector =
 //  from disk first, since they are used to build the full prompt
 //  passed to the LLM, along with the user's input.
 
-const DIR_FOR_IMAGE_GENERATION_PROMPTS = '../prompts-for-text-completions'
+const DIR_FOR_IMAGE_GENERATION_PROMPTS = 'prompts-for-text-completions'
 
 /**
  * Load one of our image generation sub-prompt files.  If the
@@ -52,9 +52,13 @@ const DIR_FOR_IMAGE_GENERATION_PROMPTS = '../prompts-for-text-completions'
  *  file.
  */
 export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
-	// Build the full file path.
+	// Get the current working directory
+	const cwd = process.cwd();
+
+	// Construct the path dynamically
 	const fullFilePath =
-		path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
+		// path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
+		path.resolve(cwd, '..', 'prompts-for-text-completions');
 
 	if (!fs.existsSync(fullFilePath))
 		throw new Error(`Unable to find image generation sub-prompt using file name:\n${fullFilePath}`);
