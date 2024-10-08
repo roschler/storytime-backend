@@ -17,6 +17,8 @@ So, when including the negative prompt in your request to the model, you should 
  */
 const DEFAULT_NEGATIVE_PROMPT = '(octane render, render, drawing, anime, bad photo, bad photography:1.3), (worst quality, low quality, blurry:1.2), (bad teeth, deformed teeth, deformed lips), (bad anatomy, bad proportions:1.1), (deformed iris, deformed pupils), (deformed eyes, bad eyes), (deformed face, ugly face, bad face), (deformed hands, bad hands, fused fingers), morbid, mutilated, mutation, disfigured';
 
+const CONSOLE_CATEGORY = 'chat-volley'
+
 // -------------------- END  : DEFAULT IMAGE GENERATION VALUES ------------
 
 // -------------------- BEGIN: class, CurrentChatState ------------
@@ -476,7 +478,7 @@ Use the chat history to help guide your efforts.  Here it is now:
  * @constant
  * @type {string}
  */
-export const DIR_CHAT_HISTORY_FILES = '../chat-history-files';
+export const DIR_CHAT_HISTORY_FILES = 'chat-history-files';
 
 /**
  * Builds the full path to the user's chat history file.
@@ -502,12 +504,16 @@ export function buildChatHistoryFilename(userId: string): string {
 	// Get the current working directory
 	const cwd = process.cwd();
 
+	console.info(CONSOLE_CATEGORY, `CWD:\n${cwd}`)
+
 	// Build the full path to the chat history file
 	const primaryFileName = `${trimmedUserId}-chat-history.json`;
 
 	// Construct the path dynamically
 	const resolvedFilePath =
 		path.resolve(cwd, DIR_CHAT_HISTORY_FILES);
+
+	console.info(CONSOLE_CATEGORY, `resolvedFilePaht:\n${resolvedFilePath}`)
 
 	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
 
