@@ -56,9 +56,10 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 	const cwd = process.cwd();
 
 	// Construct the path dynamically
-	const fullFilePath =
+	const resolvedFilePath =
 		// path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
 		path.resolve(cwd, '..', 'prompts-for-text-completions');
+	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
 
 	if (!fs.existsSync(fullFilePath))
 		throw new Error(`Unable to find image generation sub-prompt using file name:\n${fullFilePath}`);
