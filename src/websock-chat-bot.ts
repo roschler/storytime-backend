@@ -274,6 +274,16 @@ async function wsConnection(
 			return false
 		}
 	});
+
+	// The handler for when the websocket closes.
+	client.on('close', () => {
+		console.log('***** Client disconnected ***** ');
+	});
+
+	// The handler for when an error occurs.
+	client.on('error', (err) => {
+		console.error('----->>>>> WebSocket error:', err);
+	});
 }
 
 /**
