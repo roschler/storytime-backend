@@ -488,13 +488,13 @@ export async function processChatVolley(
 
 	// Now we need to get help from the LLM on creating or refining
 	//  a good prompt for the user.
-	const initialImageGenPrompt =
+	const fullPromptToLLM =
 		buildChatBotSystemPrompt(userInput, chatHistoryObj)
 
 	const textCompletion =
 		await chatCompletionImmediate(
 			'MAIN-IMAGE-GENERATION-PROMPT',
-			initialImageGenPrompt,
+			fullPromptToLLM,
 			userInput,
 			g_TextCompletionParams,
 			true);
@@ -529,7 +529,7 @@ export async function processChatVolley(
 
 	if (aryChangeDescriptions.length > 0)
 		responseSentToClient +=
-			`and the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
+			`\nand the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
 
 	responseSentToClient += `\nLet's see how this one turns out`
 
@@ -575,6 +575,7 @@ export async function processChatVolley(
 			chatState_start,
 			chatState_current,
 			aryIntentDetectorJsonResponseObjs,
+			fullPromptToLLM
 		)
 
 	chatHistoryObj.addChatVolley(newChatVolleyObj)

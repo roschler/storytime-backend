@@ -200,6 +200,11 @@ export class ChatVolley {
 	public array_of_intent_detections: IntentJsonResponseObject[];
 
 	/**
+	 * The full system prompt we sent to the LLM for consideration.
+	 */
+	public full_prompt_to_system: string;
+
+	/**
 	 * Constructs an instance of ChatVolley.
 	 *
 	 * @param is_new_image - If TRUE, then this volley is considered
@@ -217,6 +222,8 @@ export class ChatVolley {
 	 * @param chat_state_at_start - The state of the chat at the start of the volley.
 	 * @param chat_state_at_end - The state of the chat at the end of the volley.
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
+	 * @param full_prompt_to_system - The full prompt we sent to the LLM
+	 *  for consideration.
 	 */
 	constructor(
 		is_new_image: boolean,
@@ -228,7 +235,8 @@ export class ChatVolley {
 		response_sent_to_client: string,
 		chat_state_at_start: CurrentChatState,
 		chat_state_at_end: CurrentChatState,
-		array_of_intent_detections: IntentJsonResponseObject[]
+		array_of_intent_detections: IntentJsonResponseObject[],
+		full_prompt_to_system: string
 	) {
 		this.is_new_image = is_new_image;
 
@@ -247,6 +255,7 @@ export class ChatVolley {
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
 		this.response_to_user = response_sent_to_client;
+		this.full_prompt_to_system = full_prompt_to_system;
 	}
 
 	/**
@@ -295,6 +304,7 @@ export class ChatVolley {
 			negative_prompt: this.negative_prompt,
 			response_to_user: this.response_to_user,
 			array_of_intent_detections: this.array_of_intent_detections,
+			full_prompt_to_system: this.full_prompt_to_system
 		};
 	}
 
@@ -310,7 +320,8 @@ export class ChatVolley {
 			json.response_to_user,
 			CurrentChatState.fromJSON(json.chat_state_at_start),
 			CurrentChatState.fromJSON(json.chat_state_at_end),
-			json.array_of_intent_detections
+			json.array_of_intent_detections,
+			json.full_prompt_to_system
 		);
 	}
 

@@ -322,6 +322,8 @@ export function buildChatBotSystemPrompt(userPrompt: string, chatHistoryObj: Cha
 	// Main image generation system prompt.
 	arySubPrompts.push(g_MainImageGenerationSystemPrompt)
 
+	arySubPrompts.push('Here is your recent chat history with the user:\n\n')
+
 	// Chat history.
 	arySubPrompts.push(chatHistorySummaryAsText)
 
