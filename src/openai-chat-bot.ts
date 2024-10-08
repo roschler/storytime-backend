@@ -57,7 +57,7 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 		path.join(DIR_FOR_IMAGE_GENERATION_PROMPTS, primaryFileName)
 
 	if (!fs.existsSync(fullFilePath))
-		throw new Error(`Unable to find image generation sub-prompt using file name:\n${primaryFileName}`);
+		throw new Error(`Unable to find image generation sub-prompt using file name:\n${fullFilePath}`);
 
 	const textContent = readTextFileSync(fullFilePath);
 
