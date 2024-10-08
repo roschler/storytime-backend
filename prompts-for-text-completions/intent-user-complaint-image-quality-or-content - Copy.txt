@@ -16,7 +16,7 @@ RESPONSE: { "complaint_type":  "too_bright" }
 
 NATURE OF COMPLAINT:   Image has misspelled or distorted text
 EXAMPLES:  "There are misspelled words",  "I wanted numbers not letters", "The letters are distorted",  "The numbers look like they are melted"
-RESPONSE: { "complaint_type":  "too_bright" }
+RESPONSE: { "complaint_type":  "misspelled" }
 
 NATURE OF COMPLAINT: Wrong content, in other words, the content of the image is not what the user wants or requested
 EXAMPLES: "I wanted a dog instead", "Not a car, a cart", "I wanted the man to look directly at the camera", "I wanted a portrait view, not a profile view", "Not a black dress, a white vest", etc.

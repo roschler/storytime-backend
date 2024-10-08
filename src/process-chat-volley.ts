@@ -369,7 +369,7 @@ export async function processChatVolley(
 				enumImageGenerationModelId.FLUX
 
 			aryChangeDescriptions.push(
-				`I will use an engine that is good at creating text on images.`
+				`* I will use an engine that is good at creating text on images`
 			)
 		} else {
 			// We don't switch away from flux to
@@ -396,7 +396,7 @@ export async function processChatVolley(
 			chatState_current.steps += NUM_STEPS_ADJUSTMENT_VALUE;
 
 			aryChangeDescriptions.push(
-				`I have increased the time spent on image generation to make the image look better.`)
+				`* I have increased the time spent on image generation to improve quality`)
 		}
 
 		// >>>>> Image generation too slow?
@@ -416,7 +416,7 @@ export async function processChatVolley(
 				chatState_current.steps = MIN_STEPS;
 
 			aryChangeDescriptions.push(
-				`I have increased the time spent on image generation to make the image look better.`)
+				`* I have decreased the time spent on image generation to make things faster`)
 		}
 
 		// -------------------- BEGIN: VARIATION UP/DOWN TRIAGE ------------
@@ -437,6 +437,16 @@ export async function processChatVolley(
 				'wrong_content'
 			);
 
+		// >>>>> Check for misspelled letters.
+		const bIsMisspelled =
+			isStringIntentDetectedWithMatchingValue(
+				aryIntentDetectorJsonResponseObjs,
+				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				'complaint_type',
+				'problems_with_text'
+			);
+
+
 		// >>>>> Check for the user wanting more variation
 		const bIsImageBoring =
 			isStringIntentDetectedWithMatchingValue(
@@ -446,24 +456,38 @@ export async function processChatVolley(
 				'boring'
 			);
 
-		// We favor the wrong content complaint over the image is
+		// We favor the wrong content or misspelled complaint over the image is
 		//  boring complaint.
-		if (bIsWrongContent) {
+		if (bIsWrongContent || bIsMisspelled) {
 			// TODO: There should be an upper limit here.
 
 			// Increase the guidance value.
 			chatState_current.guidance_scale += NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
 
-			let changeDescription =
-				`I have told the engine to be less creative.`
+			aryChangeDescriptions.push(`* I have told the engine to be less creative.`)
+
+			// Misspellings are the worst offense.
+			if (bIsMisspelled) {
+				// Make absolutely sure we are using Flux!
+				if (chatState_current.model_id !== enumImageGenerationModelId.FLUX) {
+					chatState_current.model_id = enumImageGenerationModelId.FLUX
+
+					aryChangeDescriptions.push(`* I have switched to a text capable engine`)
+				}
+
+				// Increase the number of steps used but by three times as much as normal.
+				chatState_current.steps += 3 * NUM_STEPS_ADJUSTMENT_VALUE
+
+				aryChangeDescriptions.push(`* I have greatly increased the time spent on image generation.  Please be patient, since it will take longer to create images now.\n`)
+			} else if (bIsWrongContent) {
+				aryChangeDescriptions.push(`* I have told the engine to be less creative`)
+			}
 
 			// If we also have a boring image complaint, modify the change
 			//  description to tell the user that we will concentrate on
 			//  getting the image content correct first.
 			if (bIsImageBoring)
-				changeDescription += ` Let's concentrate on getting the image content correct before trying to be more creative.`
-
-			aryChangeDescriptions.push(changeDescription)
+				aryChangeDescriptions.push(`Let's concentrate on getting the image content correct before trying to be more creative.`)
 		} else if (bIsImageBoring) {
 			// Decrease the guidance value.
 			chatState_current.guidance_scale -= NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
