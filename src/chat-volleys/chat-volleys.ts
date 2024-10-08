@@ -299,8 +299,11 @@ export class ChatVolley {
 	public buildChatVolleySummary_text() {
 		const strSummary =
 		    	`USER INPUT: ${this.user_input},\n
-		    	 SYSTEM RESPONSE: ${this.prompt},\n
-		    	 NEGATIVE PROMPT: ${this.negative_prompt}\n`
+		    	 SYSTEM RESPONSE: ${this.prompt},\n`
+
+		    	 // TODO: Re-enable this once we solve the vanishing
+				 //  previous image content issue.
+		    	 // NEGATIVE PROMPT: ${this.negative_prompt}\n`
 		return strSummary
 	}
 

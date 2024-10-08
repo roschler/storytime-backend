@@ -553,7 +553,7 @@ export async function processChatVolley(
 
 	if (aryChangeDescriptions.length > 0)
 		responseSentToClient +=
-			`\nand the changes I made to improve the result:\n\n${aryChangeDescriptions.join(' ')}\n`
+			`\nand the changes I made to improve the result:\n\n${aryChangeDescriptions.join('\n')}\n`
 
 	responseSentToClient += `\nLet's see how this one turns out`
 

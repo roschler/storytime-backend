@@ -38,6 +38,26 @@ NEXT:
 
 - Almost done with full chat volley pipeline:
 
+    !!!!! Need a chat history summarizer.  See this ChatGPTPlus thread:
+
+        https://chatgpt.com/c/6704baea-e6d8-8008-9c29-3eeb6f4b2e0e
+
+    New strategy:
+
+        Using this JSON object output by the chat history summarizer:
+
+        {
+            "final_image_description": "A bustling futuristic city with towering skyscrapers, neon lights, and a vibrant crowd of people. Flying cars, painted in bright yellow, zoom through the city sky.",
+            "modification_history": [
+                {"modification": "Add flying cars", "status": "applied"},
+                {"modification": "Make the cars green", "status": "discarded because it was superseded"},
+                {"modification": "Change the cars to yellow", "status": "applied"}
+            ]
+        }
+
+        Pass this in each iteration and have the LLM update it, instead of
+         passing in the chat history.
+
     NEED DEFAULT NEGATIVE PROMPT!
 
     FUN PROBLEM: Currently the intent detectors can lead to conflicting
