@@ -309,6 +309,9 @@ export const g_MainImageGenerationFaqPrompt =
  * @param userPrompt - The current prompt from the user.
  * @param chatHistoryObj - The chat history object for the current
  *  user.
+ * @param wrongContentText - If the user complained about
+ *  wrong content, pass the text matched here.  Otherwise,
+ *  pass null if there was no such complaint.
  * @param bIsStartNewImage - If TRUE, then the user wants to
  *  start a completely new image, so we won't pass in the
  *  last image generation prompt to the image prompt LLM.
@@ -320,6 +323,7 @@ export const g_MainImageGenerationFaqPrompt =
  */
 export function buildChatBotSystemPrompt(
 		userPrompt: string,
+		wrongContentText: string | null,
 		chatHistoryObj: ChatHistory,
 		bIsStartNewImage: boolean): string {
 	// IMPORTANT!: This variable name must match the one used
@@ -342,6 +346,7 @@ export function buildChatBotSystemPrompt(
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	let previousImageGenerationPromptOrNothing = ''
+	let rewriteWrongContent = ''
 
 	if (!bIsStartNewImage) {
 		// Get the last chat volley.
@@ -353,18 +358,36 @@ export function buildChatBotSystemPrompt(
 			//  modify the existing content.
 			previousImageGenerationPromptOrNothing =
 				`
-				Here is the last prompt you created for the image generator.  Use the current user input to modify and improve it:\n
-				${lastChatVolleyObj.prompt}
+					Here is the last prompt you created for the image generator.:\n
+					${lastChatVolleyObj.prompt}\n
 				`
 			if (lastChatVolleyObj.negative_prompt.length > 0) {
 				previousImageGenerationPromptOrNothing +=
 					`
-				Here is the last negative prompt you created for the image generator:\n
-				${lastChatVolleyObj.prompt}
-				`
+							Here is the last negative prompt you created for the image generator:\n
+							${lastChatVolleyObj.negative_prompt}
+						`
+			}
+
+			// Did the user complain about wrong content?
+			if (wrongContentText === null) {
+				// STUB
+			} else {
+				// -------------------- BEGIN: REWRITE AROUND WRONG CONTENT ------------
+				if (wrongContentText.trim().length < 1)
+					throw new Error(`The wrongContentText parameter is not NULL, so it can not be empty`);
+
+				previousImageGenerationPromptOrNothing +=
+					`
+					Rewrite this image generation prompt so that ${wrongContentText} becomes the focus of the scene described by your revised image prompt.
+					`
+				// -------------------- END  : REWRITE AROUND WRONG CONTENT ------------
 			}
 		}
 	}
+
+	const adornedUserPrompt =
+		`Here is the current user input.  Use it to guide the improvements to your revised prompt:\n${useUserPrompt}\n`
 
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];

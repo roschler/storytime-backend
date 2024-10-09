@@ -89,18 +89,28 @@ function getBooleanIntentDetectionValue(
 }
 
 /**
- * Retrieves the string value for a given intent detector id and property name from an array of response objects.
+ * Retrieves the string value for a given intent detector id
+ *  and property name from an array of response objects.
  *
  * @param aryJsonResponseObjs - The array of JSON response objects to iterate over.
  * @param intentDetectorId - The intent detector ID to search for.
  * @param propName - The property name to check within the matching object.
-
- * @returns {string | null} - The string value found in the object for the given intent detector ID and property, or null if no match is found.
+ * @param linkedPropName - If not NULL, then the property value
+ *  belonging to the linked property name given will be returned instead
+ *  of the value belonging to the main property name.
+ *
+ * @returns - Returns the string value found in the object for
+ *  the given intent detector ID and property, or null if no
+ *  match is found.  Note, if a linked property name was given,
+ *  and the main property name was found, the value belonging to
+ *  the linked property will be returned instead.
+ *
  */
 function getStringIntentDetectionValue(
 	aryJsonResponseObjs: IntentJsonResponseObject[],
 	intentDetectorId: string,
-	propName: string
+	propName: string,
+	linkedPropName: string | null
 ): string | null {
 	// Validate intentDetectorId
 	if (!intentDetectorId.trim()) {
@@ -126,16 +136,29 @@ function getStringIntentDetectionValue(
 				(childObj) => {
 					// Does the child object have a property with the desired
 					//  name?
-					const propValue = (childObj as any)[propName]
+					let propValue = (childObj as any)[propName]
 
 					if (typeof propValue !== 'undefined') {
-						// Check if the value is a string
+						// Yes. Check if the value is a string
 						if (typeof propValue !== 'string') {
 							throw new Error(`The property '${propName}' in the child object with intent_detector_id '${intentDetectorId}' is not a string.`);
+						}
+
+						// Property value found.  Was a linked property
+						//  name provided?
+						if (linkedPropName) {
+							// Get it's value.
+							propValue = (childObj as any)[linkedPropName]
+
+							// Yes. Check if the value is a string
+							if (typeof propValue !== 'string') {
+								throw new Error(`The linked property("${linkedPropName}) tied to property name("${propName}") in the child object with intent_detector_id '${intentDetectorId}' is not a string.`);
+							}
 						}
 					}
 
 					// Found it.  We add the functionally unnecessary
+					//  "typeof propValue === 'undefined'"
 					//  because Typescript is not figuring out due
 					//  to the "undefined" check above, that propValue
 					//  must be a string at this point.
@@ -293,6 +316,7 @@ export async function processChatVolley(
 	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
 	let bIsStartNewImage = false;
+	let wrongContentText: string | null = null
 
 	if (bDoIntents) {
 		// >>>>> Status message: Tell the client we are thinking as
@@ -445,14 +469,27 @@ export async function processChatVolley(
 		//  action on them.
 
 		// >>>>> Check for the user wanting less variation, usually
-		//  via a "wrong_content" complaint
+		//  via a "wrong_content" complaint.
 		const bIsWrongContent =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
 				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
-				'wrong_content'
+				'wrong_content',
+
 			);
+
+		// If there is a wrong content complaint, get the text that
+		//  was identified as the problem item.
+		if (bIsWrongContent) {
+			wrongContentText =
+				getStringIntentDetectionValue(
+					aryIntentDetectorJsonResponseObjs,
+					enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+					'complaint_type',
+					'complaint_text'
+				)
+		}
 
 		// >>>>> Check for misspelled letters.
 		const bIsMisspelled =
@@ -530,7 +567,11 @@ export async function processChatVolley(
 	// Now we need to get help from the LLM on creating or refining
 	//  a good prompt for the user.
 	const fullPromptToLLM =
-		buildChatBotSystemPrompt(userInput, chatHistoryObj, bIsStartNewImage)
+		buildChatBotSystemPrompt(
+			userInput,
+			wrongContentText,
+			chatHistoryObj,
+			bIsStartNewImage)
 
 	const textCompletion =
 		await chatCompletionImmediate(
