@@ -628,7 +628,7 @@ export async function processChatVolley(
 
 		// Make sure the "waiting for images" state is set
 		newState.waiting_for_images = false
-		newState.state_change_message = 'Requesting image from Livepeer...'
+		newState.state_change_message = 'Requesting image, may take a minute or so...'
 
 		sendStateMessage(
 			client,
