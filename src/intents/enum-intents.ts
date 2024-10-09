@@ -13,6 +13,12 @@ export const NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE = 3;
 //  image generation call with.
 export const MIN_STEPS = 1;
 
+// This is the minimum number of steps we use with images
+//  that have text on them, to decrease the chances of
+//  misspelled words or distorted text.
+export const MIN_STEPS_FOR_IMAGE_ON_TEXT = 21;
+
+
 // -------------------- BEGIN: enumIntentDetectorId ------------
 
 // These are the IDs for each of the INTENT detectors we have created

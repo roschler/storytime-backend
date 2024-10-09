@@ -11,7 +11,7 @@ import {
 } from "./openai-chat-bot"
 import {
 	enumIntentDetectorId,
-	MIN_STEPS,
+	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT,
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
@@ -381,8 +381,12 @@ export async function processChatVolley(
 			chatState_current.model_id =
 				enumImageGenerationModelId.FLUX
 
+			// Make sure the number of step is high.
+			if (chatState_current.steps < MIN_STEPS_FOR_IMAGE_ON_TEXT)
+				chatState_current.steps = MIN_STEPS_FOR_IMAGE_ON_TEXT
+
 			aryChangeDescriptions.push(
-				`* I will use an engine that is good at creating text on images`
+				`* I will use an engine that is good at creating text on images and increase the time spent on creating the image`
 			)
 		} else {
 			// We don't switch away from flux to
