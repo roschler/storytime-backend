@@ -609,9 +609,12 @@ export async function processChatVolley(
 	let responseSentToClient: string =
 		`Here is the new image request we just made:\n\n"${revisedImageGenPrompt}"\n`
 
-	if (aryChangeDescriptions.length > 0)
+	if (aryChangeDescriptions.length > 0) {
+		const uniqueChangeDescriptions = [...new Set(aryChangeDescriptions)];
+
 		responseSentToClient +=
-			`\nand the changes I made to improve the result:\n\n${aryChangeDescriptions.join('\n')}\n`
+			`\nand the changes I made to improve the result:\n\n${uniqueChangeDescriptions.join('\n')}\n`
+	}
 
 	responseSentToClient += `\nLet's see how this one turns out`
 
