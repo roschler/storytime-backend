@@ -54,3 +54,35 @@ export function isValidEnumIntentDetectorId(enIntentDetectorId: string) {
 }
 
 // -------------------- END  : enumIntentDetectorId ------------
+
+// -------------------- BEGIN: enumChangeDescription ------------
+
+/**
+ *
+ * An enumerator that has all the changes descriptions
+
+ *
+ * @type {Readonly<{string}>}
+ */
+export enum enumChangeDescription{
+	"CHANGE_DESC_BE_LESS_CREATIVE" = "* I have told the engine to be less creative",
+	"CHANGE_DESC_BE_MORE_CREATIVE" = "* I have told the engine to be more creative",
+	"CHANGE_DESC_USE_TEXT_ENGINE" = "* I have switched to a text capable engine",
+	"CHANGE_DESC_LESS_STEPS" = "* I have decreased the time spent on image generation to make things faster",
+	"CHANGE_DESC_MORE_STEPS" = "* I have increased the time spent on image generation to improve quality",
+	"CHANGE_DESC_FIX_WRONG_CONTENT" = "* I will try to fix the incorrect content",
+	"CHANGE_DESC_A_LOT_MORE_STEPS" = "* I have greatly increased the time spent on image generation.  Please be patient, since it will take longer to create images now.",
+	"CHANGE_DESC_BE_CREATIVE_LATER" = "Let's concentrate on getting the image content correct before trying to be more creative.",
+}
+
+/**
+ * This function returns TRUE if the given value is a valid
+ *   enumChangeDescription value, FALSE if not.
+ */
+export function isValidEnumChangeDescription(enChangeDescription: string) {
+	const errPrefix = `(isValidEnumChangeDescription) `
+
+	return Object.values(enumChangeDescription).includes(enChangeDescription as enumChangeDescription)
+}
+
+// -------------------- END  : enumChangeDescription ------------

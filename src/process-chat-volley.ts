@@ -10,6 +10,7 @@ import {
 	showIntentResultObjects,
 } from "./openai-chat-bot"
 import {
+	enumChangeDescription,
 	enumIntentDetectorId,
 	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT,
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
@@ -409,9 +410,8 @@ export async function processChatVolley(
 			if (chatState_current.steps < MIN_STEPS_FOR_IMAGE_ON_TEXT)
 				chatState_current.steps = MIN_STEPS_FOR_IMAGE_ON_TEXT
 
-			aryChangeDescriptions.push(
-				`* I will use an engine that is good at creating text on images and increase the time spent on creating the image`
-			)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_USE_TEXT_ENGINE)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_MORE_STEPS)
 		} else {
 			// We don't switch away from flux to
 			//  another model just because the
@@ -436,8 +436,7 @@ export async function processChatVolley(
 			// Increase the number of steps used.
 			chatState_current.steps += NUM_STEPS_ADJUSTMENT_VALUE;
 
-			aryChangeDescriptions.push(
-				`* I have increased the time spent on image generation to improve quality`)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_MORE_STEPS)
 		}
 
 		// >>>>> Image generation too slow?
@@ -456,8 +455,7 @@ export async function processChatVolley(
 			if (chatState_current.steps < MIN_STEPS)
 				chatState_current.steps = MIN_STEPS;
 
-			aryChangeDescriptions.push(
-				`* I have decreased the time spent on image generation to make things faster`)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_LESS_STEPS)
 		}
 
 		// -------------------- BEGIN: VARIATION UP/DOWN TRIAGE ------------
@@ -491,7 +489,7 @@ export async function processChatVolley(
 				)
 
 			if (wrongContentText && wrongContentText.length > 0)
-				aryChangeDescriptions.push(`* I will try to fix the incorrect content`)
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_FIX_WRONG_CONTENT)
 		}
 
 		// >>>>> Check for misspelled letters.
@@ -521,7 +519,7 @@ export async function processChatVolley(
 			// Increase the guidance value.
 			chatState_current.guidance_scale += NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
 
-			aryChangeDescriptions.push(`* I have told the engine to be less creative.`)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_LESS_CREATIVE)
 
 			// Misspellings are the worst offense.
 			if (bIsMisspelled) {
@@ -529,22 +527,22 @@ export async function processChatVolley(
 				if (chatState_current.model_id !== enumImageGenerationModelId.FLUX) {
 					chatState_current.model_id = enumImageGenerationModelId.FLUX
 
-					aryChangeDescriptions.push(`* I have switched to a text capable engine`)
+					aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_USE_TEXT_ENGINE)
 				}
 
 				// Increase the number of steps used but by three times as much as normal.
 				chatState_current.steps += 3 * NUM_STEPS_ADJUSTMENT_VALUE
 
-				aryChangeDescriptions.push(`* I have greatly increased the time spent on image generation.  Please be patient, since it will take longer to create images now.\n`)
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_A_LOT_MORE_STEPS)
 			} else if (bIsWrongContent) {
-				aryChangeDescriptions.push(`* I have told the engine to be less creative`)
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_LESS_CREATIVE)
 			}
 
 			// If we also have a boring image complaint, modify the change
 			//  description to tell the user that we will concentrate on
 			//  getting the image content correct first.
 			if (bIsImageBoring)
-				aryChangeDescriptions.push(`Let's concentrate on getting the image content correct before trying to be more creative.`)
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_CREATIVE_LATER)
 		} else if (bIsImageBoring) {
 			// Decrease the guidance value.
 			chatState_current.guidance_scale -= NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE
@@ -552,8 +550,7 @@ export async function processChatVolley(
 			if (chatState_current.steps < MIN_STEPS)
 				chatState_current.steps = MIN_STEPS;
 
-			aryChangeDescriptions.push(
-				`I have told the engine to be more creative.`)
+			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_MORE_CREATIVE)
 		}
 
 		// -------------------- END  : VARIATION UP/DOWN TRIAGE ------------
