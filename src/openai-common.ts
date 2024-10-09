@@ -135,8 +135,12 @@ export async function chatCompletionImmediate(
 		throw new Error("The intentDetectorId must not be empty.");
 	}
 
-	console.log(`Creating chat completion (non-streaming) with system prompt: ${systemPrompt}`);
-	console.log(`User prompt: ${userInput}`);
+	/*
+		Full prompt is quite long.
+
+		console.log(`Creating chat completion (non-streaming) with system prompt: ${systemPrompt}`);
+		console.log(`User prompt: ${userInput}`);
+	 */
 
 	const messages = [
 		{

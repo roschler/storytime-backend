@@ -334,6 +334,8 @@ export async function processChatVolley(
 		}
 
 		// Run the user input by all intents.
+		console.info(CONSOLE_CATEGORY, `Doing intents through OpenAI...`)
+
 		const aryIntentDetectResultObjs =
 			await processAllIntents(
 				Object.values(enumIntentDetectorId),
@@ -359,6 +361,8 @@ export async function processChatVolley(
 
 		// Create an array of the intent detector JSON response
 		//  objects.
+		console.info(CONSOLE_CATEGORY, `Creating an array of intent detector JSON responses objects.`)
+
 		aryIntentDetectResultObjs.forEach(
 			(intentResultObj) => {
 				// Merge the intent detector ID into the
@@ -608,6 +612,8 @@ export async function processChatVolley(
 			chatHistoryObj,
 			bIsStartNewImage)
 
+	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`)
+
 	const textCompletion =
 		await chatCompletionImmediate(
 			'MAIN-IMAGE-GENERATION-PROMPT',
@@ -621,7 +627,8 @@ export async function processChatVolley(
 
 	const revisedImageGenPrompt = jsonResponse.prompt;
 
-	if (revisedImageGenPrompt === null || revisedImageGenPrompt.length < 1)
+	if (revisedImageGenPrompt === null ||
+		(typeof revisedImageGenPrompt === 'string' && revisedImageGenPrompt.length < 1))
 		throw new Error(`The revised image generation prompt is invalid or empty.`);
 
 	// The negative prompt may be empty.
