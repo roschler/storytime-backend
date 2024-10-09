@@ -22,15 +22,29 @@ FUTURE FEATURES:
 
 NEXT:
 
-    - CAN'T USE STREAMING LLM COMPLETIONS. We are not piping the
-      text received from the LLm to the client as it comes in
-      like Storytime does because expects a story.  Instead, we
-      receive the improved prompt text from the LLM and send
-      it to the client after post-processing it.  However, we
-      do still make the un-awaited async call to create an
-      image.
+    Interesting enhancement:  Create an LLM block to reorder the clauses
+     in a previous prompt if the user mentions it in a wrong content
+     complaint.  Try the main system prompt first with a template variable
+     named ${reorderClauses}.  Something like:
 
-    > Use non-streamed text completions.
+        The user has complained that the content of the image is wrong and
+        does not match the prompt they gave you previously.  When that happens,
+        and only if there are multiple element descriptions in the previous,
+        reorder the element descriptions so that the element or elements
+        they complained about are at the front of the image prompt, moving
+        the other elements after the reordered text.
+
+        For example.  If the previous prompt text was "A large friendly
+        dog with red fur stands in front of a tall building.  On top
+        of the building is a sad bald eagle wearing a coat.  The sky is
+        dark.", and the current user input has a wrong content complaint
+        like "No I wanted a happy bald eagle", then the revised prompt
+        would be "A sad bald eagle is on top of a building.  A large friendly
+        dog with red fur stands in front of the building.  The sky is dark."
+
+        Make sure the revised prompt retains the same meaning as the
+        original sentence, so do not reorder words that belong together.
+
 
     NOTE: Need to update the field "lora" to "loras" and make it an object
      where each property is a lora model ID with its value being set to
@@ -38,43 +52,7 @@ NEXT:
 
 - Almost done with full chat volley pipeline:
 
-    !!!!! Need a chat history summarizer.  See this ChatGPTPlus thread:
-
-        https://chatgpt.com/c/6704baea-e6d8-8008-9c29-3eeb6f4b2e0e
-
-    New strategy:
-
-        Using this JSON object output by the chat history summarizer:
-
-        {
-            "final_image_description": "A bustling futuristic city with towering skyscrapers, neon lights, and a vibrant crowd of people. Flying cars, painted in bright yellow, zoom through the city sky.",
-            "modification_history": [
-                {"modification": "Add flying cars", "status": "applied"},
-                {"modification": "Make the cars green", "status": "discarded because it was superseded"},
-                {"modification": "Change the cars to yellow", "status": "applied"}
-            ]
-        }
-
-        Pass this in each iteration and have the LLM update it, instead of
-         passing in the chat history.
-
     NEED DEFAULT NEGATIVE PROMPT!
-
-    FUN PROBLEM: Currently the intent detectors can lead to conflicting
-     adjustments, like when the user says the image boring but also
-     reports a "wrong_content" complaint.  The former decreases
-     guidance_scale and the latter increases it.
-
-    1) Write a new chat volley object immediately, do not
-        wait for the images to be generated.
-
-    2) Integrate the test harness code into the websocket
-      request flow.
-
-    3) Update the client to handle the new payloads from the
-      back-end server, flip the user input and system response
-      text areas vertically, make sure we have a nice busy
-      animation while waiting for image requests
 
 - Do we need to store the images in an S3 bucket for the contest?
 
