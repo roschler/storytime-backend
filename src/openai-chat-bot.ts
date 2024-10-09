@@ -346,7 +346,6 @@ export function buildChatBotSystemPrompt(
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	let previousImageGenerationPromptOrNothing = ''
-	let rewriteWrongContent = ''
 
 	if (!bIsStartNewImage) {
 		// Get the last chat volley.

@@ -489,6 +489,9 @@ export async function processChatVolley(
 					'complaint_type',
 					'complaint_text'
 				)
+
+			if (wrongContentText && wrongContentText.length > 0)
+				aryChangeDescriptions.push(`* I will try to fix the incorrect content`)
 		}
 
 		// >>>>> Check for misspelled letters.
