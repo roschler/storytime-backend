@@ -11,7 +11,9 @@
  */
 export enum enumImageGenerationModelId {
 	// The ByteDance lightning model.
-	LIGHTNING = "ByteDance/SDXL-Lightning",
+	BYTEDANCE_LIGHTNING = "ByteDance/SDXL-Lightning",
+	// The RealVisXL lightning model.
+	REALVIS_LIGHTNING = "SG161222/RealVisXL_V4.0_Lightning",
 	// The Black Forest FLUX model.
 	FLUX = "black-forest-labs/FLUX.1-dev",
 }
@@ -29,7 +31,7 @@ export function isValidEnumImageGenerationModelId(enImageGenerationModelId: stri
 // Some defaults.
 // This model leads to a service unavailable message: 502
 // const DEFAULT_IMAGE_GENERATION_MODEL_ID = 'RealVisXL_V4.0_Lightning';
-export const DEFAULT_IMAGE_GENERATION_MODEL_ID = enumImageGenerationModelId.LIGHTNING;
+export const DEFAULT_IMAGE_GENERATION_MODEL_ID = enumImageGenerationModelId.BYTEDANCE_LIGHTNING;
 // If this value is empty, then we are not using a LoRA
 //  model by default.
 // const DEFAULT_LORA_MODEL_ID = '';

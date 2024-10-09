@@ -102,7 +102,7 @@ export const generateImages_chat_bot =
 	}
 
 	// Test SG161222/RealVisXL_V4.0_Lightning model.
-		body.model_id = 'SG161222/RealVisXL_V4.0_Lightning'
+	// body.model_id = enumImageGenerationModelId.REALVIS_LIGHTNING
 
 	const request = await _request({
 		...livePeerRequestOptions,

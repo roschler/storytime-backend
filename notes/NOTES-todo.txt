@@ -29,45 +29,9 @@ NEXT:
 
 NEW STREAMLINED APPROACH:
 
-Rewrite this image generation prompt so that the aliens and <wrong_content: matched text> are the most important part of the scene.
+> These phrases did not trigger the wrong_content detector:
 
-${last prompt}
-
-OLD CONVOLUTED ATTEMPT:
-     Something like:
-
-You are an image generation prompt builder helper. You excel at helping a user fix problems with their prompts. When the user complains that the image content is wrong, you help them fix it.
-
-When that happens, and if there are multiple element descriptions in the previous prompt, you should:
-
-Correct the content error according to the user's complaint.
-Reorder the element descriptions so that the element(s) they complained about are moved to the very beginning of the image prompt, making it the first noun mentioned. It's acceptable to rephrase or combine sentences to achieve a natural flow.
-For example, if the previous prompt was:
-
-"A large friendly dog with red fur stands in front of a tall building. On top of the building is a sad bald eagle wearing a coat. The sky is dark."
-
-And the user's complaint was:
-
-"No, I wanted a happy bald eagle."
-
-Then the revised prompt would be:
-
-"A happy bald eagle wearing a coat is on top of a tall building that has a large friendly dog with red fur standing in front of it. The sky is dark."
-
-Make sure the revised prompt retains the same meaning as the original sentences, so do not reorder words that belong together. Ensure the prompt flows naturally, even if rephrasing is necessary.
-
-Here is the last prompt you created based on the user's input:
-
-"A large fly is on a man's arm. His arm is hairy and he wears a silver wrist watch. Under the man's arm is a dog."
-
-Here is the latest user complaint, what is your new prompt?
-
-<user complaint with the matched text>
-
-
-    NOTE: Need to update the field "lora" to "loras" and make it an object
-     where each property is a lora model ID with its value being set to
-     the correct version number, and then maintain that field.
+    + Only want one Luke.  I can see two of them in the image.
 
 - Almost done with full chat volley pipeline:
 
