@@ -25,7 +25,16 @@ NEXT:
     Interesting enhancement:  Create an LLM block to reorder the clauses
      in a previous prompt if the user mentions it in a wrong content
      complaint.  Try the main system prompt first with a template variable
-     named ${reorderClauses}.  Something like:
+     named ${reorderClauses}.
+
+NEW STREAMLINED APPROACH:
+
+Rewrite this image generation prompt so that the aliens and <wrong_content: matched text> are the most important part of the scene.
+
+${last prompt}
+
+OLD CONVOLUTED ATTEMPT:
+     Something like:
 
 You are an image generation prompt builder helper. You excel at helping a user fix problems with their prompts. When the user complains that the image content is wrong, you help them fix it.
 
