@@ -9,14 +9,21 @@ export const NUM_STEPS_ADJUSTMENT_VALUE = 3;
 // an image generation, up or down, based on feedback from the user.
 export const NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE = 3;
 
+// This is the minimum guidance scale we use with images
+//  that have text on them, to decrease the chances of
+//  misspelled words or distorted text, or if the user
+//  has made a wrong content complaint.
+export const MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE = 28;
+
 // This is the minimum number of steps we will make an
 //  image generation call with.
 export const MIN_STEPS = 1;
 
 // This is the minimum number of steps we use with images
 //  that have text on them, to decrease the chances of
-//  misspelled words or distorted text.
-export const MIN_STEPS_FOR_IMAGE_ON_TEXT = 21;
+//  misspelled words or distorted text, or if the user
+//  has made a wrong content complaint.
+export const MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT = 21;
 
 
 // -------------------- BEGIN: enumIntentDetectorId ------------
@@ -68,6 +75,7 @@ export enum enumChangeDescription{
 	"CHANGE_DESC_BE_LESS_CREATIVE" = "* I have told the engine to be less creative",
 	"CHANGE_DESC_BE_MORE_CREATIVE" = "* I have told the engine to be more creative",
 	"CHANGE_DESC_USE_TEXT_ENGINE" = "* I have switched to a text capable engine",
+	"CHANGE_DESC_USE_FLUX_ENGINE" = "* I have switched to the Flux engine",
 	"CHANGE_DESC_LESS_STEPS" = "* I have decreased the time spent on image generation to make things faster",
 	"CHANGE_DESC_MORE_STEPS" = "* I have increased the time spent on image generation to improve quality",
 	"CHANGE_DESC_FIX_WRONG_CONTENT" = "* I will try to fix the incorrect content",

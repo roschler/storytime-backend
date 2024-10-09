@@ -11,8 +11,8 @@ import {
 } from "./openai-chat-bot"
 import {
 	enumChangeDescription,
-	enumIntentDetectorId,
-	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT,
+	enumIntentDetectorId, MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE,
+	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT,
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
@@ -407,11 +407,19 @@ export async function processChatVolley(
 				enumImageGenerationModelId.FLUX
 
 			// Make sure the number of step is high.
-			if (chatState_current.steps < MIN_STEPS_FOR_IMAGE_ON_TEXT)
-				chatState_current.steps = MIN_STEPS_FOR_IMAGE_ON_TEXT
+			if (chatState_current.steps < MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT)
+				chatState_current.steps = MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT
 
 			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_USE_TEXT_ENGINE)
 			aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_MORE_STEPS)
+
+			// Make sure we are using the minimum guidance scale too
+			//  for text on images.
+			if (chatState_current.guidance_scale < MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE) {
+				chatState_current.guidance_scale = MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE;
+
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_LESS_CREATIVE)
+			}
 		} else {
 			// We don't switch away from flux to
 			//  another model just because the
@@ -490,6 +498,33 @@ export async function processChatVolley(
 
 			if (wrongContentText && wrongContentText.length > 0)
 				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_FIX_WRONG_CONTENT)
+
+			// We don't want to double increase the steps if
+			//  the text on image flag is set.
+
+			if (!bIsTextOnImageDesired) {
+				// Switch to the FLUX model since it is
+				//  much better for text on images.
+				chatState_current.model_id =
+					enumImageGenerationModelId.FLUX
+
+				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_USE_FLUX_ENGINE)
+
+				// Make sure the number of step is high.
+				if (chatState_current.steps < MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT) {
+					chatState_current.steps = MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT
+
+					aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_MORE_STEPS)
+
+					// Make sure we are using the minimum guidance scale too
+					//  for fixing wrong content complaints.
+					if (chatState_current.guidance_scale < MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE) {
+						chatState_current.guidance_scale = MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE;
+
+						aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_BE_LESS_CREATIVE)
+					}
+				}
+			}
 		}
 
 		// >>>>> Check for misspelled letters.
