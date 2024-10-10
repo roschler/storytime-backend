@@ -39,6 +39,25 @@ NEW STREAMLINED APPROACH:
 
 - Do we need to store the images in an S3 bucket for the contest?
 
+- The wrong_content detector needs improvement.  Example:
+
+    Previous prompt:
+
+    Generate an image of several monks dressed in golden frocks surrounding a monolith as they fervently pray for the Giant Chicken of Ragnarok to manifest. Ensure the scene exudes solemnity and reverence, with deep concentration depicted on the monks' faces. The setting should convey a mystical atmosphere, possibly with subtle ethereal lighting to enhance the spiritual ambiance. Include a majestic manifestation of the Giant Chicken of Ragnarok in a prominent position within the scene. The monks should have their hands raised in exhortation.
+
+    User feedback:
+
+    "The monks hands are not raised."
+
+    Probably need a dedicated wrong_content detector that gets passed the last prompt and the user input, and looks for specific instances of the user input that are semantically linked but in negation to some part of the previous prompt.
+
+    In this case:
+
+    neg: "The monks should have their hands raised in exhortation"
+
+        + Also, make sure this is why the prompt rewrite feature did not kick in.
+
+
 TESTS TO RUN:
 
 - Need to figure out the sweet spot in CFG and STEPS for the FLUX model to get clear, legible text.  Use the prompt below and try the major CFG STEPS value pairs, writing the generated image to a file that bears the CFG and STEPS values in the primary file name.  Have GPT write the code.
