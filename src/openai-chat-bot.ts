@@ -400,15 +400,6 @@ export function buildChatBotSystemPrompt(
 	// Not using this prompt for now.  Needs curation.
 	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
 
-	// Prepare the EXTENDED wrong content prompt.
-	const evalStrExtendedWrongContent =
-		'`' + g_ExtendedWrongContentPrompt + '`';
-
-	const evaluatedExtendedWrongContent =
-		eval(evalStrExtendedWrongContent)
-
-	arySubPrompts.push(evaluatedExtendedWrongContent)
-
 	// Main image generation system prompt.  Use it as a
 	//  template string so that we can insert the needed values
 	//  in the right place.

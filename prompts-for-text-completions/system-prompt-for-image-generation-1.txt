@@ -10,4 +10,4 @@ You will output your answer in a JSON object, using the following format:
 
 ${previousImageGenerationPromptOrNothing}
 
-${adornedUserPrompt_main}
+${adornedUserPrompt}
