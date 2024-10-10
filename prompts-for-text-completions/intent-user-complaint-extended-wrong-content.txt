@@ -28,8 +28,6 @@ Now analyze this PROMPT and USER_INPUT pair.
 
 PROMPT:
 
-${previousImageGenerationPromptOrNothing}
+${previousImageGenPrompt}
 
 USER_INPUT:
-
-${adornedUserPrompt}

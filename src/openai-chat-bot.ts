@@ -363,13 +363,13 @@ export function buildChatBotSystemPrompt(
 			//  modify the existing content.
 			previousImageGenerationPromptOrNothing =
 				`
-					Here is the last prompt you created for the image generator.:\n
+					Here is the previous image generation prompt you created:\n
 					${lastChatVolleyObj.prompt}\n
 				`
 			if (lastChatVolleyObj.negative_prompt.length > 0) {
 				previousImageGenerationPromptOrNothing +=
 					`
-							Here is the last negative prompt you created for the image generator:\n
+							Here is the previous negative prompt you created:\n
 							${lastChatVolleyObj.negative_prompt}
 						`
 			}

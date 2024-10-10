@@ -173,7 +173,7 @@ export class ChatVolley {
 	public chat_state_at_start: CurrentChatState;
 
 	/**
-	 * The state of the chat atthe end of the volley.
+	 * The state of the chat at the end of the volley.
 	 */
 	public chat_state_at_end: CurrentChatState;
 

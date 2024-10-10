@@ -4,7 +4,7 @@ import type WebSocket from "ws"
 import { ChatVolley, CurrentChatState, readChatHistory, writeChatHistory } from "./chat-volleys/chat-volleys"
 import { enumImageGenerationModelId, IntentJsonResponseObject } from "./enum-image-generation-models"
 import {
-	buildChatBotSystemPrompt, g_TextCompletionParams,
+	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
 	processAllIntents,
 	showIntentResultObjects,
@@ -282,15 +282,21 @@ export async function processChatVolley(
 	//  ending state.  If not, create a default
 	//  chat state object.
 	const  chatHistoryObj =
-		await readChatHistory(userId)
+		await readChatHistory(userId);
+
+	const chatVolley_previous =
+		chatHistoryObj.getLastVolley()
+
+	const previousChatVolleyPrompt =
+		chatVolley_previous?.prompt;
 
 	const chatState_start =
-		chatHistoryObj.getLastVolley()?.chat_state_at_start ?? CurrentChatState.createDefaultObject()
+		chatVolley_previous?.chat_state_at_start ?? CurrentChatState.createDefaultObject();
 
 	// Make a clone of the starting chat state so that we can
 	//  have it as a reference as we make state changes.
 	const chatState_current =
-		chatState_start.clone()
+		chatState_start.clone();
 
 	/*
 	const result =
@@ -378,6 +384,46 @@ export async function processChatVolley(
 
 		if (aryIntentDetectorJsonResponseObjs.length < 1)
 			throw new Error(`The array of intent detectors JSON response objects is empty.`);
+
+		// -------------------- BEGIN: EXTENDED WRONG CONTENT DETECTOR ------------
+
+		// The extended wrong content detector is handled separately
+		//  because we need to push text into the prompt for it.
+
+		// Prepare the EXTENDED wrong content prompt.
+		const previousImageGenPrompt =
+			previousChatVolleyPrompt;
+
+		const evalStrExtendedWrongContent =
+			'`' + g_ExtendedWrongContentPrompt + '`';
+
+		const evaluatedExtendedWrongContent =
+			eval(evalStrExtendedWrongContent);
+
+		// Make a separate completion call for it.
+		console.info(CONSOLE_CATEGORY, `>>>>> Making extended wrong content detector completion request <<<<<`)
+
+		const textCompletion =
+			await chatCompletionImmediate(
+				'MAIN-IMAGE-GENERATION-PROMPT',
+				evaluatedExtendedWrongContent,
+				userInput,
+				g_TextCompletionParams,
+				true);
+
+		if (textCompletion.is_error)
+			throw new Error(`The extended wrong content detector completion call failed with error: ${textCompletion.error_message}`);
+
+		const extWrongContentJsonResponseObj: IntentJsonResponseObject =
+			{
+				intent_detector_id: enumIntentDetectorId.USER_COMPLAINT_WRONG_CONTENT_EXTENDED,
+				array_child_objects: textCompletion.json_response as object[]
+			}
+
+		// Add it to the array of intent detection JSON response objects.
+		aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj)
+
+		// -------------------- END  : EXTENDED WRONG CONTENT DETECTOR ------------
 
 		// -------------------- BEGIN: INTENT DETECTIONS TO STATE CHANGES ------------
 

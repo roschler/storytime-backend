@@ -49,7 +49,9 @@ export enum enumIntentDetectorId {
 	// User is complaining about the generation speed.
 	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
 	// User wants to start a brand new image.
-	START_NEW_IMAGE = "start_new_image"
+	START_NEW_IMAGE = "start_new_image",
+	// User wrong content complaint from the extended wrong content detector.
+	USER_COMPLAINT_WRONG_CONTENT_EXTENDED = "user_complaint_wrong_content_extended",
 }
 
 /**
