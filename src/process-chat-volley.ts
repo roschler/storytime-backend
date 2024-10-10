@@ -14,7 +14,7 @@ import {
 	enumIntentDetectorId, MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE,
 	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT,
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
-	NUM_STEPS_ADJUSTMENT_VALUE, USER_COMPLAINT_WRONG_CONTENT_EXTENDED,
+	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse } from "./openai-parameter-objects"
@@ -416,7 +416,7 @@ export async function processChatVolley(
 
 		const extWrongContentJsonResponseObj: IntentJsonResponseObject =
 			{
-				intent_detector_id: USER_COMPLAINT_WRONG_CONTENT_EXTENDED,
+				intent_detector_id: enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				array_child_objects: textCompletion.json_response as object[]
 			}
 
@@ -532,8 +532,9 @@ export async function processChatVolley(
 				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
 				'wrong_content',
-
 			);
+
+		// Check for extended wrong content detection.
 
 		// If there is a wrong content complaint, get the text that
 		//  was identified as the problem item.

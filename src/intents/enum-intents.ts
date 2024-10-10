@@ -52,11 +52,6 @@ export enum enumIntentDetectorId {
 	START_NEW_IMAGE = "start_new_image"
 }
 
-// We don't put the extended wrong content intent
-//  detector ID in the enum because it requires
-//  text substitutions to build the prompt.
-export const USER_COMPLAINT_WRONG_CONTENT_EXTENDED = "user_complaint_wrong_content_extended";
-
 /**
  * This function returns TRUE if the given value is a valid
  *   enumIntentDetectorId value, FALSE if not.
