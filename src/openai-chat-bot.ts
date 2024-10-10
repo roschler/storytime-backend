@@ -115,7 +115,6 @@ g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED] =
 		prompt_text: ""
 	};
 
-
 // We iterate over all the intent values known to the system
 //  at this time to make sure that every one of them has a
 //  corresponding prompt resource, and then we load that into
@@ -300,6 +299,13 @@ export const g_TipsFromDiscordMembersPrompt =
 export const g_MainImageGenerationFaqPrompt =
 	readImageGenerationSubPromptOrDie('main-image-improvement-tips-and-guidelines-document-no-parameter-tips.txt')
 
+// We use a dedicated wrong content prompt for user input
+//  that points out specific wrong content errors because
+//  the lesser intent detector that generates wrong
+//  content detections misses things.
+export const g_ExtendedWrongContentPrompt =
+	readImageGenerationSubPromptOrDie('intent-user-complaint-extended-wrong-content.txt')
+
 // -------------------- END  : LOAD PROMPT BUILDER TEXT FILES ------------
 
 /**
@@ -394,6 +400,15 @@ export function buildChatBotSystemPrompt(
 	// Not using this prompt for now.  Needs curation.
 	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
 
+	// Prepare the EXTENDED wrong content prompt.
+	const evalStrExtendedWrongContent =
+		'`' + g_ExtendedWrongContentPrompt + '`';
+
+	const evaluatedExtendedWrongContent =
+		eval(evalStrExtendedWrongContent)
+
+	arySubPrompts.push(evaluatedExtendedWrongContent)
+
 	// Main image generation system prompt.  Use it as a
 	//  template string so that we can insert the needed values
 	//  in the right place.
@@ -401,11 +416,11 @@ export function buildChatBotSystemPrompt(
 	// NOTE: Because they are only found in the system
 	//  prompt eval string, the IDE will incorrectly
 	//  flag them as unused variables.
-	const evalStr =
+	const evalStrMainSystemPrompt =
 		'`' + g_MainImageGenerationSystemPrompt + '`';
 
 	const evaluatedSystemPrompt =
-		eval(evalStr)
+		eval(evalStrMainSystemPrompt)
 
 	arySubPrompts.push(evaluatedSystemPrompt)
 
