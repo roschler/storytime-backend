@@ -29,7 +29,15 @@ NEXT:
 
 NEW STREAMLINED APPROACH:
 
+I think the rewrite feature is triggering a JSON error.  When I make specific complaint about the image being wrong, I see that error.
+
+- Change the color of the error text so it is more visible.
+
+- The prompt rewrite feature is not being triggered reliably.
+
 > These phrases did not trigger the wrong_content detector:
+
+    + The elephant is not dancing.
 
     + Only want one Luke.  I can see two of them in the image.
 
