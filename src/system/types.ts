@@ -23,6 +23,14 @@ export interface ImageType {
 	urls: string[]
 }
 
+/**
+ * This is the expected request payload for a image share
+ *  on Twitter operation.
+ */
+export interface ShareImageOnTwitterType {
+	url: string,
+}
+
 // The request payload for a Storytime app request.
 export interface RequestPayload_storytime {
 	prompt: string

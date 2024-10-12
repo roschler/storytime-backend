@@ -22,6 +22,35 @@ FUTURE FEATURES:
 
 NEXT:
 
+    > Finish Twitter posting feature
+
+        - When the Twitter post button is pressed the client will
+            send us a websocket request to that effect with the
+            user ID, and the URL of the image the user selected from the
+            image carousel.  The websocket request will be a
+            "share_image_on_twitter" request.
+
+        - We need to do the following in response to this request:
+
+            > Download the image from the URL, and then store it
+             in our nft3d-public-mp3 public bucket.  Here is a
+             sample object URL
+
+                https://nft3d-public-mp3.s3.amazonaws.com/livepeer-images/some-image.png
+
+            > Then we need to build the HTML for dead simple page that
+                looks like this:
+
+                <!-- Twitter Card data -->
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:title" content="Your Post Title">
+                <meta name="twitter:description" content="A short description of your content.">
+                <meta name="twitter:image" content="https://example.com/path-to-your-image.jpg">
+
+            >> See the ChatGPTPlus thread for the rest of the details.
+
+
+
     Interesting enhancement:  Create an LLM block to reorder the clauses
      in a previous prompt if the user mentions it in a wrong content
      complaint.  Try the main system prompt first with a template variable

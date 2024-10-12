@@ -33,6 +33,7 @@ let streaming = false
 ws.on("message", (data) => {
 	const buf = Buffer.from(data)
 	const json = JSON.parse(buf.toString("utf8"))
+
 	function showImages() {
 		imageUrls.forEach((url, i) => {
 			console.log(`* Image ${i + 1}: ${url}`)
@@ -61,11 +62,17 @@ ws.on("message", (data) => {
 			}
 		}
 		// This may seem convoluted but occasionally the images are sent before the text stream is finished so we need to wait for the text stream to finish before displaying the images!
-		if (json.type === "image") {
+		else if (json.type === "image") {
 			imageUrls.push(...json.payload.urls)
 			if (!streaming) {
 				showImages()
 			}
+		}
+		else if (json.type === "share_images_on_twitter") {
+			// This request type is the result of the user initiating
+			//  a Twitter image share from the client.
+			console.log("* Sharing images on twitter...")
+
 		}
 	}
 })
