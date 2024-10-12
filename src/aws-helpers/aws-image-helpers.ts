@@ -82,3 +82,77 @@ export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: strin
 		throw new Error(`Failed to upload image to S3: ${error.message}`);
 	}
 }
+
+/**
+ * Builds a Twitter share URL with pre-filled tweet text, an image URL, and hashtags.
+ *
+ * @param {string} postText - The text content of the tweet. Must be a non-empty string.
+ * @param {string} imageUrl - The URL of the image to share. Must be a valid HTTPS URL.
+ * @param {string[]} aryHashTags - An array of hashtags (without the # symbol). Must be non-empty and properly trimmed.
+ * @param {string} title - The title for the Twitter card. Must be a non-empty string.
+ * @param {string} description - The description for the Twitter card. Must be a non-empty string.
+ * @returns {string} - The generated Twitter share URL.
+ * @throws {Error} If any of the input parameters are invalid (empty strings, invalid URLs, or non-HTTPS protocols).
+ */
+export function buildImageShareForTwitterUrl(
+	postText: string,
+	imageUrl: string,
+	aryHashTags: string[],
+	title: string,
+	description: string
+): string {
+	// Validate postText
+	if (!postText || postText.trim().length === 0) {
+		throw new Error("postText cannot be an empty string.");
+	}
+
+	// Validate imageUrl
+	if (!imageUrl || imageUrl.trim().length === 0) {
+		throw new Error("imageUrl cannot be an empty string.");
+	}
+
+	// Ensure imageUrl is a valid URL and uses HTTPS protocol
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(imageUrl);
+	} catch (err) {
+		throw new Error(`imageUrl is not a valid URL: ${imageUrl}`);
+	}
+	if (parsedUrl.protocol !== "https:") {
+		throw new Error(`imageUrl must use the HTTPS protocol: ${imageUrl}`);
+	}
+
+	// Validate title
+	if (!title || title.trim().length === 0) {
+		throw new Error("title cannot be an empty string.");
+	}
+
+	// Validate description
+	if (!description || description.trim().length === 0) {
+		throw new Error("description cannot be an empty string.");
+	}
+
+	// Base URL for Twitter's tweet intent
+	const baseUrl = "https://twitter.com/intent/tweet?";
+
+	// Create the page URL for the Twitter card
+	const pageUrl = `https://example.com/twitter-card/${parsedUrl.pathname.split('/').pop()}?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
+
+	// Encode the post text and page URL
+	const textParam = `text=${encodeURIComponent(postText)}`;
+	const urlParam = `url=${encodeURIComponent(pageUrl)}`;
+
+	// Validate, trim, and encode hashtags (comma-separated)
+	const hashtagsParam = aryHashTags.length > 0
+		? `&hashtags=${encodeURIComponent(
+			aryHashTags
+				.map(tag => tag.trim())  // Trim each hashtag
+				.filter(tag => tag.length > 0)  // Filter out empty strings
+				.join(',')
+		)}`
+		: '';
+
+	// Construct and return the full URL
+	return `${baseUrl}${textParam}&${urlParam}${hashtagsParam}`;
+}
+

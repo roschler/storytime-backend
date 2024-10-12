@@ -32,20 +32,40 @@ NEXT:
 
         - We need to do the following in response to this request:
 
-            > Download the image from the URL, and then store it
-             in our nft3d-public-mp3 public bucket.  Here is a
-             sample object URL
+            PREQUISITE:
 
-                https://nft3d-public-mp3.s3.amazonaws.com/livepeer-images/some-image.png
+                + Get the user's chat history
+                + Get the last generated prompt
+                + Create a new prompt that asks gpt-4-turbo to
+                  create a pithy, viral tweet from the prompt
+                  with the footer - Made with @Livepeer Image Helper
+                + Use the response as the preset text for the
+                  Tweet
 
-            > Then we need to build the HTML for dead simple page that
-                looks like this:
+            > Use putLivepeerImageToS3() to store the image in S3
+             and get back the S3 asset
+
+            > Use buildImageShareForTwitterUrl() to build the image
+              share link we pass to the Twitter share intent API
+
+              Here's an example link it might build:
+
+              https://example.com/twitter-card/123?card=summary_large_image&title=My%20Title&description=My%20Description
+
+            > Return the fully built Twitter share intent URL to the
+               front-end client, so it can open a new tab for the
+               user that shows them the pre-built tweet.
+
+            > When the Twitter share intent accesses our route for /twitter-card/:imageId, it returns this text:
 
                 <!-- Twitter Card data -->
                 <meta name="twitter:card" content="summary_large_image">
                 <meta name="twitter:title" content="Your Post Title">
                 <meta name="twitter:description" content="A short description of your content.">
                 <meta name="twitter:image" content="https://example.com/path-to-your-image.jpg">
+
+                + Twitter will uses this information to build a nice
+                 image preview, visible in the Tweet
 
             >> See the ChatGPTPlus thread for the rest of the details.
 

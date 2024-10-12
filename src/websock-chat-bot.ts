@@ -6,13 +6,11 @@ import { WebSocket } from 'ws'
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { StateType, ErrorType, RequestPayload_chat_bot } from "./system/types"
+import { StateType, } from "./system/types"
 import {
 	sendStateMessage,
 	sendErrorMessage,
-	sendImageMessage,
 	sendTextMessage,
-	saveImageURLs,
 	saveMetaData_chat_bot
 } from "./system/handlers"
 import path from "node:path"
@@ -20,9 +18,7 @@ import { isFlagged } from "./openai-common"
 
 import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
-import { assistUserWithImageGeneration } from "./openai-chat-bot"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { readChatHistory } from "./chat-volleys/chat-volleys"
 import { processChatVolley } from "./process-chat-volley"
 
 // What do we say when the user is trying to be problematic?
