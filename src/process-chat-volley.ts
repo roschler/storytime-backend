@@ -405,7 +405,7 @@ export async function processChatVolley(
 
 		const textCompletion =
 			await chatCompletionImmediate(
-				'MAIN-IMAGE-GENERATION-PROMPT',
+				'EXTENDED-WRONG-CONTENT-PROMPT',
 				evaluatedExtendedWrongContent,
 				userInput,
 				g_TextCompletionParams,
