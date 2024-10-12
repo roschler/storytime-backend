@@ -799,4 +799,23 @@ export async function processChatVolley(
 	return aryImageUrls
 }
 
+/**
+ * This function does the necessary tasks to build a Tweet
+ *  that will share the given image on Twitter.
+ *
+ * @param userId - The user ID that wants to share the
+ *  image on Twitter.
+ * @param imageUrl - The image URL to the image to be
+ *  shared on Twitter.
+ */
+export async function shareImageOnTwitter(userId: string, imageUrl: string) {
+	if (userId || userId.trim().length < 1)
+		throw new Error(`The user ID is empty or invalid.`);
+
+	if (!imageUrl || imageUrl.trim().length < 1)
+		throw new Error(`The image URL is empty or invalid.`);
+
+
+}
+
 // -------------------- END  : MAIN FUNCTION ------------

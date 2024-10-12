@@ -216,6 +216,8 @@ async function wsConnection(
 
 			// Is it a request message?
 			if (message.type === "request") {
+				// -------------------- BEGIN: PROCESS IMAGE GEN USER INPUT FROM CLIENT ------------
+
 				// Yes.  Process a chat volley.
 				//
 				// Every request must have a user ID and user input fields.
@@ -256,6 +258,39 @@ async function wsConnection(
 				// const imageGenerationPrompt = extractImageGenerationPrompt(message)
 
 				return isChatVolleySuccessful
+
+				// -------------------- END  : PROCESS IMAGE GEN USER INPUT FROM CLIENT ------------
+			} else if (message.type === "share_image_on_twitter") {
+				// -------------------- BEGIN: SHARE IMAGE ON TWITTER ------------
+
+				// User wants to share a generated image.
+				//
+				// Every request must have a user ID and image URL
+				//  field in the payload.
+				const { user_id, prompt } = message.payload;
+
+				if (!user_id || user_id.trim().length < 1)
+					throw new Error(`BAD REQUEST: User ID is missing.`);
+
+				if (!prompt || prompt.trim().length < 1)
+					throw new Error(`BAD REQUEST: Image URL is missing.`);
+
+				// Create a unique request ID.
+				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+
+				// Call the function that does the share on Twitter
+				//  operations.  It will return the URL we provide
+				//  a GET route for that will serve up the Twitter
+				//  card document the Twitter share intent requires
+				//  for showing an image preview on a Tweet.
+				const urlToTwitterCard =
+					await shareImageOnTwitter(userId, imageUrl);
+
+				if (typeof urlToTwitterCard !== 'string' || urlToTwitterCard.length < 1)
+					throw new Error(`The URL to the Twitter card is empty or invalid.`);
+
+
+				// -------------------- END  : SHARE IMAGE ON TWITTER ------------
 			} else {
 				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
 			}

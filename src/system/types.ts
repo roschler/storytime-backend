@@ -26,9 +26,16 @@ export interface ImageType {
 /**
  * This is the expected request payload for a image share
  *  on Twitter operation.
+ *
+ * WARNING: This interface must match the declaration
+ *  for ShareImageOnTwitterPayload used by the client
+ *  front-end.
  */
 export interface ShareImageOnTwitterType {
-	url: string,
+	// We send back to the client the URL to our back-end
+	//  server that will build the Twitter card for
+	//  previewing the image on the Tweet.
+	url_to_twitter_card: string,
 }
 
 // The request payload for a Storytime app request.
