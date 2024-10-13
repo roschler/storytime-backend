@@ -5,6 +5,8 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import axios from "axios";
 import { URL } from "url";
 
+const CONSOLE_CATEGORY = 'aws-image-helpers';
+
 /**
  * Uploads an image from Livepeer to Amazon S3 under a user-specific folder.
  *
@@ -84,22 +86,24 @@ export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: strin
 }
 
 /**
- * Builds a Twitter share URL with pre-filled tweet text, an image URL, and hashtags.
+ * Builds a Twitter share URL with pre-filled tweet text, a link to the Twitter card, and hashtags.
  *
  * @param {string} postText - The text content of the tweet. Must be a non-empty string.
- * @param {string} imageUrl - The URL of the image to share. Must be a valid HTTPS URL.
+ * @param {string} imageUrl - The URL of the image to share (direct URL to the S3 image).
  * @param {string[]} aryHashTags - An array of hashtags (without the # symbol). Must be non-empty and properly trimmed.
  * @param {string} title - The title for the Twitter card. Must be a non-empty string.
  * @param {string} description - The description for the Twitter card. Must be a non-empty string.
+ * @param {string} [card="summary_large_image"] - The type of Twitter card. Defaults to "summary_large_image".
  * @returns {string} - The generated Twitter share URL.
  * @throws {Error} If any of the input parameters are invalid (empty strings, invalid URLs, or non-HTTPS protocols).
  */
 export function buildImageShareForTwitterUrl(
 	postText: string,
-	imageUrl: string,
+	imageUrl: string, // This is the S3 image URL
 	aryHashTags: string[],
 	title: string,
-	description: string
+	description: string,
+	card: string = "summary_large_image" // Default Twitter Card type
 ): string {
 	// Validate postText
 	if (!postText || postText.trim().length === 0) {
@@ -132,15 +136,21 @@ export function buildImageShareForTwitterUrl(
 		throw new Error("description cannot be an empty string.");
 	}
 
-	// Base URL for Twitter's tweet intent
-	const baseUrl = "https://twitter.com/intent/tweet?";
+	// Validate card
+	if (!card || card.trim().length === 0) {
+		throw new Error("card cannot be an empty string.");
+	}
 
-	// Create the page URL for the Twitter card
-	const pageUrl = `https://example.com/twitter-card/${parsedUrl.pathname.split('/').pop()}?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
+	// Twitter intent/tweet base URL
+	const twitterShareBaseUrl = "https://twitter.com/intent/tweet";
 
-	// Encode the post text and page URL
-	const textParam = `text=${encodeURIComponent(postText)}`;
-	const urlParam = `url=${encodeURIComponent(pageUrl)}`;
+	// Construct the full URL to open the Twitter share dialog
+	//  with the embedded twitterCardUrl that sends the Twitter
+	//  share intent server to our GET URL for Twitter card
+	//  metadata.
+
+	// Base URL for your Fastify route that serves the Twitter Card metadata
+	let twitterCardHostOurs = process.env.TWITTER_CARD_BASE_URL || 'https://plasticeducator.com';
 
 	// Validate, trim, and encode hashtags (comma-separated)
 	const hashtagsParam = aryHashTags.length > 0
@@ -152,7 +162,42 @@ export function buildImageShareForTwitterUrl(
 		)}`
 		: '';
 
-	// Construct and return the full URL
-	return `${baseUrl}${textParam}&${urlParam}${hashtagsParam}`;
+	// Create the URL pointing to your Fastify route, which will serve up the metadata for the Twitter Card
+	const twitterCardUrl = `${twitterCardHostOurs}/twitter-card/${parsedUrl.pathname.split('/').pop()}?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&card=${encodeURIComponent(card)}&imageUrl=${encodeURIComponent(imageUrl)}${hashtagsParam}`;
+
+	/*
+
+	// Encode the tweet text (postText) separately from the URL
+	const textParam = `text=${encodeURIComponent(postText)}`;
+
+	// Include the twitterCardUrl as the URL query parameter (Twitter will use this to fetch metadata)
+	const urlParam = `&url=${encodeURIComponent(twitterCardUrl)}`;
+
+	// Validate, trim, and encode hashtags (comma-separated)
+	const hashtagsParam = aryHashTags.length > 0
+		? `&hashtags=${encodeURIComponent(
+			aryHashTags
+				.map(tag => tag.trim())  // Trim each hashtag
+				.filter(tag => tag.length > 0)  // Filter out empty strings
+				.join(',')
+		)}`
+		: '';
+
+	// Construct and return the full Twitter intent URL
+	const fullShareUrl = `${twitterShareBaseUrl}?${textParam}${urlParam}${hashtagsParam}`;
+
+	 */
+
+	// Include the twitterCardUrl as the URL query parameter (Twitter will use this to fetch metadata)
+	const urlParam = `url=${twitterCardUrl}`;
+
+	// When a Twitter card is used, it replaces the other Twitter share
+	//  intent query arguments so only the URL parameter should be
+	//  included.
+	const fullShareUrl = `${twitterShareBaseUrl}?${urlParam}`;
+
+	console.info(CONSOLE_CATEGORY, `Full Twitter share URL built:\n${fullShareUrl}`)
+
+	return fullShareUrl
 }
 

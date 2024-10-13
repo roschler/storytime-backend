@@ -283,7 +283,7 @@ async function wsConnection(
 				//  card document the Twitter share intent requires
 				//  for showing an image preview on a Tweet.
 				const urlToTwitterCard =
-					await shareImageOnTwitter(user_id, image_url);
+					await shareImageOnTwitter(client, user_id, image_url);
 
 				// Send it back to the client.
 				sendTwitterCardUrlMessage(client,

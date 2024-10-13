@@ -33,6 +33,7 @@ import {
 	enumImageGenerationModelId,
 	IntentJsonResponseObject,
 } from "../enum-image-generation-models"
+import { StateType } from "../system/types"
 
 /**
  * Represents the current state of the chat, particularly for image generation settings.
@@ -568,6 +569,27 @@ export async function readChatHistory(userId: string): Promise<ChatHistory>  {
 
 		// -------------------- END  : BRAND NEW USER ------------
 	}
+}
+
+/**
+ * Returns a default StateType object with the fields initialized
+ * to starting values. Allows passing in partial overrides for the state.
+ *
+ * @param overrides - An optional object that contains one or more fields from StateType to override the defaults.
+ * @returns {StateType} - The default state with optional overrides.
+ */
+export function getDefaultState(overrides: Partial<StateType> = {}): StateType {
+	// Default state object
+	const defaultState: StateType = {
+		streaming_audio: false,
+		streaming_text: false,
+		waiting_for_images: false,
+		current_request_id: "",
+		state_change_message: ""
+	};
+
+	// Return the merged object, with overrides replacing defaults where provided
+	return { ...defaultState, ...overrides };
 }
 
 

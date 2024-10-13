@@ -13,6 +13,7 @@ const host = '0.0.0.0';
 
 const appName = 'Chatbot';
 const versionNum = '1.0';
+const CONSOLE_CATEGORY = 'index page';
 
 let app: FastifyInstance;
 
@@ -87,22 +88,60 @@ interface TwitterCardParams {
 // -------------------- END  : TYPES NEEDED FOR TWITTER CARD ROUTE ------------
 
 /**
+ * Type definition for the query parameters expected in the request.
+ */
+interface TwitterCardQuery {
+	card: string;
+	title: string;
+	description: string;
+	imageUrl: string;
+}
+
+/**
+ * Type definition for the route parameters (path parameters).
+ */
+interface TwitterCardParams {
+	imageId: string;
+}
+
+/**
  * Fastify route that generates a dynamic Twitter Card metadata page.
  *
  * @param {string} imageId - The ID of the image (from the URL path).
  * @param {string} card - The type of Twitter card (e.g., "summary_large_image").
  * @param {string} title - The title of the Twitter card. Must be a non-empty string.
  * @param {string} description - The description of the Twitter card. Must be a non-empty string.
+ * @param {string} imageUrl - The URL of the image to display in the card. Must be a valid URL.
  * @returns {string} - Dynamically generated HTML page with Twitter Card metadata.
- * @throws {400} - Returns a 400 Bad request error iff any of the required parameters are missing or invalid.
+ * @throws {400} - Returns a 400 Bad request error if any of the required parameters are missing or invalid.
  */
 app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:imageId', async (
-		request: FastifyRequest<
-			{
-				Params: TwitterCardParams;
-				Query: TwitterCardQuery }>, reply: FastifyReply) => {
+	request: FastifyRequest<{
+		Params: TwitterCardParams;
+		Query: TwitterCardQuery;
+	}>,
+	reply: FastifyReply
+) => {
 	const { imageId } = request.params;
-	const { card, title, description } = request.query as TwitterCardQuery;
+	const { card, title, description, imageUrl } = request.query as TwitterCardQuery;
+
+	// -------------------- BEGIN: LOG REQUEST ------------
+
+	console.log('\n----------------- TWITTER CARD REQUEST ------------\n')
+
+	// Log the request headers
+	console.log('Request Headers:', request.headers);
+
+	// Inspect the user-agent to check if it's from Twitter
+	const userAgent = request.headers['user-agent'];
+	console.log('User-Agent:', userAgent);
+
+	// Check for Twitter's bot specifically
+	if (userAgent && userAgent.includes('Twitterbot')) {
+		console.log('This request is coming from Twitterbot.');
+	}
+
+	// -------------------- END  : LOG REQUEST ------------
 
 	// Validate imageId
 	if (!imageId || typeof imageId !== 'string' || imageId.trim().length === 0) {
@@ -124,28 +163,50 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 		return reply.code(400).send({ error: 'Invalid or missing description parameter.' });
 	}
 
-	// Construct the image URL using the imageId
-	const imageUrl = `https://example.com/generated-images/${imageId}.jpg`;
+	// Validate imageUrl
+	if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim().length === 0) {
+		return reply.code(400).send({ error: 'Invalid or missing imageUrl parameter.' });
+	}
+
+	console.info(CONSOLE_CATEGORY, `Serving up Twitter card for image ID: ${imageId}`)
+
+	let parsedImageUrl: URL;
+	try {
+		parsedImageUrl = new URL(imageUrl);
+	} catch (err) {
+		return reply.code(400).send({ error: `imageUrl is not a valid URL: ${imageUrl}` });
+	}
+
+	const theSite = "https://plasticeducator.com/"
+	const theCreator = "human_for_now"
 
 	// Dynamically generate the HTML with Twitter Card metadata
+
+	// NOTE: Forcing card format to "summary".
 	const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta name="twitter:card" content="${encodeURIComponent(card)}">
-        <meta name="twitter:title" content="${encodeURIComponent(title)}">
-        <meta name="twitter:description" content="${encodeURIComponent(description)}">
-        <meta name="twitter:image" content="${encodeURIComponent(imageUrl)}">
-    </head>
-    <body>
-        <p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${encodeURIComponent(imageId)}.</p>
-    </body>
-    </html>
-    `;
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta name="twitter:card" content="summary">
+			<meta name="twitter:title" content="${title}">
+			<meta name="twitter:site" content="${theSite}">
+			<meta name="twitter:description" content="${description}">
+			<meta name="twitter:image" content="${parsedImageUrl.href}"> 
+			<meta name="twitter:image:alt" content="${description}">
+		</head>
+		<body>
+			<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
+		</body>
+		</html>
+	`;
+
+	console.log(`HTML returned to user agent:\n${userAgent}\n`)
+	console.log(`${html}`)
 
 	// Serve the dynamically generated HTML
 	reply.type('text/html').send(html);
 });
+
 
 // Wildcard route for front-end routing (must be after other routes)
 app.setNotFoundHandler(async (request: FastifyRequest, reply: FastifyReply) => {

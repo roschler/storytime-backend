@@ -1,7 +1,13 @@
 // This module includes code for processing a chat volley.
 
 import type WebSocket from "ws"
-import { ChatVolley, CurrentChatState, readChatHistory, writeChatHistory } from "./chat-volleys/chat-volleys"
+import {
+	ChatVolley,
+	CurrentChatState,
+	getDefaultState,
+	readChatHistory,
+	writeChatHistory,
+} from "./chat-volleys/chat-volleys"
 import { enumImageGenerationModelId, IntentJsonResponseObject } from "./enum-image-generation-models"
 import {
 	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
@@ -804,21 +810,37 @@ export async function processChatVolley(
  * This function does the necessary tasks to build a Tweet
  *  that will share the given image on Twitter.
  *
+ * @param client - The client connection making the share
+ *  request.
  * @param userId - The user ID that wants to share the
  *  image on Twitter.
  * @param imageUrl - The image URL to the image to be
  *  shared on Twitter.
  */
-export async function shareImageOnTwitter(userId: string, imageUrl: string) : Promise<string> {
+export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string) : Promise<string> {
 	if (!userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
 	if (!imageUrl || imageUrl.trim().length < 1)
 		throw new Error(`The image URL is empty or invalid.`);
 
+	// This function sends a state update message, but with
+	//  all the other fields besides the state_change_message
+	//  set to their default values.
+	function sendSimpleStateMessage(stateChangeMessage: string) {
+		if (!stateChangeMessage || stateChangeMessage.length < 1)
+			throw new Error(`The state change message is empty.`);
+
+		let newState: StateType = getDefaultState({ state_change_message: stateChangeMessage})
+
+		sendStateMessage(client, newState)
+	}
+
 	// -------------------- BEGIN: CREATE TWEET TEXT FROM PROMPT ------------
 
 	// First, we get the prompt of the last generated image
+
+	sendSimpleStateMessage('Preparing tweet...')
 
 	// Get the chat history object for the given user.
 	const chatHistoryObj =
@@ -839,6 +861,8 @@ export async function shareImageOnTwitter(userId: string, imageUrl: string) : Pr
 
 	console.info(CONSOLE_CATEGORY, `>>>>> Making image generation prompt to Tweet text LLM completion request <<<<<`)
 
+	sendSimpleStateMessage('Creating tweet message from the image generation prompt...')
+
 	const textCompletion =
 		await chatCompletionImmediate(
 			'IMAGE-GENERATION-PROMPT-TO-TWEET',
@@ -850,6 +874,8 @@ export async function shareImageOnTwitter(userId: string, imageUrl: string) : Pr
 	// ImageGenPromptToTweetLlmJsonResponse
 	const jsonResponse =
 		textCompletion.json_response as ImageGenPromptToTweetLlmJsonResponse;
+
+	sendSimpleStateMessage('Saving Livepeer image to permanent storage...')
 
 	// Put the image in our S3 bucket.
 	const fullS3UriToImage =
@@ -869,6 +895,7 @@ export async function shareImageOnTwitter(userId: string, imageUrl: string) : Pr
 
 	// -------------------- END  : CREATE TWEET TEXT FROM PROMPT ------------
 
+	sendSimpleStateMessage('Opening Twitter to share tweet...')
 
 	// Return the twitter card URL.
 	return twitterCardUrl
