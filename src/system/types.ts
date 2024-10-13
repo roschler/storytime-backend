@@ -52,6 +52,16 @@ export interface TwitterImageCardUrlResponse {
 	url_to_twitter_card: string,
 }
 
+/**
+ * This interface describes a Twitter card details object.
+ */
+export interface TwitterCardDetails {
+	tweet_text: string,
+	hash_tags_array: string[],
+	twitter_card_title: string,
+	twitter_card_description: string,
+	url_to_image: string
+}
 
 // The request payload for a Storytime app request.
 export interface RequestPayload_storytime {

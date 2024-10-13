@@ -25,8 +25,9 @@ import {
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse, ImageGenPromptToTweetLlmJsonResponse } from "./openai-parameter-objects"
 import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
-import { StateType, TextType } from "./system/types"
+import { StateType, TextType, TwitterCardDetails } from "./system/types"
 import { buildImageShareForTwitterUrl, putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
+import { URL } from "url"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -881,24 +882,66 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 	const fullS3UriToImage =
 		await putLivepeerImageToS3(userId, imageUrl)
 
+	const aryHashTags = ['AIArt'];
 
 	// Build the Twitter card URL back to our back-end server (here).
-	const twitterCardUrl =
-		buildImageShareForTwitterUrl(
-			jsonResponse.tweet_text,
-			fullS3UriToImage,
-			['AIArt'],
-			jsonResponse.twitter_card_title,
-			jsonResponse.twitter_card_description
-		)
+	//
+	// Twitter intent/tweet base URL
+	const twitterShareBaseUrl = "https://twitter.com/intent/tweet";
 
+	// Construct the full URL to open the Twitter share dialog
+	//  with the embedded twitterCardUrl that sends the Twitter
+	//  share intent server to our GET URL for Twitter card
+	//  metadata.
+
+	// Ensure imageUrl is a valid URL and uses HTTPS protocol
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(imageUrl);
+	} catch (err) {
+		throw new Error(`imageUrl is not a valid URL: ${imageUrl}`);
+	}
+
+	const imageId =
+		parsedUrl.pathname.split('/').pop();
+
+	if (!imageId || imageId.length < 1)
+		throw new Error(`Invalid or empty image iD.`);
+
+	// Base URL for the Fastify route that serves the Twitter Card metadata
+	const ourTwitterCardRoute = process.env.TWITTER_CARD_BASE_URL || 'https://plasticeducator.com';
+
+	// Create the URL pointing to your Fastify route, which will serve up the metadata for the Twitter Card
+	const twitterCardUrl = `${ourTwitterCardRoute}/twitter-card/${imageId}`;
+
+	const fullTwitterShareUrl =
+		`${twitterShareBaseUrl}?url=${encodeURIComponent(twitterCardUrl)}`;
 
 	// -------------------- END  : CREATE TWEET TEXT FROM PROMPT ------------
+
+	// -------------------- BEGIN: SAVE TWITTER CARD DETAILS TO DISK ------------
+
+
+	// Save the Twitter card details to a file that
+	//  our Twitter card GET route can use to build
+	//  the Twitter card.
+	const twitterCardDetails: TwitterCardDetails =
+		{
+			tweet_text: jsonResponse.tweet_text,
+			hash_tags_array: aryHashTags,
+			twitter_card_title: jsonResponse.twitter_card_title,
+			twitter_card_description: jsonResponse.twitter_card_description,
+			url_to_image: fullS3UriToImage
+		}
+
+	// Save the Twitter card details to disk.
+
+	// -------------------- END  : SAVE TWITTER CARD DETAILS TO DISK ------------
 
 	sendSimpleStateMessage('Opening Twitter to share tweet...')
 
 	// Return the twitter card URL.
-	return twitterCardUrl
+	return fullTwitterShareUrl
 }
 
 // -------------------- END  : MAIN FUNCTION ------------

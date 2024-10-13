@@ -516,6 +516,7 @@ export function buildChatHistoryFilename(userId: string): string {
 }
 
 // ***********************************************
+
 /**
  * Writes the ChatHistory object to disk as a JSON file.
  *
