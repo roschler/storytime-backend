@@ -810,7 +810,7 @@ export async function processChatVolley(
  *  shared on Twitter.
  */
 export async function shareImageOnTwitter(userId: string, imageUrl: string) : Promise<string> {
-	if (userId || userId.trim().length < 1)
+	if (!userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
 	if (!imageUrl || imageUrl.trim().length < 1)

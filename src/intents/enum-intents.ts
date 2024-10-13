@@ -74,8 +74,8 @@ export function isValidEnumIntentDetectorId(enIntentDetectorId: string) {
 export enum enumChangeDescription{
 	"CHANGE_DESC_BE_LESS_CREATIVE" = "* I have told the engine to be less creative",
 	"CHANGE_DESC_BE_MORE_CREATIVE" = "* I have told the engine to be more creative",
-	"CHANGE_DESC_USE_TEXT_ENGINE" = "* I have switched to a text capable engine",
-	"CHANGE_DESC_USE_FLUX_ENGINE" = "* I have switched to the Flux engine",
+	"CHANGE_DESC_USE_TEXT_ENGINE" = "* I have switched to a text capable engine.  Note, image generations will much longer to generate",
+	"CHANGE_DESC_USE_FLUX_ENGINE" = "* I have switched to the Flux engine, image generations will much longer to generate",
 	"CHANGE_DESC_LESS_STEPS" = "* I have decreased the time spent on image generation to make things faster",
 	"CHANGE_DESC_MORE_STEPS" = "* I have increased the time spent on image generation to improve quality",
 	"CHANGE_DESC_FIX_WRONG_CONTENT" = "* I will try to fix the incorrect content",
