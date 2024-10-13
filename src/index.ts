@@ -7,6 +7,8 @@ import websock from './websock-chat-bot';
 
 import { readFileSync } from 'fs';
 import path from 'node:path';
+import { readTwitterCardDetails } from "./twitter/twitter-helper-functions"
+import { TwitterCardDetails } from "./system/types"
 
 const port = Number(process.env.BACKEND_SERVER_PORT ?? 3001);
 const host = '0.0.0.0';
@@ -123,7 +125,6 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 	reply: FastifyReply
 ) => {
 	const { imageId } = request.params;
-	const { card, title, description, imageUrl } = request.query as TwitterCardQuery;
 
 	// -------------------- BEGIN: LOG REQUEST ------------
 
@@ -148,57 +149,82 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 		return reply.code(400).send({ error: 'Invalid or missing imageId parameter.' });
 	}
 
+	// Load the Twitter card details for this image ID.
+	const twitterCardDetails =
+		await readTwitterCardDetails(imageId);
+
+	if (!twitterCardDetails)
+		throw new Error(`Unable to find the Twitter card details for image ID: ${imageId}`);
+
+
 	// Validate card type
-	if (!card || typeof card !== 'string' || card.trim().length === 0) {
+	if (!twitterCardDetails.card || typeof twitterCardDetails.card !== 'string' || twitterCardDetails.card.trim().length === 0) {
 		return reply.code(400).send({ error: 'Invalid or missing card parameter.' });
 	}
 
 	// Validate title
-	if (!title || typeof title !== 'string' || title.trim().length === 0) {
+	if (!twitterCardDetails.twitter_card_title || typeof twitterCardDetails.twitter_card_title !== 'string' || twitterCardDetails.twitter_card_title.trim().length === 0) {
 		return reply.code(400).send({ error: 'Invalid or missing title parameter.' });
 	}
 
 	// Validate description
-	if (!description || typeof description !== 'string' || description.trim().length === 0) {
+	if (!twitterCardDetails.twitter_card_description || typeof twitterCardDetails.twitter_card_description !== 'string' || twitterCardDetails.twitter_card_description.trim().length === 0) {
 		return reply.code(400).send({ error: 'Invalid or missing description parameter.' });
 	}
 
 	// Validate imageUrl
-	if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim().length === 0) {
+	if (!twitterCardDetails.url_to_image || typeof twitterCardDetails.url_to_image !== 'string' || twitterCardDetails.url_to_image.trim().length === 0) {
 		return reply.code(400).send({ error: 'Invalid or missing imageUrl parameter.' });
 	}
 
 	console.info(CONSOLE_CATEGORY, `Serving up Twitter card for image ID: ${imageId}`)
 
-	let parsedImageUrl: URL;
-	try {
-		parsedImageUrl = new URL(imageUrl);
-	} catch (err) {
-		return reply.code(400).send({ error: `imageUrl is not a valid URL: ${imageUrl}` });
-	}
-
-	const theSite = "https://plasticeducator.com/"
-	const theCreator = "human_for_now"
+	const theSite = "@human_for_now"
+	const theCreator = "@human_for_now"
 
 	// Dynamically generate the HTML with Twitter Card metadata
 
 	// NOTE: Forcing card format to "summary".
+	/*
 	const html = `
 		<!DOCTYPE html>
 		<html>
 		<head>
-			<meta name="twitter:card" content="summary">
-			<meta name="twitter:title" content="${title}">
+			<meta content="text/html; charset=UTF-8" name="Content-Type" />
+			<meta name="twitter:card" content="summary_large_image">
+			<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
 			<meta name="twitter:site" content="${theSite}">
-			<meta name="twitter:description" content="${description}">
-			<meta name="twitter:image" content="${parsedImageUrl.href}"> 
-			<meta name="twitter:image:alt" content="${description}">
+			<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
+			<meta name="twitter:image" content="${twitterCardDetails.url_to_image}"> 
+			<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
 		</head>
 		<body>
 			<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
 		</body>
 		</html>
 	`;
+	 */
+
+	const html = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta content="text/html; charset=UTF-8" name="Content-Type" />
+			<meta name="twitter:card" content="summary_large_image">
+			<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
+			<meta name="twitter:site" content="${theSite}">
+			<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
+			<meta name="twitter:image:src" content="${twitterCardDetails.url_to_image}">
+			<meta name="twitter:image:width" content="${twitterCardDetails.dimensions.width}">
+			<meta name="twitter:image:height" content="${twitterCardDetails.dimensions.height}">
+			<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
+		</head>
+		<body>
+			<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
+		</body>
+		</html>
+	`;
+
 
 	console.log(`HTML returned to user agent:\n${userAgent}\n`)
 	console.log(`${html}`)

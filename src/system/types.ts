@@ -23,6 +23,11 @@ export interface ImageType {
 	urls: string[]
 }
 
+export interface ImageDimensions{
+	width: number,
+	height: number
+}
+
 /**
  * This is the expected request payload for a request from
  *  the client front-end to share a generated image on
@@ -35,7 +40,9 @@ export interface ShareImageOnTwitterRequest {
 	// The ID of the user making the request.
 	user_id: string,
 	// The Livepeer image URL for the generated image.
-	image_url: string
+	image_url: string,
+	// The image dimensions.
+	dimensions: ImageDimensions
 }
 
 /**
@@ -56,11 +63,13 @@ export interface TwitterImageCardUrlResponse {
  * This interface describes a Twitter card details object.
  */
 export interface TwitterCardDetails {
+	card: string,
 	tweet_text: string,
 	hash_tags_array: string[],
 	twitter_card_title: string,
 	twitter_card_description: string,
-	url_to_image: string
+	url_to_image: string,
+	dimensions: ImageDimensions
 }
 
 // The request payload for a Storytime app request.

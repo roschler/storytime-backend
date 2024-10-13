@@ -266,13 +266,16 @@ async function wsConnection(
 				//
 				// Every request must have a user ID and image URL
 				//  field in the payload.
-				const { user_id, image_url } = message.payload as ShareImageOnTwitterRequest;
+				const { user_id, image_url, dimensions } = message.payload as ShareImageOnTwitterRequest;
 
 				if (!user_id || user_id.trim().length < 1)
 					throw new Error(`BAD REQUEST: The user ID is missing.`);
 
 				if (!image_url || image_url.trim().length < 1)
 					throw new Error(`BAD REQUEST: The image URL is missing.`);
+
+				if (!dimensions)
+					throw new Error(`BAD REQUEST: The image dimensions are missing.`);
 
 				// Create a unique request ID.
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
@@ -283,7 +286,11 @@ async function wsConnection(
 				//  card document the Twitter share intent requires
 				//  for showing an image preview on a Tweet.
 				const urlToTwitterCard =
-					await shareImageOnTwitter(client, user_id, image_url);
+					await shareImageOnTwitter(
+						client,
+						user_id,
+						image_url,
+						dimensions);
 
 				// Send it back to the client.
 				sendTwitterCardUrlMessage(client,

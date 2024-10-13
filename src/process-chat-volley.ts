@@ -25,9 +25,10 @@ import {
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse, ImageGenPromptToTweetLlmJsonResponse } from "./openai-parameter-objects"
 import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
-import { StateType, TextType, TwitterCardDetails } from "./system/types"
+import { ImageDimensions, StateType, TextType, TwitterCardDetails } from "./system/types"
 import { buildImageShareForTwitterUrl, putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
 import { URL } from "url"
+import { writeTwitterCardDetails } from "./twitter/twitter-helper-functions"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -817,8 +818,9 @@ export async function processChatVolley(
  *  image on Twitter.
  * @param imageUrl - The image URL to the image to be
  *  shared on Twitter.
+ * @param dimensions - The image dimensions
  */
-export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string) : Promise<string> {
+export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string, dimensions: ImageDimensions) : Promise<string> {
 	if (!userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
@@ -884,7 +886,7 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 
 	const aryHashTags = ['AIArt'];
 
-	// Build the Twitter card URL back to our back-end server (here).
+	// Build the Twitter card URL that links back to our server.
 	//
 	// Twitter intent/tweet base URL
 	const twitterShareBaseUrl = "https://twitter.com/intent/tweet";
@@ -902,11 +904,15 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 		throw new Error(`imageUrl is not a valid URL: ${imageUrl}`);
 	}
 
-	const imageId =
+	const imageIdWithExt =
 		parsedUrl.pathname.split('/').pop();
 
-	if (!imageId || imageId.length < 1)
+	if (!imageIdWithExt || imageIdWithExt.length < 1)
 		throw new Error(`Invalid or empty image iD.`);
+
+	// Remove the file extension.
+	const imageId =
+		 imageIdWithExt.split('.')[0];
 
 	// Base URL for the Fastify route that serves the Twitter Card metadata
 	const ourTwitterCardRoute = process.env.TWITTER_CARD_BASE_URL || 'https://plasticeducator.com';
@@ -916,6 +922,8 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 
 	const fullTwitterShareUrl =
 		`${twitterShareBaseUrl}?url=${encodeURIComponent(twitterCardUrl)}`;
+
+	console.info(CONSOLE_CATEGORY, `Full Twitter share URL:\n${fullTwitterShareUrl}`)
 
 	// -------------------- END  : CREATE TWEET TEXT FROM PROMPT ------------
 
@@ -927,14 +935,17 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 	//  the Twitter card.
 	const twitterCardDetails: TwitterCardDetails =
 		{
+			card: "summary",
 			tweet_text: jsonResponse.tweet_text,
 			hash_tags_array: aryHashTags,
 			twitter_card_title: jsonResponse.twitter_card_title,
 			twitter_card_description: jsonResponse.twitter_card_description,
-			url_to_image: fullS3UriToImage
+			url_to_image: fullS3UriToImage,
+			dimensions: dimensions
 		}
 
 	// Save the Twitter card details to disk.
+	await writeTwitterCardDetails(imageId, twitterCardDetails)
 
 	// -------------------- END  : SAVE TWITTER CARD DETAILS TO DISK ------------
 
