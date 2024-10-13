@@ -24,19 +24,34 @@ export interface ImageType {
 }
 
 /**
- * This is the expected request payload for a image share
- *  on Twitter operation.
+ * This is the expected request payload for a request from
+ *  the client front-end to share a generated image on
+ *  Twitter.
  *
  * WARNING: This interface must match the declaration
- *  for ShareImageOnTwitterPayload used by the client
- *  front-end.
+ *  used by the client front-end.
  */
-export interface ShareImageOnTwitterType {
+export interface ShareImageOnTwitterRequest {
+	// The ID of the user making the request.
+	user_id: string,
+	// The Livepeer image URL for the generated image.
+	image_url: string
+}
+
+/**
+ * This is response payload we send to the client
+ *  in response to a share image on Twitter request.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ */
+export interface TwitterImageCardUrlResponse {
 	// We send back to the client the URL to our back-end
 	//  server that will build the Twitter card for
-	//  previewing the image on the Tweet.
+	//  previewing the selected generated image on a Tweet.
 	url_to_twitter_card: string,
 }
+
 
 // The request payload for a Storytime app request.
 export interface RequestPayload_storytime {

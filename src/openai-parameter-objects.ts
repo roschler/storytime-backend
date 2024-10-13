@@ -125,3 +125,18 @@ export interface ImageGeneratorLlmJsonResponse
 
 
 // -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LLM TEXT COMPLETIONS ------------
+
+// -------------------- BEGIN: EXPECTED JSON RESPONSE FOR IMAGE GEN PROMPT TO TWEET TEXT COMPLETIONS ------------
+
+// NOTE: Remember to update this object if we change the prompt!
+export interface ImageGenPromptToTweetLlmJsonResponse
+{
+	// The text for the tweet
+	"tweet_text": string,
+	// The title for the Twitter card that shows the image preview
+	"twitter_card_title": string
+	// The description for the Twitter card that shows the image preview
+	"twitter_card_description": string
+}
+
+// -------------------- END  : EXPECTED JSON RESPONSE FOR IMAGE GEN PROMPT TO TWEET TEXT COMPLETIONS ------------

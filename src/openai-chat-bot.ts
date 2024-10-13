@@ -306,6 +306,12 @@ export const g_MainImageGenerationFaqPrompt =
 export const g_ExtendedWrongContentPrompt =
 	readImageGenerationSubPromptOrDie('intent-user-complaint-extended-wrong-content.txt')
 
+// We use a dedicated wrong content prompt for creating
+//  the text for a good tweet that is based on the
+//  last image generation prompt.
+export const g_ImageGenPromptToTweetPrompt =
+	readImageGenerationSubPromptOrDie('image-generation-prompt-to-tweet.txt')
+
 // -------------------- END  : LOAD PROMPT BUILDER TEXT FILES ------------
 
 /**

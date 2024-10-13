@@ -6,7 +6,7 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, ShareImageOnTwitterType,
+	Genre, TwitterImageCardUrlResponse,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
@@ -177,24 +177,23 @@ export const sendStateMessage = (client: WebSocket, payload: StateType) => {
 	})
 }
 
-export const sendErrorMessage = (client: WebSocket, payload: ErrorType) => {
+/**
+ * This function sends a Twitter card URL response to the websocket
+ *  client.
+ *
+ * @param client - The target websocket client.
+ * @param payload - The message payload.
+ */
+export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterImageCardUrlResponse) => {
 	_send(client, {
-		type: "error",
+		type: "twitter_card_url",
 		payload,
 	})
 }
 
-/**
- * This function sends to the client the message that tells it
- *  to open a new window/tab with the twitter card URL in the
- *  payload that points to our twitter card building URL.
- *
- * @param client
- * @param payload
- */
-export const sendTwitterShareMessage = (client: WebSocket, payload: ShareImageOnTwitterType) => {
+export const sendErrorMessage = (client: WebSocket, payload: ErrorType) => {
 	_send(client, {
-		type: "open_twitter_share_page",
+		type: "error",
 		payload,
 	})
 }

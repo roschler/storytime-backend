@@ -4,7 +4,7 @@ import type WebSocket from "ws"
 import { ChatVolley, CurrentChatState, readChatHistory, writeChatHistory } from "./chat-volleys/chat-volleys"
 import { enumImageGenerationModelId, IntentJsonResponseObject } from "./enum-image-generation-models"
 import {
-	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_TextCompletionParams,
+	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
 	processAllIntents,
 	showIntentResultObjects,
@@ -17,9 +17,10 @@ import {
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
 import { chatCompletionImmediate } from "./openai-common"
-import { ImageGeneratorLlmJsonResponse } from "./openai-parameter-objects"
+import { ImageGeneratorLlmJsonResponse, ImageGenPromptToTweetLlmJsonResponse } from "./openai-parameter-objects"
 import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
 import { StateType, TextType } from "./system/types"
+import { buildImageShareForTwitterUrl, putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -808,14 +809,69 @@ export async function processChatVolley(
  * @param imageUrl - The image URL to the image to be
  *  shared on Twitter.
  */
-export async function shareImageOnTwitter(userId: string, imageUrl: string) {
+export async function shareImageOnTwitter(userId: string, imageUrl: string) : Promise<string> {
 	if (userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
 	if (!imageUrl || imageUrl.trim().length < 1)
 		throw new Error(`The image URL is empty or invalid.`);
 
+	// -------------------- BEGIN: CREATE TWEET TEXT FROM PROMPT ------------
 
+	// First, we get the prompt of the last generated image
+
+	// Get the chat history object for the given user.
+	const chatHistoryObj =
+		await readChatHistory(userId);
+
+	// Get the last chat volley.
+	const lastChatVolleyObj =
+		chatHistoryObj.getLastVolley()
+
+	if (!lastChatVolleyObj)
+		throw new Error(`There is no chat history for user ID: ${userId}`);
+
+	const imageGenPrompt =
+		lastChatVolleyObj.prompt;
+
+	if (imageGenPrompt.length < 1)
+		throw new Error(`The image generation prompt is empty for user ID: ${userId}`);
+
+	console.info(CONSOLE_CATEGORY, `>>>>> Making image generation prompt to Tweet text LLM completion request <<<<<`)
+
+	const textCompletion =
+		await chatCompletionImmediate(
+			'IMAGE-GENERATION-PROMPT-TO-TWEET',
+			g_ImageGenPromptToTweetPrompt,
+			imageGenPrompt,
+			g_TextCompletionParams,
+			true);
+
+	// ImageGenPromptToTweetLlmJsonResponse
+	const jsonResponse =
+		textCompletion.json_response as ImageGenPromptToTweetLlmJsonResponse;
+
+	// Put the image in our S3 bucket.
+	const fullS3UriToImage =
+		await putLivepeerImageToS3(userId, imageUrl)
+
+
+	// Build the Twitter card URL back to our back-end server (here).
+	const twitterCardUrl =
+		buildImageShareForTwitterUrl(
+			jsonResponse.tweet_text,
+			fullS3UriToImage,
+			['AIArt'],
+			jsonResponse.twitter_card_title,
+			jsonResponse.twitter_card_description
+		)
+
+
+	// -------------------- END  : CREATE TWEET TEXT FROM PROMPT ------------
+
+
+	// Return the twitter card URL.
+	return twitterCardUrl
 }
 
 // -------------------- END  : MAIN FUNCTION ------------

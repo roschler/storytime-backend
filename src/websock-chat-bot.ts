@@ -6,12 +6,12 @@ import { WebSocket } from 'ws'
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { StateType, } from "./system/types"
+import { StateType, ShareImageOnTwitterRequest } from "./system/types"
 import {
 	sendStateMessage,
 	sendErrorMessage,
 	sendTextMessage,
-	saveMetaData_chat_bot
+	saveMetaData_chat_bot, sendTwitterCardUrlMessage,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -19,16 +19,15 @@ import { isFlagged } from "./openai-common"
 import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { processChatVolley } from "./process-chat-volley"
-
-// What do we say when the user is trying to be problematic?
+import { processChatVolley, shareImageOnTwitter } from "./process-chat-volley"
 
 const CONSOLE_CATEGORY = 'websocket'
 const appName = 'Chatbot'
 
+// What do we say when the user is trying to be problematic?
 const badPromptError =
 	process.env.HARMFUL_PROMPT_RESPONSE ??
-	"I'm sorry, Dave. I'm afraid I can't do that."
+	"Let's keep the conversation positive and focused on generating healthy images."
 
 // Enable this in the `.env.local` file to stream text to the console
 
@@ -267,29 +266,32 @@ async function wsConnection(
 				//
 				// Every request must have a user ID and image URL
 				//  field in the payload.
-				const { user_id, prompt } = message.payload;
+				const { user_id, image_url } = message.payload as ShareImageOnTwitterRequest;
 
 				if (!user_id || user_id.trim().length < 1)
-					throw new Error(`BAD REQUEST: User ID is missing.`);
+					throw new Error(`BAD REQUEST: The user ID is missing.`);
 
-				if (!prompt || prompt.trim().length < 1)
-					throw new Error(`BAD REQUEST: Image URL is missing.`);
+				if (!image_url || image_url.trim().length < 1)
+					throw new Error(`BAD REQUEST: The image URL is missing.`);
 
 				// Create a unique request ID.
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
 				// Call the function that does the share on Twitter
-				//  operations.  It will return the URL we provide
-				//  a GET route for that will serve up the Twitter
+				//  operations.  It will return the URL to the
+				//  our GET route that will serve up the Twitter
 				//  card document the Twitter share intent requires
 				//  for showing an image preview on a Tweet.
 				const urlToTwitterCard =
-					await shareImageOnTwitter(userId, imageUrl);
+					await shareImageOnTwitter(user_id, image_url);
 
-				if (typeof urlToTwitterCard !== 'string' || urlToTwitterCard.length < 1)
-					throw new Error(`The URL to the Twitter card is empty or invalid.`);
+				// Send it back to the client.
+				sendTwitterCardUrlMessage(client,
+					{
+							url_to_twitter_card: urlToTwitterCard
+					})
 
-
+				return true
 				// -------------------- END  : SHARE IMAGE ON TWITTER ------------
 			} else {
 				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
