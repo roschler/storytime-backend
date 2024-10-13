@@ -6,7 +6,7 @@ import { WebSocket } from 'ws'
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { StateType, ShareImageOnTwitterRequest } from "./system/types"
+import { StateType, ShareImageOnTwitterRequest, TwitterCardDetails } from "./system/types"
 import {
 	sendStateMessage,
 	sendErrorMessage,
@@ -285,7 +285,7 @@ async function wsConnection(
 				//  our GET route that will serve up the Twitter
 				//  card document the Twitter share intent requires
 				//  for showing an image preview on a Tweet.
-				const urlToTwitterCard =
+				const twitterCardDetails =
 					await shareImageOnTwitter(
 						client,
 						user_id,
@@ -293,10 +293,7 @@ async function wsConnection(
 						dimensions);
 
 				// Send it back to the client.
-				sendTwitterCardUrlMessage(client,
-					{
-							url_to_twitter_card: urlToTwitterCard
-					})
+				sendTwitterCardUrlMessage(client, twitterCardDetails)
 
 				return true
 				// -------------------- END  : SHARE IMAGE ON TWITTER ------------

@@ -6,7 +6,7 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, TwitterImageCardUrlResponse,
+	Genre, TwitterCardDetails,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
@@ -184,7 +184,7 @@ export const sendStateMessage = (client: WebSocket, payload: StateType) => {
  * @param client - The target websocket client.
  * @param payload - The message payload.
  */
-export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterImageCardUrlResponse) => {
+export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterCardDetails) => {
 	_send(client, {
 		type: "twitter_card_url",
 		payload,

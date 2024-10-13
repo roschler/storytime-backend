@@ -86,6 +86,9 @@ export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: strin
 }
 
 /**
+ * DEPRECATED: The client now does this part.  The back-end server
+ *  just makes and services the Twitter card URL.
+ *
  * Builds a Twitter share URL with pre-filled tweet text, a link to the Twitter card, and hashtags.
  *
  * @param {string} postText - The text content of the tweet. Must be a non-empty string.
@@ -105,6 +108,7 @@ export function buildImageShareForTwitterUrl(
 	description: string,
 	card: string = "summary_large_image" // Default Twitter Card type
 ): string {
+
 	// Validate postText
 	if (!postText || postText.trim().length === 0) {
 		throw new Error("postText cannot be an empty string.");

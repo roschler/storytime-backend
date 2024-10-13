@@ -29,6 +29,20 @@ export interface ImageDimensions{
 }
 
 /**
+ * This is the response payload created as a result of
+ *  a Twitter share request from the client front-end.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ *
+export interface TwitterImageCardUrlType {
+	tweet_text: string,
+	url_to_twitter_card: string,
+	hash_tags_array: string[]
+}
+*/
+
+/**
  * This is the expected request payload for a request from
  *  the client front-end to share a generated image on
  *  Twitter.
@@ -46,21 +60,10 @@ export interface ShareImageOnTwitterRequest {
 }
 
 /**
- * This is response payload we send to the client
- *  in response to a share image on Twitter request.
+ * This interface describes a Twitter card details object.
  *
  * WARNING: This interface must match the declaration
  *  used by the client front-end.
- */
-export interface TwitterImageCardUrlResponse {
-	// We send back to the client the URL to our back-end
-	//  server that will build the Twitter card for
-	//  previewing the selected generated image on a Tweet.
-	url_to_twitter_card: string,
-}
-
-/**
- * This interface describes a Twitter card details object.
  */
 export interface TwitterCardDetails {
 	card: string,
@@ -69,7 +72,12 @@ export interface TwitterCardDetails {
 	twitter_card_title: string,
 	twitter_card_description: string,
 	url_to_image: string,
-	dimensions: ImageDimensions
+	dimensions: ImageDimensions,
+
+	// This is a copy of the full Twitter card URL
+	//  that is here for convenience purposes to
+	//  help the caller.
+	twitter_card_url: string
 }
 
 // The request payload for a Storytime app request.

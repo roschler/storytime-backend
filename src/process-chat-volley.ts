@@ -819,8 +819,11 @@ export async function processChatVolley(
  * @param imageUrl - The image URL to the image to be
  *  shared on Twitter.
  * @param dimensions - The image dimensions
+ *
+ * @return - Returns the twitter card details made
+ *  for the Twitter share request.
  */
-export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string, dimensions: ImageDimensions) : Promise<string> {
+export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string, dimensions: ImageDimensions) : Promise<TwitterCardDetails> {
 	if (!userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
@@ -920,10 +923,10 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 	// Create the URL pointing to your Fastify route, which will serve up the metadata for the Twitter Card
 	const twitterCardUrl = `${ourTwitterCardRoute}/twitter-card/${imageId}`;
 
-	const fullTwitterShareUrl =
+	const fullTwitterCardUrl =
 		`${twitterShareBaseUrl}?url=${encodeURIComponent(twitterCardUrl)}`;
 
-	console.info(CONSOLE_CATEGORY, `Full Twitter share URL:\n${fullTwitterShareUrl}`)
+	console.info(CONSOLE_CATEGORY, `Full Twitter card URL:\n${fullTwitterCardUrl}`)
 
 	// -------------------- END  : CREATE TWEET TEXT FROM PROMPT ------------
 
@@ -941,7 +944,12 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 			twitter_card_title: jsonResponse.twitter_card_title,
 			twitter_card_description: jsonResponse.twitter_card_description,
 			url_to_image: fullS3UriToImage,
-			dimensions: dimensions
+			dimensions: dimensions,
+
+			// This is a copy of the full Twitter card URL
+			//  that is here for convenience purposes to
+			//  help the caller.
+			twitter_card_url: twitterCardUrl
 		}
 
 	// Save the Twitter card details to disk.
@@ -952,7 +960,7 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 	sendSimpleStateMessage('Opening Twitter to share tweet...')
 
 	// Return the twitter card URL.
-	return fullTwitterShareUrl
+	return twitterCardDetails
 }
 
 // -------------------- END  : MAIN FUNCTION ------------

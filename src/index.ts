@@ -214,6 +214,7 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 			<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
 			<meta name="twitter:site" content="${theSite}">
 			<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
+			<meta name="twitter:image" content="${twitterCardDetails.url_to_image}">
 			<meta name="twitter:image:src" content="${twitterCardDetails.url_to_image}">
 			<meta name="twitter:image:width" content="${twitterCardDetails.dimensions.width}">
 			<meta name="twitter:image:height" content="${twitterCardDetails.dimensions.height}">
