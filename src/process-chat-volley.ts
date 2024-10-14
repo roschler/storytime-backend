@@ -986,8 +986,6 @@ export async function shareImageOnTwitter(
 
 	// -------------------- END  : SAVE TWITTER CARD DETAILS TO DISK ------------
 
-	sendSimpleStateMessage('Opening Twitter to share tweet...')
-
 	// Return the twitter card URL.
 	return twitterCardDetails
 }

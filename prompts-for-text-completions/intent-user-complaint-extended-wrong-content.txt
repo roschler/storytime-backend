@@ -2,7 +2,7 @@ LLM Prompt to Detect Image Generation Complaints:
 
 Given the following prompt for image generation and the user's feedback, determine if the user is expressing dissatisfaction with the image. Specifically, look for complaints about elements of the image that do not match the original request. Common complaints might include missing objects or details, incorrect positioning, wrong actions or gestures, or misinterpretation of key descriptions. Analyze and detect whether the user's feedback indicates any such discrepancies.
 
-Respond with a JSON array containing one JSON object in the format below for each incorrect image element the user complained about.  If you do not detect any complaints, just output an empty JSON array.
+Respond with a JSON array containing one JSON object in the format below for each incorrect image element the user complained about.  If you do not detect any complaints, just output an empty array.  Do not put any text before or after the square brackets that comprise the array.
 
 This is critical, do not make up your own field names for the JSON object.  You should only use the field names: "complaint_type" and "complaint_text".  The field values are what you fill in, that is all.
 

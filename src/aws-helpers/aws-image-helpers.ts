@@ -1,7 +1,7 @@
 // This module contains code that involves storing and
 //  retrieving images to and from Amazon S3.
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import axios from "axios";
 import { URL } from "url";
 
@@ -13,7 +13,7 @@ const CONSOLE_CATEGORY = 'aws-image-helpers';
  * @param {string} userId - The ID of the user to whom the image belongs.
  * @param {string} livepeerImgUrl - The Livepeer image URL.
  *
- * @returns {Promise<string>} - The full S3 URI to the new asset.
+ * @returns {Promise<string>} - The full S3 URI to the new asset or existing object.
  */
 export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: string): Promise<string> {
 	// Validate and trim userId
@@ -63,6 +63,31 @@ export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: strin
 	const s3Key = `livepeer-images/${trimmedUserId}/${filename}`;
 
 	try {
+		// Check if the object already exists in S3
+		try {
+			await s3.send(new HeadObjectCommand({
+				Bucket: bucketName,
+				Key: s3Key,
+			}));
+
+			// If it exists, return the existing S3 URI
+			const existingS3Uri = `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
+			console.log(`S3 object already exists: ${existingS3Uri}`);
+
+			// -------------------- BEGIN: EARLY RETURN STATEMENT ------------
+
+			return existingS3Uri;
+
+			// -------------------- END  : EARLY RETURN STATEMENT ------------
+		} catch (headError) {
+			// If the object doesn't exist, the HeadObjectCommand will throw an error (usually a 404).
+			// Continue with uploading the image.
+			if (headError.name !== "NotFound") {
+				console.error(`Error checking if S3 object exists: ${headError.message}`);
+				throw new Error(`Failed to check if S3 object exists: ${headError.message}`);
+			}
+		}
+
 		// Retrieve image content from Livepeer
 		const response = await axios.get(livepeerImgUrl, { responseType: "arraybuffer" });
 		const imageContent = response.data;
@@ -77,8 +102,8 @@ export async function putLivepeerImageToS3(userId: string, livepeerImgUrl: strin
 
 		// Return the full S3 URI to the newly uploaded asset
 		const s3Uri = `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
-
 		return s3Uri;
+
 	} catch (error) {
 		console.error(`Error uploading image to S3: ${error.message}`, { userId, livepeerImgUrl });
 		throw new Error(`Failed to upload image to S3: ${error.message}`);
