@@ -56,11 +56,22 @@ export interface ShareImageOnTwitterRequest {
 	// The Livepeer image URL for the generated image.
 	image_url: string,
 	// The image dimensions.
-	dimensions: ImageDimensions
+	dimensions: ImageDimensions,
+
+	// This field contains the custom
+	//  value, if any, that the client passed
+	//  to the back-end server during
+	//  a request to it, in the
+	//  TwitterCardDetails object.
+	client_user_message: string
 }
 
 /**
  * This interface describes a Twitter card details object.
+ *
+ * NOTE: For now we are also using this object for the
+ *  mint NFT operation too, in order to get back
+ *  the S3 URI created for the generated image.
  *
  * WARNING: This interface must match the declaration
  *  used by the client front-end.
@@ -77,7 +88,12 @@ export interface TwitterCardDetails {
 	// This is a copy of the full Twitter card URL
 	//  that is here for convenience purposes to
 	//  help the caller.
-	twitter_card_url: string
+	twitter_card_url: string,
+
+	// This field can be used by the front-end
+	//  client to pass custom information back
+	//  to itself.
+	client_user_message: string
 }
 
 // The request payload for a Storytime app request.

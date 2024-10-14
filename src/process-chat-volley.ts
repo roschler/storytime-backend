@@ -819,11 +819,19 @@ export async function processChatVolley(
  * @param imageUrl - The image URL to the image to be
  *  shared on Twitter.
  * @param dimensions - The image dimensions
+ * @param clientUserMessage - The user message the
+ *  client front-end passed to us with the share
+ *  request, that we will return to them.
  *
  * @return - Returns the twitter card details made
  *  for the Twitter share request.
  */
-export async function shareImageOnTwitter(client: WebSocket, userId: string, imageUrl: string, dimensions: ImageDimensions) : Promise<TwitterCardDetails> {
+export async function shareImageOnTwitter(
+		client: WebSocket,
+		userId: string,
+		imageUrl: string,
+		dimensions: ImageDimensions,
+		clientUserMessage: string) : Promise<TwitterCardDetails> {
 	if (!userId || userId.trim().length < 1)
 		throw new Error(`The user ID is empty or invalid.`);
 
@@ -949,7 +957,14 @@ export async function shareImageOnTwitter(client: WebSocket, userId: string, ima
 			// This is a copy of the full Twitter card URL
 			//  that is here for convenience purposes to
 			//  help the caller.
-			twitter_card_url: twitterCardUrl
+			twitter_card_url: twitterCardUrl,
+
+			// This field contains the custom
+			//  value, if any, that the client passed
+			//  to the back-end server during
+			//  a request to it, in the
+			//  TwitterCardDetails object.
+			client_user_message: clientUserMessage
 		}
 
 	// Save the Twitter card details to disk.

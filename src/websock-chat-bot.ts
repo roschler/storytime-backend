@@ -266,7 +266,7 @@ async function wsConnection(
 				//
 				// Every request must have a user ID and image URL
 				//  field in the payload.
-				const { user_id, image_url, dimensions } = message.payload as ShareImageOnTwitterRequest;
+				const { user_id, image_url, dimensions, client_user_message } = message.payload as ShareImageOnTwitterRequest;
 
 				if (!user_id || user_id.trim().length < 1)
 					throw new Error(`BAD REQUEST: The user ID is missing.`);
@@ -290,7 +290,8 @@ async function wsConnection(
 						client,
 						user_id,
 						image_url,
-						dimensions);
+						dimensions,
+						client_user_message);
 
 				// Send it back to the client.
 				sendTwitterCardUrlMessage(client, twitterCardDetails)
