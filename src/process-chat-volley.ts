@@ -132,7 +132,7 @@ function getStringIntentDetectionValue(
 		throw new Error('The propName cannot be empty.');
 	}
 
-	let retValue: string | null
+	let retValue: string | null = null
 
 	// Iterate over the extended JSON response objects
 	for (const jsonResponseObjExt of aryJsonResponseObjs) {
@@ -182,7 +182,7 @@ function getStringIntentDetectionValue(
 
 	// If no object with the matching intentDetectorId is found,
 	//  return NULL to let the caller know this.
-	return null;
+	return retValue;
 }
 
 /**

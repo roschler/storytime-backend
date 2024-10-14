@@ -4,6 +4,8 @@ Given the following prompt for image generation and the user's feedback, determi
 
 Respond with a JSON array containing one JSON object in the format below for each incorrect image element the user complained about.  If you do not detect any complaints, just output an empty JSON array.
 
+This is critical, do not make up your own field names for the JSON object.  You should only use the field names: "complaint_type" and "complaint_text".  The field values are what you fill in, that is all.
+
 Example input:
 
 PROMPT:
@@ -18,9 +20,8 @@ Example output, in JSON format:
 
 [
 	{
-		"complaint_type": "wrong_content_extended",
-		"complaint_text": "The monks should have their hands raised in exhortation.",
-		"complaint_user_made": "The monks hands are not raised."
+		"complaint_type": "wrong_content",
+		"complaint_text": "The monks hands are not raised."
 	}
 ]
 

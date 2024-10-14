@@ -390,7 +390,7 @@ export function buildChatBotSystemPrompt(
 
 				previousImageGenerationPromptOrNothing +=
 					`
-					Rewrite this image generation prompt so that ${wrongContentText} becomes the focus of the scene described by your revised image prompt.
+					Rewrite this image generation prompt so that the subject in the user's complaint, "${wrongContentText}", becomes the focus of the scene described by your revised image prompt.
 					`
 				// -------------------- END  : REWRITE AROUND WRONG CONTENT ------------
 			}
