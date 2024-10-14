@@ -22,6 +22,10 @@ FUTURE FEATURES:
 
 NEXT:
 
+    > Instead of blindly saving the Livepeer image to disk,
+      see if it already exists in S3 and if so, just return
+      the existing S3 URI.
+
     > Finish Twitter posting feature
 
         - When the Twitter post button is pressed the client will

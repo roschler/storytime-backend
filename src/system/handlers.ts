@@ -186,7 +186,7 @@ export const sendStateMessage = (client: WebSocket, payload: StateType) => {
  */
 export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterCardDetails) => {
 	_send(client, {
-		type: "twitter_card_url",
+		type: "twitter_card_details",
 		payload,
 	})
 }
