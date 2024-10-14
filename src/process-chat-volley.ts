@@ -8,7 +8,11 @@ import {
 	readChatHistory,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
-import { enumImageGenerationModelId, IntentJsonResponseObject } from "./enum-image-generation-models"
+import {
+	DEFAULT_GUIDANCE_SCALE, DEFAULT_IMAGE_GENERATION_MODEL_ID, DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS,
+	enumImageGenerationModelId,
+	IntentJsonResponseObject,
+} from "./enum-image-generation-models"
 import {
 	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
@@ -448,8 +452,18 @@ export async function processChatVolley(
 				'start_new_image'
 			);
 
-		if (bIsStartNewImageDetected == true)
+		if (bIsStartNewImageDetected == true) {
 			bIsStartNewImage = true;
+
+			// Reset image generation parameters
+			//  to the defaults.
+			chatState_current.guidance_scale = DEFAULT_GUIDANCE_SCALE
+			chatState_current.steps = DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS
+			chatState_current.model_id = DEFAULT_IMAGE_GENERATION_MODEL_ID
+			chatState_current.loras = {}
+
+			console.info(CONSOLE_CATEGORY, `Image generation parameters reset to the defaults, due to a start new image request.`)
+		}
 
 		// >>>>> Text on image wanted?
 		const bIsTextOnImageDesired =
