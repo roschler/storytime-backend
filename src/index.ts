@@ -138,8 +138,11 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 	console.log('User-Agent:', userAgent);
 
 	// Check for Twitter's bot specifically
+	let bIsTwitterBot = false;
+
 	if (userAgent && userAgent.includes('Twitterbot')) {
 		console.log('This request is coming from Twitterbot.');
+		bIsTwitterBot = true;
 	}
 
 	// -------------------- END  : LOG REQUEST ------------
@@ -177,61 +180,76 @@ app.get<{ Params: TwitterCardParams; Query: TwitterCardQuery }>('/twitter-card/:
 		return reply.code(400).send({ error: 'Invalid or missing imageUrl parameter.' });
 	}
 
-	console.info(CONSOLE_CATEGORY, `Serving up Twitter card for image ID: ${imageId}`)
+	if (bIsTwitterBot) {
+		// -------------------- BEGIN: GENERATE TWITTER CARD FOR TWITTERBOT ------------
 
-	const theSite = "@human_for_now"
-	const theCreator = "@human_for_now"
+		console.info(CONSOLE_CATEGORY, `Serving up Twitter card for image ID: ${imageId}`)
 
-	// Dynamically generate the HTML with Twitter Card metadata
+		const theSite = "@human_for_now"
+		const theCreator = "@human_for_now"
 
-	// NOTE: Forcing card format to "summary".
-	/*
-	const html = `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta content="text/html; charset=UTF-8" name="Content-Type" />
-			<meta name="twitter:card" content="summary_large_image">
-			<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
-			<meta name="twitter:site" content="${theSite}">
-			<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
-			<meta name="twitter:image" content="${twitterCardDetails.url_to_image}"> 
-			<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
-		</head>
-		<body>
-			<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
-		</body>
-		</html>
-	`;
-	 */
+		// Dynamically generate the HTML with Twitter Card metadata
 
-	const html = `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta content="text/html; charset=UTF-8" name="Content-Type" />
-			<meta name="twitter:card" content="summary_large_image">
-			<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
-			<meta name="twitter:site" content="${theSite}">
-			<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
-			<meta name="twitter:image" content="${twitterCardDetails.url_to_image}">
-			<meta name="twitter:image:src" content="${twitterCardDetails.url_to_image}">
-			<meta name="twitter:image:width" content="${twitterCardDetails.dimensions.width}">
-			<meta name="twitter:image:height" content="${twitterCardDetails.dimensions.height}">
-			<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
-		</head>
-		<body>
-			<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
-		</body>
-		</html>
-	`;
+		// NOTE: Forcing card format to "summary".
+		/*
+		const html = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<meta content="text/html; charset=UTF-8" name="Content-Type" />
+				<meta name="twitter:card" content="summary_large_image">
+				<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
+				<meta name="twitter:site" content="${theSite}">
+				<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
+				<meta name="twitter:image" content="${twitterCardDetails.url_to_image}">
+				<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
+			</head>
+			<body>
+				<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
+			</body>
+			</html>
+		`;
+		 */
+
+		const html = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<meta content="text/html; charset=UTF-8" name="Content-Type" />
+				<meta name="twitter:card" content="summary_large_image">
+				<meta name="twitter:title" content="${twitterCardDetails.twitter_card_title}">
+				<meta name="twitter:site" content="${theSite}">
+				<meta name="twitter:description" content="${twitterCardDetails.twitter_card_description}">
+				<meta name="twitter:image" content="${twitterCardDetails.url_to_image}">
+				<meta name="twitter:image:width" content="${twitterCardDetails.dimensions.width}">
+				<meta name="twitter:image:height" content="${twitterCardDetails.dimensions.height}">
+				<meta name="twitter:image:alt" content="${twitterCardDetails.twitter_card_description}">
+				<meta name="twitter:url" content="${twitterCardDetails.url_to_image}">
+			</head>
+			<body>
+				<p>This page contains metadata for Twitter to display a rich preview of the image with ID: ${imageId}.</p>
+			</body>
+			</html>
+			`;
 
 
-	console.log(`HTML returned to user agent:\n${userAgent}\n`)
-	console.log(`${html}`)
+		console.log(`HTML returned to user agent:\n${userAgent}\n`)
+		console.log(`${html}`)
 
-	// Serve the dynamically generated HTML
-	reply.type('text/html').send(html);
+		// Serve the dynamically generated HTML
+		reply.type('text/html').send(html);
+
+		// -------------------- END  : GENERATE TWITTER CARD FOR TWITTERBOT ------------
+	} else {
+		// -------------------- BEGIN: REDIRECT TO S3 URL ------------
+
+		// Not Twitter bot.  Redirect the request to
+		//  our S3 URL.
+		// Redirect the browser to the S3 URL
+		reply.redirect(twitterCardDetails.url_to_image); // Defaults to 302
+
+		// -------------------- END  : REDIRECT TO S3 URL ------------
+	}
 });
 
 

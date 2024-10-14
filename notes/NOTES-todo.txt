@@ -22,9 +22,13 @@ FUTURE FEATURES:
 
 NEXT:
 
+    > Big bug: Major items from the prompt are being lost
+        during refinement attempts.
+
     > Instead of blindly saving the Livepeer image to disk,
       see if it already exists in S3 and if so, just return
       the existing S3 URI.
+
 
     > Finish Twitter posting feature
 
