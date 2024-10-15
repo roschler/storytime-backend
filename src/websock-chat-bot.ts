@@ -10,13 +10,21 @@ import {
 	StateType,
 	ShareImageOnTwitterRequest,
 	TwitterCardDetails,
-	GetUserBlockchainPresenceRequest, StoreUserBlockchainPresenceRequest, OperationResult,
+	GetUserBlockchainPresenceRequest,
+	StoreUserBlockchainPresenceRequest,
+	OperationResult,
+	MintNftRequest,
+	MintNftImageDetails,
 } from "./system/types"
 import {
 	sendStateMessage,
 	sendErrorMessage,
 	sendTextMessage,
-	saveMetaData_chat_bot, sendTwitterCardUrlMessage, sendUserBlockchainPresence, sendUserBlockchainPresenceStoreResult,
+	saveMetaData_chat_bot,
+	sendTwitterCardUrlMessage,
+	sendUserBlockchainPresence,
+	sendUserBlockchainPresenceStoreResult,
+	sendMintNftImageDetailsMessage,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -295,7 +303,7 @@ async function wsConnection(
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
 				// Call the function that does the share on Twitter
-				//  operations.  It will return the URL to the
+				//  operations.  It will return the URL to
 				//  our GET route that will serve up the Twitter
 				//  card document the Twitter share intent requires
 				//  for showing an image preview on a Tweet.
@@ -371,6 +379,66 @@ async function wsConnection(
 				return true;
 
 				// -------------------- END  : REQUEST USER BLOCKCHAIN PRESENCE OBJECT ------------
+
+			} else if (message.type === "mint_nft") {
+				// -------------------- BEGIN: MINT NFT ------------
+
+				// User wants to mint their generated image as an NFT.
+				//
+				// Every request must have a user blockchain presence
+				//  object in JSON format and the Livepeer image URL
+				//  for the generated image in the payload.
+				const {
+					user_id,
+					image_url,
+					dimensions,
+					client_user_message,
+					user_blockchain_presence_json
+				} = message.payload as MintNftRequest;
+
+				if (!user_id || user_id.trim().length < 1)
+					throw new Error(`BAD REQUEST: The user ID is missing.`);
+
+				if (!image_url || image_url.trim().length < 1)
+					throw new Error(`BAD REQUEST: The image URL is missing.`);
+
+				if (!dimensions)
+					throw new Error(`BAD REQUEST: The image dimensions are missing.`);
+
+				// Reconstitute the user_blockchain_presence_json object.
+				const userBlockchainPresenceObj =
+					reconstituteUserBlockchainPresence(user_blockchain_presence_json)
+
+				// Create a unique request ID.
+				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+
+				// Call the function that does the share on Twitter
+				//  operations.  It will return the URL to
+				//  our GET route that will serve up the Twitter
+				//  card document the Twitter share intent requires
+				//  for showing an image preview on a Tweet.
+				const twitterCardDetails =
+					await shareImageOnTwitter(
+						client,
+						user_id,
+						image_url,
+						dimensions,
+						client_user_message);
+
+				// Merge the Twitter card details into our mint NFT
+				//  image details object.
+				const mintNftImageDetails: MintNftImageDetails =
+					{
+						...twitterCardDetails,
+						user_blockchain_presence: userBlockchainPresenceObj
+					}
+
+				// Send it back to the client.
+				sendMintNftImageDetailsMessage(client, mintNftImageDetails)
+
+				return true
+
+				// -------------------- END  : MINT NFT ------------
 			} else {
 				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
 			}

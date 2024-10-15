@@ -78,6 +78,34 @@ export interface ShareImageOnTwitterRequest {
 
 /**
  * This is the expected request payload for a request from
+ *  the client front-end to mint a generated image on
+ *  as an NFT.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ */
+export interface MintNftRequest {
+	// The ID of the user making the request.
+	user_id: string,
+	// The UserBlockchainPresence object for the requesting
+	//  user in plain JSON format.  We will reconstitute it
+	//  to a UserBlockchainPresence object.
+	user_blockchain_presence_json: any,
+	// The Livepeer image URL for the generated image.
+	image_url: string,
+	// The image dimensions.
+	dimensions: ImageDimensions,
+
+	// This field contains the custom
+	//  value, if any, that the client passed
+	//  to the back-end server during
+	//  a request to it, in the
+	//  TwitterCardDetails object.
+	client_user_message: string
+}
+
+/**
+ * This is the expected request payload for a request from
  *  the client front-end to share a generated image on
  *  Twitter.
  *
@@ -109,10 +137,6 @@ export interface StoreUserBlockchainPresenceRequest {
 /**
  * This interface describes a Twitter card details object.
  *
- * NOTE: For now we are also using this object for the
- *  mint NFT operation too, in order to get back
- *  the S3 URI created for the generated image.
- *
  * WARNING: This interface must match the declaration
  *  used by the client front-end.
  */
@@ -134,6 +158,19 @@ export interface TwitterCardDetails {
 	//  client to pass custom information back
 	//  to itself.
 	client_user_message: string
+}
+
+/**
+ * This interface extends the Twitter card details object.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ */
+export interface MintNftImageDetails extends TwitterCardDetails {
+	// We add the blockchain related elements to the
+	//  Twitter card details.
+	user_blockchain_presence: UserBlockchainPresence
+
 }
 
 // The request payload for a Storytime app request.

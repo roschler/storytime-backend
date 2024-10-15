@@ -1,17 +1,20 @@
 // This module contains the code for the user blockchain object and
 //  helper utilities.
 
+import {
+    getFriendlyChainIdName,
+    Maybe,
+    maybeTypeToString,
+    NotifyUserFunction,
+    NotifyUserMessages,
+} from "./blockchain-common"
+
 /**
  * WARNING: Keep this file in sync with the file of the same name
  *  between CLIENT and BACK-END server.
  */
 
 // Verbose logging flag
-import {
-    getFriendlyChainIdName, Maybe, maybeTypeToString,
-    NotifyUserFunction,
-    NotifyUserMessages
-} from "@/app/components/blockchain/blockchain-common";
 
 export const bVerboseUserManagement = true;
 

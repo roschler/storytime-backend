@@ -6,7 +6,7 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, TwitterCardDetails, OperationResult,
+	Genre, TwitterCardDetails, OperationResult, MintNftImageDetails,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
@@ -188,6 +188,20 @@ export const sendStateMessage = (client: WebSocket, payload: StateType) => {
 export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterCardDetails) => {
 	_send(client, {
 		type: "twitter_card_details",
+		payload,
+	})
+}
+
+/**
+ * This function sends a mint NFT image details response to the websocket
+ *  client.
+ *
+ * @param client - The target websocket client.
+ * @param payload - The message payload.
+ */
+export const sendMintNftImageDetailsMessage = (client: WebSocket, payload: MintNftImageDetails) => {
+	_send(client, {
+		type: "mint_nft_image_details",
 		payload,
 	})
 }
