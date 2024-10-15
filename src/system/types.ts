@@ -1,3 +1,13 @@
+import { UserBlockchainPresence } from "../blockchain/user-blockchain-presence"
+
+/**
+ * Simple true/false result object for most responses
+ *  to client side requests.
+ */
+export interface OperationResult {
+	result: boolean
+}
+
 export interface LivepeerImage {
 	seed: number
 	url: string
@@ -64,6 +74,36 @@ export interface ShareImageOnTwitterRequest {
 	//  a request to it, in the
 	//  TwitterCardDetails object.
 	client_user_message: string
+}
+
+/**
+ * This is the expected request payload for a request from
+ *  the client front-end to share a generated image on
+ *  Twitter.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ */
+export interface GetUserBlockchainPresenceRequest {
+	// The public address of the user making the request.
+	user_public_address: string
+}
+
+/**
+ * This is the expected request payload for a request from
+ *  the client front-end to share a generated image on
+ *  Twitter.
+ *
+ * WARNING: This interface must match the declaration
+ *  used by the client front-end.
+ */
+export interface StoreUserBlockchainPresenceRequest {
+	// The public address of the user making the request.
+	user_public_address: string,
+
+	// The user blockchain presence object to store for the
+	//  given public address.
+	user_blockchain_presence: UserBlockchainPresence
 }
 
 /**

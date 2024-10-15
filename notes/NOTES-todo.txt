@@ -25,6 +25,9 @@ NEXT:
     // need websocket client/server request/response code to read/write
     //  user blockchain presence objects.
 
+    LATER: Add server side verification of user public address via
+     client side payload signature checking.
+
     > Big bug: Major items from the prompt are being lost
         during refinement attempts.
 

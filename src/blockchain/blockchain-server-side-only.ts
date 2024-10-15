@@ -12,6 +12,29 @@ const CONSOLE_CATEGORY = 'blockchain-server-side-only';
 const DIR_USER_BLOCKCHAIN_PRESENCE = '../../user-blockchain-presence-files';
 
 /**
+ *
+ * @param rawJson
+ */
+export function reconstituteUserBlockchainPresence(rawJson: any): UserBlockchainPresence {
+	// Validate that the raw data is an object
+	if (typeof rawJson !== 'object' || rawJson === null) {
+		throw new Error('Invalid JSON structure for UserBlockchainPresence.');
+	}
+
+	// Create a new UserBlockchainPresence object
+	const userBlockchainPresence = new UserBlockchainPresence(rawJson.enforceChainId || null);
+
+	// Iterate over the properties in the raw JSON object and dynamically assign them to the instance
+	Object.keys(rawJson).forEach((key) => {
+		if (key in userBlockchainPresence) {
+			(userBlockchainPresence as any)[key] = rawJson[key];
+		}
+	});
+
+	return userBlockchainPresence;
+}
+
+/**
  * Given a user's public address, build the full file path that
  *  leads to the directory where those files are stored, with
  *  the public address as the primary file name.
@@ -71,20 +94,8 @@ export async function readUserBlockchainPresence(userPublicAddress: string): Pro
 	// Read the raw JSON data from the file
 	const rawJson: any = await readJsonFile(filePath);
 
-	// Validate that the raw data is an object
-	if (typeof rawJson !== 'object' || rawJson === null) {
-		throw new Error('Invalid JSON structure for UserBlockchainPresence.');
-	}
-
-	// Create a new UserBlockchainPresence object
-	const userBlockchainPresence = new UserBlockchainPresence(rawJson.enforceChainId || null);
-
-	// Iterate over the properties in the raw JSON object and dynamically assign them to the instance
-	Object.keys(rawJson).forEach((key) => {
-		if (key in userBlockchainPresence) {
-			(userBlockchainPresence as any)[key] = rawJson[key];
-		}
-	});
+	const userBlockchainPresence =
+		reconstituteUserBlockchainPresence(rawJson)
 
 	return userBlockchainPresence;
 }

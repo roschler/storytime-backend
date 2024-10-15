@@ -6,12 +6,17 @@ import { WebSocket } from 'ws'
 import fs, { createWriteStream } from "fs"
 import websocket, { SocketStream } from "@fastify/websocket"
 import type { FastifyInstance, FastifyRequest } from "fastify"
-import { StateType, ShareImageOnTwitterRequest, TwitterCardDetails } from "./system/types"
+import {
+	StateType,
+	ShareImageOnTwitterRequest,
+	TwitterCardDetails,
+	GetUserBlockchainPresenceRequest, StoreUserBlockchainPresenceRequest, OperationResult,
+} from "./system/types"
 import {
 	sendStateMessage,
 	sendErrorMessage,
 	sendTextMessage,
-	saveMetaData_chat_bot, sendTwitterCardUrlMessage,
+	saveMetaData_chat_bot, sendTwitterCardUrlMessage, sendUserBlockchainPresence, sendUserBlockchainPresenceStoreResult,
 } from "./system/handlers"
 import path from "node:path"
 import { isFlagged } from "./openai-common"
@@ -20,6 +25,10 @@ import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 import { processChatVolley, shareImageOnTwitter } from "./process-chat-volley"
+import {
+	readUserBlockchainPresence,
+	reconstituteUserBlockchainPresence, writeUserBlockchainPresence,
+} from "./blockchain/blockchain-server-side-only"
 
 const CONSOLE_CATEGORY = 'websocket'
 const appName = 'Chatbot'
@@ -266,7 +275,12 @@ async function wsConnection(
 				//
 				// Every request must have a user ID and image URL
 				//  field in the payload.
-				const { user_id, image_url, dimensions, client_user_message } = message.payload as ShareImageOnTwitterRequest;
+				const {
+					user_id,
+					image_url,
+					dimensions,
+					client_user_message
+				} = message.payload as ShareImageOnTwitterRequest;
 
 				if (!user_id || user_id.trim().length < 1)
 					throw new Error(`BAD REQUEST: The user ID is missing.`);
@@ -298,6 +312,65 @@ async function wsConnection(
 
 				return true
 				// -------------------- END  : SHARE IMAGE ON TWITTER ------------
+			} else if (message.type === "request_get_user_blockchain_presence") {
+				// -------------------- BEGIN: REQUEST USER BLOCKCHAIN PRESENCE OBJECT ------------
+
+				// Process the request.
+				//
+				// Every request must have a public address.
+				const {
+					user_public_address
+				} = message.payload as GetUserBlockchainPresenceRequest;
+
+				if (!user_public_address || user_public_address.trim().length < 1)
+					throw new Error(`BAD REQUEST: The user public address is missing.`);
+
+				// Get the user blockchain object or
+				//  return null if none exists.
+				const userBlockchainPresenceObjOrNull =
+					await readUserBlockchainPresence(user_public_address)
+
+				// Send the result to the client.
+				sendUserBlockchainPresence(client, userBlockchainPresenceObjOrNull)
+
+				return true;
+
+				// -------------------- END  : REQUEST USER BLOCKCHAIN PRESENCE OBJECT ------------
+			} else if (message.type === "request_store_user_blockchain_presence") {
+				// -------------------- BEGIN: REQUEST USER BLOCKCHAIN PRESENCE OBJECT ------------
+
+				// Process the request.
+				//
+				// Every request must have a public address and
+				//  a valid, non-null user blockchain presence
+				//  object.
+				const {
+					user_public_address,
+					user_blockchain_presence
+				} = message.payload as StoreUserBlockchainPresenceRequest;
+
+				if (!user_public_address || user_public_address.trim().length < 1)
+					throw new Error(`BAD REQUEST: The user public address is missing.`);
+
+				if (user_blockchain_presence === null || typeof user_blockchain_presence === 'undefined')
+					throw new Error(`BAD REQUEST: The user blockchain  is missing.`);
+
+				// Reconstitute the user blockchain presence object.
+				const userBlockchainPresenceObj =
+					reconstituteUserBlockchainPresence(user_blockchain_presence)
+
+				// Store it.
+				await writeUserBlockchainPresence(user_public_address, userBlockchainPresenceObj)
+
+				const resultOfOperation: OperationResult =
+					{ result: true }
+
+				// Send the result to the client.
+				sendUserBlockchainPresenceStoreResult(client, resultOfOperation)
+
+				return true;
+
+				// -------------------- END  : REQUEST USER BLOCKCHAIN PRESENCE OBJECT ------------
 			} else {
 				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
 			}

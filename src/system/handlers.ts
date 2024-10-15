@@ -6,12 +6,13 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, TwitterCardDetails,
+	Genre, TwitterCardDetails, OperationResult,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
 import { CurrentChatState } from "../chat-volleys/chat-volleys"
 import { StatusCodes } from 'http-status-codes';
+import { UserBlockchainPresence } from "../blockchain/user-blockchain-presence"
 
 // Pull in all of our environment variables
 // and set defaults if any of them are missing
@@ -187,6 +188,35 @@ export const sendStateMessage = (client: WebSocket, payload: StateType) => {
 export const sendTwitterCardUrlMessage = (client: WebSocket, payload: TwitterCardDetails) => {
 	_send(client, {
 		type: "twitter_card_details",
+		payload,
+	})
+}
+
+/**
+ * This function sends a UserBlockchainPresence object
+ *  back to the client.
+ *
+ * @param client - The target websocket client.
+ * @param payload - The message payload.
+ */
+export const sendUserBlockchainPresence = (client: WebSocket, payload: UserBlockchainPresence) => {
+	_send(client, {
+		type: "user_blockchain_presence",
+		payload,
+	})
+}
+
+//
+/**
+ * This function sends a UserBlockchainPresence object
+ *  back to the client.
+ *
+ * @param client - The target websocket client.
+ * @param payload - The message payload.
+ */
+export const sendUserBlockchainPresenceStoreResult = (client: WebSocket, payload: OperationResult) => {
+	_send(client, {
+		type: "store_user_blockchain_presence_result",
 		payload,
 	})
 }
