@@ -22,67 +22,16 @@ FUTURE FEATURES:
 
 NEXT:
 
+    // need websocket client/server request/response code to read/write
+    //  user blockchain presence objects.
+
     > Big bug: Major items from the prompt are being lost
         during refinement attempts.
 
-    > Instead of blindly saving the Livepeer image to disk,
-      see if it already exists in S3 and if so, just return
-      the existing S3 URI.
-
-
-    > Finish Twitter posting feature
-
-        - When the Twitter post button is pressed the client will
-            send us a websocket request to that effect with the
-            user ID, and the URL of the image the user selected from the
-            image carousel.  The websocket request will be a
-            "share_image_on_twitter" request.
-
-        - We need to do the following in response to this request:
-
-            PREQUISITE:
-
-                + Get the user's chat history
-                + Get the last generated prompt
-                + Create a new prompt that asks gpt-4-turbo to
-                  create a pithy, viral tweet from the prompt
-                  with the footer - Made with @Livepeer Image Helper
-                + Use the response as the preset text for the
-                  Tweet
-
-            > Use putLivepeerImageToS3() to store the image in S3
-             and get back the S3 asset
-
-            > Use buildImageShareForTwitterUrl() to build the image
-              share link we pass to the Twitter share intent API
-
-              Here's an example link it might build:
-
-              https://example.com/twitter-card/123?card=summary_large_image&title=My%20Title&description=My%20Description
-
-            > Return the fully built Twitter share intent URL to the
-               front-end client, so it can open a new tab for the
-               user that shows them the pre-built tweet.
-
-            > When the Twitter share intent accesses our route for /twitter-card/:imageId, it returns this text:
-
-                <!-- Twitter Card data -->
-                <meta name="twitter:card" content="summary_large_image">
-                <meta name="twitter:title" content="Your Post Title">
-                <meta name="twitter:description" content="A short description of your content.">
-                <meta name="twitter:image" content="https://example.com/path-to-your-image.jpg">
-
-                + Twitter will uses this information to build a nice
-                 image preview, visible in the Tweet
-
-            >> See the ChatGPTPlus thread for the rest of the details.
-
-
-
-    Interesting enhancement:  Create an LLM block to reorder the clauses
-     in a previous prompt if the user mentions it in a wrong content
-     complaint.  Try the main system prompt first with a template variable
-     named ${reorderClauses}.
+    Interesting enhancement:  Modify the prompt reordering rewrite
+     code to force the primary error content to the front of the
+     prompt by isolating the component image elements and doing this
+     explicitly.
 
 NEW STREAMLINED APPROACH:
 
