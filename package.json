@@ -21,6 +21,7 @@
 		"@fastify/helmet": "^12.0.1",
 		"@fastify/static": "^7.0.4",
 		"@fastify/websocket": "^9.0.0",
+		"@metamask/providers": "^17.2.1",
 		"@types/aws-sdk": "^2.7.0",
 		"dotenv": "^16.4.5",
 		"fastify": "^4.26.2",

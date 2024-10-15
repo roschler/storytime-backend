@@ -388,6 +388,8 @@ export function buildChatBotSystemPrompt(
 				if (wrongContentText.trim().length < 1)
 					throw new Error(`The wrongContentText parameter is not NULL, so it can not be empty`);
 
+				console.info(CONSOLE_CATEGORY, `>>>>>> Adding rewrite for wrong content text to system prompt.`)
+
 				previousImageGenerationPromptOrNothing +=
 					`
 					Rewrite this image generation prompt so that the subject in the user's complaint, "${wrongContentText}", becomes the focus of the scene described by your revised image prompt.

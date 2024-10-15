@@ -176,9 +176,14 @@ function getStringIntentDetectionValue(
 					//  because Typescript is not figuring out due
 					//  to the "undefined" check above, that propValue
 					//  must be a string at this point.
-					retValue =
-						typeof propValue === 'undefined'
-							? null : propValue
+					//
+					// Once retValue has a valid value, we don't
+					//  overwrite with another.
+					if (retValue === null) {
+						retValue =
+							typeof propValue === 'undefined'
+								? null : propValue
+					}
 				}
 			)
 		}
@@ -228,7 +233,7 @@ function isStringIntentDetectedWithMatchingValue(
 		if (jsonResponseObjExt.intent_detector_id === intentDetectorId) {
 			// Iterate its child objects and look for a child object
 			//  with the desired property name.
-			retValue =
+			const bTestValue =
 				jsonResponseObjExt.array_child_objects.some(
 					(childObj) => {
 						// Does the child object have a property with the desired
@@ -246,6 +251,12 @@ function isStringIntentDetectedWithMatchingValue(
 						return propValue === desiredPropValue
 					}
 				)
+
+			if (bTestValue) {
+				// Once retValue is true, we don't "unset" it.
+				if (!retValue)
+					retValue = bTestValue
+			}
 		}
 	}
 
@@ -432,6 +443,46 @@ export async function processChatVolley(
 				intent_detector_id: enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				array_child_objects: textCompletion.json_response as object[]
 			}
+
+		if (extWrongContentJsonResponseObj.array_child_objects.length > 0) {
+			// The extended wrong content detector has a tendency
+			//  to replace the complaint_type property name with
+			//  something it deems more appropriate.  So if we
+			//  don't find a complaint_type property, we add it
+			//  with the value "wrong_content" because the only
+			//  thing it detects is wrong content.
+			let bIsMissingComplaintType = true;
+			let strComplaintText = "(none)";
+
+			// Check if any child object has "wrong_content" as the complaint_type
+			bIsMissingComplaintType = !extWrongContentJsonResponseObj.array_child_objects.some(
+				(childObj: any) => childObj.complaint_type === "wrong_content"
+			);
+
+			// If no "wrong_content" object found, search for the
+			//  first object with "complaint_text" and set
+			//  strComplaintText its value.  We use this
+			//  technique because when the LLM makes the
+			//  mistake we are fixing, it has, so far,
+			//  produced the JSON object with
+			//  "complaint_text" having the correct value.
+			if (bIsMissingComplaintType) {
+				const firstComplaintTextObj = extWrongContentJsonResponseObj.array_child_objects.find(
+					(childObj: any) => childObj.complaint_text
+				);
+
+				if (firstComplaintTextObj) {
+					strComplaintText = (firstComplaintTextObj as unknown as any).complaint_text;
+				}
+
+				// Add a new child object to the array with the
+				//  correct complaint_type value of "wrong_content".
+				extWrongContentJsonResponseObj.array_child_objects.push({
+					complaint_type: "wrong_content",
+					complaint_text: strComplaintText
+				});
+			}
+		}
 
 		// Add it to the array of intent detection JSON response objects.
 		aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj)
