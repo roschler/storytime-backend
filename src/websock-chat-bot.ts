@@ -37,6 +37,7 @@ import {
 	readUserBlockchainPresence,
 	reconstituteUserBlockchainPresence, writeUserBlockchainPresence,
 } from "./blockchain/blockchain-server-side-only"
+import { sendSimpleStateMessage } from "./common-routines"
 
 const CONSOLE_CATEGORY = 'websocket'
 const appName = 'Chatbot'
@@ -435,6 +436,8 @@ async function wsConnection(
 
 				// Send it back to the client.
 				sendMintNftImageDetailsMessage(client, mintNftImageDetails)
+
+				sendSimpleStateMessage(client, 'Image saved.')
 
 				return true
 

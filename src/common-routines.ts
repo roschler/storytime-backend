@@ -2,6 +2,10 @@
 
 import * as fs from 'fs';
 import path from "node:path"
+import type WebSocket from "ws"
+import { StateType } from "./system/types"
+import { getDefaultState } from "./chat-volleys/chat-volleys"
+import { sendStateMessage } from "./system/handlers"
 
 /**
  * Reads the given string content from the specified file path.
@@ -120,3 +124,17 @@ export function getCurrentOrAncestorPathForSubDirOrDie(consoleCategory: string, 
 
 	return resolvedFilePath
 }
+
+
+// This function sends a state update message, but with
+//  all the other fields besides the state_change_message
+//  set to their default values.
+export function sendSimpleStateMessage(client: WebSocket, stateChangeMessage: string) {
+	if (!stateChangeMessage || stateChangeMessage.length < 1)
+		throw new Error(`The state change message is empty.`);
+
+	let newState: StateType = getDefaultState({ state_change_message: stateChangeMessage})
+
+	sendStateMessage(client, newState)
+}
+

@@ -29,10 +29,11 @@ import {
 import { chatCompletionImmediate } from "./openai-common"
 import { ImageGeneratorLlmJsonResponse, ImageGenPromptToTweetLlmJsonResponse } from "./openai-parameter-objects"
 import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
-import { ImageDimensions, StateType, TextType, TwitterCardDetails } from "./system/types"
-import { buildImageShareForTwitterUrl, putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
+import { ImageDimensions, StateType, TwitterCardDetails } from "./system/types"
+import { putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
 import { URL } from "url"
 import { writeTwitterCardDetails } from "./twitter/twitter-helper-functions"
+import { sendSimpleStateMessage } from "./common-routines"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
 
@@ -903,23 +904,11 @@ export async function shareImageOnTwitter(
 	if (!imageUrl || imageUrl.trim().length < 1)
 		throw new Error(`The image URL is empty or invalid.`);
 
-	// This function sends a state update message, but with
-	//  all the other fields besides the state_change_message
-	//  set to their default values.
-	function sendSimpleStateMessage(stateChangeMessage: string) {
-		if (!stateChangeMessage || stateChangeMessage.length < 1)
-			throw new Error(`The state change message is empty.`);
-
-		let newState: StateType = getDefaultState({ state_change_message: stateChangeMessage})
-
-		sendStateMessage(client, newState)
-	}
-
 	// -------------------- BEGIN: CREATE TWEET TEXT FROM PROMPT ------------
 
 	// First, we get the prompt of the last generated image
 
-	sendSimpleStateMessage('Preparing tweet...')
+	sendSimpleStateMessage(client,'Preparing tweet...')
 
 	// Get the chat history object for the given user.
 	const chatHistoryObj =
@@ -940,7 +929,7 @@ export async function shareImageOnTwitter(
 
 	console.info(CONSOLE_CATEGORY, `>>>>> Making image generation prompt to Tweet text LLM completion request <<<<<`)
 
-	sendSimpleStateMessage('Creating tweet message from the image generation prompt...')
+	sendSimpleStateMessage(client, 'Creating tweet message from the image generation prompt...')
 
 	const textCompletion =
 		await chatCompletionImmediate(
@@ -954,7 +943,7 @@ export async function shareImageOnTwitter(
 	const jsonResponse =
 		textCompletion.json_response as ImageGenPromptToTweetLlmJsonResponse;
 
-	sendSimpleStateMessage('Saving Livepeer image to permanent storage...')
+	sendSimpleStateMessage(client, 'Saving Livepeer image to permanent storage...')
 
 	// Put the image in our S3 bucket.
 	const fullS3UriToImage =
