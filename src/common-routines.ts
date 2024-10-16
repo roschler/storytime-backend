@@ -15,8 +15,8 @@ import { sendStateMessage } from "./system/handlers"
  * @returns {string | null} - Returns the contents of the file if
  *  it exists, or NULL if not.
  */
-export function readTextFileSync(fullFilePath: string): string | null {
-	const errPrefix = '(readTextFileSync) ';
+export function readTextFile(fullFilePath: string): string | null {
+	const errPrefix = '(readTextFile) ';
 
 	// Validate fullFilePath
 	if (typeof fullFilePath !== 'string' || fullFilePath.trim() === '') {
@@ -44,8 +44,8 @@ export function readTextFileSync(fullFilePath: string): string | null {
  * @returns {boolean} - Returns true on successful write, or
  *  throws an error if the operation fails.
  */
-export function writeTextFileSync(fullFilePath: string, strContent: string): boolean {
-	const errPrefix = '(writeTextFileSync) ';
+export function writeTextFile(fullFilePath: string, strContent: string): boolean {
+	const errPrefix = '(writeTextFile) ';
 
 	// Validate fullFilePath
 	if (typeof fullFilePath !== 'string' || fullFilePath.trim() === '') {
@@ -102,7 +102,7 @@ export function getCurrentOrAncestorPathForSubDirOrDie(consoleCategory: string, 
 	if (!fs.existsSync(subDirToFind)) {
 		// Check the ancestor directory.
 		const ancestorPath =
-			path.join('..', devOrProdDirCheck)
+			path.resolve(path.join('..', devOrProdDirCheck))
 
 		if (fs.existsSync(ancestorPath)) {
 			subDirFound = ancestorPath

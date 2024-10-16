@@ -9,7 +9,7 @@ import { DIR_CHAT_HISTORY_FILES } from "../chat-volleys/chat-volleys"
 
 const CONSOLE_CATEGORY = 'blockchain-server-side-only';
 
-const DIR_USER_BLOCKCHAIN_PRESENCE = '../../user-blockchain-presence-files';
+const DIR_USER_BLOCKCHAIN_PRESENCE = '../user-blockchain-presence-files';
 
 /**
  *
@@ -80,7 +80,7 @@ function buildUserBlockchainPresenceFilename(userPublicAddress: string) {
  * @returns {Promise<UserBlockchainPresence>} - The reconstituted UserBlockchainPresence object.
  * @throws {Error} - If the public address is invalid or the file read operation fails.
  */
-export async function readUserBlockchainPresence(userPublicAddress: string): Promise<UserBlockchainPresence> {
+export async function readUserBlockchainPresence(userPublicAddress: string): Promise<UserBlockchainPresence | null> {
 	// Validate userPublicAddress
 	if (!userPublicAddress || userPublicAddress.trim().length === 0) {
 		throw new Error('userPublicAddress cannot be empty.');
@@ -92,7 +92,10 @@ export async function readUserBlockchainPresence(userPublicAddress: string): Pro
 	const filePath = buildUserBlockchainPresenceFilename(trimmedAddress);
 
 	// Read the raw JSON data from the file
-	const rawJson: any = await readJsonFile(filePath);
+	const rawJson: any = readJsonFile(filePath);
+
+	if (!rawJson)
+		return null
 
 	const userBlockchainPresence =
 		reconstituteUserBlockchainPresence(rawJson)
@@ -125,5 +128,5 @@ export async function writeUserBlockchainPresence(
 	const dataToWrite = { ...userBlockchainPresenceObj };
 
 	// Write the JSON data to the file
-	await writeJsonFile(filePath, dataToWrite);
+	writeJsonFile(filePath, dataToWrite);
 }

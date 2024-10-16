@@ -4,7 +4,6 @@ import type WebSocket from "ws"
 import {
 	ChatVolley,
 	CurrentChatState,
-	getDefaultState,
 	readChatHistory,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
@@ -830,7 +829,7 @@ export async function processChatVolley(
 	chatHistoryObj.addChatVolley(newChatVolleyObj)
 
 	// Update storage.
-	await writeChatHistory(userId, chatHistoryObj)
+	writeChatHistory(userId, chatHistoryObj)
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
@@ -1022,7 +1021,7 @@ export async function shareImageOnTwitter(
 		}
 
 	// Save the Twitter card details to disk.
-	await writeTwitterCardDetails(imageId, twitterCardDetails)
+	writeTwitterCardDetails(imageId, twitterCardDetails)
 
 	// -------------------- END  : SAVE TWITTER CARD DETAILS TO DISK ------------
 

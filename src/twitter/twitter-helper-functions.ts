@@ -57,11 +57,11 @@ export function buildTwitterCardDetailsFilename(imageId: string): string {
  * @param {string} imageId - The image ID associated with the twitter card details.
  * @param {TwitterCardDetails} twitterCardDetails - The twitter card details object to write to disk.
  */
-export async function writeTwitterCardDetails(imageId: string, twitterCardDetails: TwitterCardDetails): Promise<void> {
+export function writeTwitterCardDetails(imageId: string, twitterCardDetails: TwitterCardDetails): void {
 	const filename = buildTwitterCardDetailsFilename(imageId);
 	const jsonData = JSON.stringify(twitterCardDetails, null, 2);  // Pretty print the JSON
 
-	await writeJsonFile(filename, jsonData);
+	writeJsonFile(filename, jsonData);
 }
 
 /**
@@ -87,7 +87,7 @@ export async function readTwitterCardDetails(imageId: string): Promise<TwitterCa
 		// -------------------- BEGIN: LOAD EXISTING FILE ------------
 
 		const filename = buildTwitterCardDetailsFilename(imageId);
-		const jsonData = await readJsonFile(filename);
+		const jsonData = readJsonFile(filename);
 		const parsedData = JSON.parse(jsonData) as TwitterCardDetails;
 
 		return parsedData

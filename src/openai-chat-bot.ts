@@ -1,6 +1,6 @@
 import { chatCompletionImmediate, chatCompletionStream } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { getCurrentOrAncestorPathForSubDirOrDie, readTextFileSync } from "./common-routines"
+import { getCurrentOrAncestorPathForSubDirOrDie, readTextFile } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
@@ -65,7 +65,7 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 		throw new Error(`Unable to find image generation sub-prompt using file name:\n${fullFilePath}`);
 	}
 
-	const textContent = readTextFileSync(fullFilePath);
+	const textContent = readTextFile(fullFilePath);
 
 	if (textContent === null)
 		throw new Error(`Unable to load image generation sub-prompt using file name:\n${primaryFileName}`);

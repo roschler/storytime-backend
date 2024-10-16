@@ -22,8 +22,10 @@ FUTURE FEATURES:
 
 NEXT:
 
-    // need websocket client/server request/response code to read/write
-    //  user blockchain presence objects.
+    >>>>> Badly need cancelable (when new image is requested)
+      503 retry with exponential back-off.  Also, when a 503
+      error occurs, we should not lose the user's prompt.  It's
+      getting replaced with the default prompt when that happens.
 
     LATER: Add server side verification of user public address via
      client side payload signature checking.

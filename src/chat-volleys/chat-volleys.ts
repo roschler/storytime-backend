@@ -523,11 +523,11 @@ export function buildChatHistoryFilename(userId: string): string {
  * @param {string} userId - The user ID associated with the chat history.
  * @param {ChatHistory} chatHistory - The chat history object to write to disk.
  */
-export async function writeChatHistory(userId: string, chatHistory: ChatHistory): Promise<void> {
+export function writeChatHistory(userId: string, chatHistory: ChatHistory): void {
 	const filename = buildChatHistoryFilename(userId);
 	const jsonData = JSON.stringify(chatHistory, null, 2);  // Pretty print the JSON
 
-	await writeJsonFile(filename, jsonData);
+	writeJsonFile(filename, jsonData);
 }
 
 /**
@@ -553,7 +553,7 @@ export async function readChatHistory(userId: string): Promise<ChatHistory>  {
 		// -------------------- BEGIN: LOAD EXISTING FILE ------------
 
 		const filename = buildChatHistoryFilename(userId);
-		const jsonData = await readJsonFile(filename);
+		const jsonData = readJsonFile(filename);
 		const parsedData = JSON.parse(jsonData);
 
 		if (parsedData.__type === 'ChatHistory') {
