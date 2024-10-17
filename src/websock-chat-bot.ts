@@ -38,6 +38,12 @@ import {
 	reconstituteUserBlockchainPresence, writeUserBlockchainPresence,
 } from "./blockchain/blockchain-server-side-only"
 import { sendSimpleStateMessage } from "./common-routines"
+import { IpMetadata, StoryClient, StoryConfig } from "@story-protocol/core-sdk"
+import { Hex, http } from 'viem'
+import { RPCProviderUrl } from "./story-protocol/utils"
+import { uploadJSONToIPFS } from "./story-protocol/uploadToIpfs"
+import { createHash } from "node:crypto"
+
 
 const CONSOLE_CATEGORY = 'websocket'
 const appName = 'Chatbot'
@@ -391,6 +397,8 @@ async function wsConnection(
 			} else if (message.type === "mint_nft") {
 				// -------------------- BEGIN: MINT NFT ------------
 
+				sendSimpleStateMessage(client, 'Beginning NFT minting setup...')
+
 				// User wants to mint their generated image as an NFT.
 				//
 				// Every request must have a user blockchain presence
@@ -420,6 +428,8 @@ async function wsConnection(
 				// Create a unique request ID.
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
+				sendSimpleStateMessage(client, 'Preparing image for sharing...')
+
 				// Call the function that does the share on Twitter
 				//  operations.  It will return the URL to
 				//  our GET route that will serve up the Twitter
@@ -433,18 +443,87 @@ async function wsConnection(
 						dimensions,
 						client_user_message);
 
-				// Merge the Twitter card details into our mint NFT
-				//  image details object.
+				// -------------------- BEGIN: WRITE IP AND NFT METADATA TO IPFS ------------
+
+				sendSimpleStateMessage(client, 'Preparing IP and NFT assets for the blockchain...')
+
+				// Set up the StoryConfig object.
+				//
+				// Docs: https://docs.story.foundation/docs/typescript-sdk-setup
+				const storyConfig: StoryConfig = {
+					account: userBlockchainPresenceObj.publicAddress,
+					transport: http(RPCProviderUrl),
+					chainId: 'iliad',
+				}
+				const storyClientObj = StoryClient.newClient(storyConfig)
+
+
+				// Now that we created or confirmed the existence of the user's
+				//  SPG NFT collection, mint a new NFT against it using the current
+				//  generated image.
+				//
+				// 2. Set up your IP Metadata
+				//
+				// Docs: https://docs.story.foundation/docs/ipa-metadata-standard
+				const ipMetadata: IpMetadata =
+					storyClientObj.ipAsset.generateIpMetadata({
+						// Use the Twitter card title created by the LLM.
+						title: twitterCardDetails.twitter_card_title,
+						// Use the Twitter card description created by the LLM.
+						description: twitterCardDetails.twitter_card_description,
+						// URI to our S3 bucket for generated images.
+						watermarkImg: twitterCardDetails.url_to_image,
+						// TODO: What should we actually put here?  These values
+						//  are straight out of the Typescript tutorial
+						//  'non-commercial' sample.
+						attributes: [
+							{
+								key: 'Rarity',
+								value: 'Legendary',
+							},
+						],
+					})
+
+				// 3. Set up your NFT Metadata
+				//
+				// Docs: https://eips.ethereum.org/EIPS/eip-721
+				const nftMetadata = {
+					// Use the Twitter card title created by the LLM.
+					name: twitterCardDetails.twitter_card_title,
+					// Use the Twitter card description created by the LLM.
+					description: twitterCardDetails.twitter_card_description,
+					// URI to our S3 bucket for generated images.
+					image: twitterCardDetails.url_to_image,
+				}
+
+				sendSimpleStateMessage(client, 'Writing IP and NFT metadata to the blockchain...')
+
+				// Upload the IP and NFT metadata to IPFS.
+				const ipMetadataURI = await uploadJSONToIPFS(ipMetadata)
+				const ipMetadataHash = createHash('sha256').update(JSON.stringify(ipMetadata)).digest('hex')
+				const nftIpfsHash = await uploadJSONToIPFS(nftMetadata)
+				const nftHash = createHash('sha256').update(JSON.stringify(nftMetadata)).digest('hex')				
+				
+				// -------------------- END  : WRITE IP AND NFT METADATA TO IPFS ------------
+
+				// Merge the Twitter card details and IP/NFT metadata
+				//  details into our mint NFT image details object.
 				const mintNftImageDetails: MintNftImageDetails =
 					{
 						...twitterCardDetails,
-						user_blockchain_presence: userBlockchainPresenceObj
+						user_blockchain_presence: userBlockchainPresenceObj,
+						ipMetadata: {
+							ipMetadataURI: ipMetadataURI,
+							ipMetadataHash: ipMetadataHash as Hex,
+							nftMetadataURI: nftIpfsHash,
+							nftMetadataHash: nftHash as Hex
+						}
 					}
 
 				// Send it back to the client.
 				sendMintNftImageDetailsMessage(client, mintNftImageDetails)
 
-				sendSimpleStateMessage(client, 'Image saved.')
+				sendSimpleStateMessage(client, 'NFT is ready for minting and registering...')
 
 				return true
 

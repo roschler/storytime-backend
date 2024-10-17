@@ -1,4 +1,5 @@
 import { UserBlockchainPresence } from "../blockchain/user-blockchain-presence"
+import { Hex } from "viem"
 
 /**
  * Simple true/false result object for most responses
@@ -161,7 +162,22 @@ export interface TwitterCardDetails {
 }
 
 /**
- * This interface extends the Twitter card details object.
+ * These are the fields required for registering and minting
+ *  an NFT.
+ *
+ *  These interface declaration must be the same between
+ *   server and client.
+ */
+export interface IpMetadataUrisAndHashes {
+	ipMetadataURI: string;
+	ipMetadataHash: Hex;
+	nftMetadataURI: string;
+	nftMetadataHash: Hex;
+}
+
+/**
+ * This interface extends the Twitter card details object
+ *  to include the fields we need for minting an NFT.
  *
  * WARNING: This interface must match the declaration
  *  used by the client front-end.
@@ -169,8 +185,11 @@ export interface TwitterCardDetails {
 export interface MintNftImageDetails extends TwitterCardDetails {
 	// We add the blockchain related elements to the
 	//  Twitter card details.
-	user_blockchain_presence: UserBlockchainPresence
+	user_blockchain_presence: UserBlockchainPresence,
 
+	// We return the metadata the client needs to mint and
+	//  register the asset.
+	ipMetadata:  IpMetadataUrisAndHashes
 }
 
 // The request payload for a Storytime app request.
