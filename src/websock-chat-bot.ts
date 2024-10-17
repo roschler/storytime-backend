@@ -368,6 +368,13 @@ async function wsConnection(
 				const userBlockchainPresenceObj =
 					reconstituteUserBlockchainPresence(user_blockchain_presence)
 
+				// Reject any user blockchain presence object with
+				//  an uninstantiated SPG NFT collection contract
+				//  address.
+				if (!userBlockchainPresenceObj.isSpgNftCollectionInitialized()) {
+					throw new Error(`The user blockchain presence object does not have a SPG NFT collection smart contract hash yet.`);
+				}
+
 				// Store it.
 				await writeUserBlockchainPresence(user_public_address, userBlockchainPresenceObj)
 

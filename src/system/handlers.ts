@@ -215,7 +215,7 @@ export const sendMintNftImageDetailsMessage = (client: WebSocket, payload: MintN
  */
 export const sendUserBlockchainPresence = (client: WebSocket, payload: UserBlockchainPresence|null) => {
 	_send(client, {
-		type: "user_blockchain_presence",
+		type: "get_user_blockchain_presence_result",
 		payload,
 	})
 }

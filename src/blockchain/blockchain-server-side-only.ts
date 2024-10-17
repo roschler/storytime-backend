@@ -5,7 +5,6 @@ import { UserBlockchainPresence } from "./user-blockchain-presence"
 import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
 import { getCurrentOrAncestorPathForSubDirOrDie } from "../common-routines"
 import path from "node:path"
-import { DIR_CHAT_HISTORY_FILES } from "../chat-volleys/chat-volleys"
 
 const CONSOLE_CATEGORY = 'blockchain-server-side-only';
 
