@@ -14,8 +14,8 @@
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
+		"moduleResolution": "Node",
+		"module": "CommonJS",
 		"resolveJsonModule": true
 	},
 	"exclude": ["node_modules"],
