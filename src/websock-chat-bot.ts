@@ -510,7 +510,7 @@ async function wsConnection(
 				const mintNftImageDetails: MintNftImageDetails =
 					{
 						...twitterCardDetails,
-						user_blockchain_presence: userBlockchainPresenceObj,
+						user_blockchain_presence_stringified: userBlockchainPresenceObj.toJsonString(),
 						ipMetadata: {
 							ipMetadataURI: ipMetadataURI,
 							ipMetadataHash: ipMetadataHash as Hex,

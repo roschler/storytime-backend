@@ -189,7 +189,7 @@ export interface IpMetadataUrisAndHashes {
 export interface MintNftImageDetails extends TwitterCardDetails {
 	// We add the blockchain related elements to the
 	//  Twitter card details.
-	user_blockchain_presence: UserBlockchainPresence,
+	user_blockchain_presence_stringified: string,
 
 	// We return the metadata the client needs to mint and
 	//  register the asset.
