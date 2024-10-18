@@ -91,7 +91,7 @@ export interface MintNftRequest {
 	// The UserBlockchainPresence object for the requesting
 	//  user in plain JSON format.  We will reconstitute it
 	//  to a UserBlockchainPresence object.
-	user_blockchain_presence_json: any,
+	user_blockchain_presence_json_stringified: string,
 	// The Livepeer image URL for the generated image.
 	image_url: string,
 	// The image dimensions.

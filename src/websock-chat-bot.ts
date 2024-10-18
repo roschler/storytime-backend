@@ -405,7 +405,7 @@ async function wsConnection(
 					image_url,
 					dimensions,
 					client_user_message,
-					user_blockchain_presence_json
+					user_blockchain_presence_json_stringified
 				} = message.payload as MintNftRequest;
 
 				if (!user_id || user_id.trim().length < 1)
@@ -417,9 +417,12 @@ async function wsConnection(
 				if (!dimensions)
 					throw new Error(`BAD REQUEST: The image dimensions are missing.`);
 
+				if (user_blockchain_presence_json_stringified.length < 1)
+					throw new Error(`BAD REQUEST: The stringified user blockchain presence object is missing.`);
+
 				// Reconstitute the user_blockchain_presence_json object.
 				const userBlockchainPresenceObj =
-					reconstituteUserBlockchainPresence(user_blockchain_presence_json)
+					UserBlockchainPresence.fromJsonString(user_blockchain_presence_json_stringified)
 
 				// Create a unique request ID.
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
