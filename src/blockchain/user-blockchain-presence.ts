@@ -41,6 +41,7 @@ const CONSOLE_CATEGORY = 'user-blockchain-presence';
  *  interfaces into a single interface.
  */
 export interface MintNftRequestAndResponse {
+    ipId: string,
     mintNftRequestDetails: CreateIpAssetWithPilTermsRequest,
     mintNftResponseDetails: CreateIpAssetWithPilTermsResponse
 }
@@ -82,6 +83,12 @@ function isSupportedChainId(chainId: string): chainId is SupportedChainIds {
  *  listOfNftObjs data member.
  */
 type ListOfNftObjectsInterface = Record<string, unknown>; // Allow indexing with string keys
+
+/**
+ * This interface is conform the type of NFT arrays.
+ */
+type ArrayOfNftObjectsInterface = unknown[]; // Allow indexing with string keys
+
 
 // -------------------- BEGIN: SERIALIZER/DESERIALIZE USER BLOCKCHAIN PRESENCE ------------
 
@@ -147,6 +154,10 @@ export class UserBlockchainPresence {
     //  array.
     public listOfNftObjs: ListOfNftObjectsInterface = {};
 
+    // We also add the new NFT to this array that we keep
+    //   in chronological order of NFT creation.
+    public aryOfNftObjectsInterface: ArrayOfNftObjectsInterface = [];
+
     // -------------------- END  : DATA MEMBERS ------------
 
     /**
@@ -180,32 +191,19 @@ export class UserBlockchainPresence {
      *  If there is an existing entry for that NFT, its
      *  value will be overwritten with the new one.
      *
-     * @param ipaId - The ID/hash of the NFT as returned from the
-     *  mint and register NFT operation.
-     * @param mintingRequestDetails - The details used in the
-     *  request to mint and register an NFT.
-     * @param mintingResponseDetails - The details used in the
-     *  request to mint and register an NFT.
+     * @param mintAndRegisterResponseObj - The response object
+     *  from a mint and register call.
      */
     public addNftDetailsIntoSpgCollection(
-        ipaId: Hex,
-        mintingRequestDetails: CreateIpAssetWithPilTermsRequest,
-        mintingResponseDetails: CreateIpAssetWithPilTermsResponse) {
-        const idOfNftTrimmed = ipaId.trim()
-
-        if (idOfNftTrimmed.length < 1)
-            throw new Error(`The idOfNft parameter is empty.`)
-
-        // Combine the NFT minting request and response details
-        //  into a unified object.
-        const nftDetails: MintNftRequestAndResponse = {
-            mintNftRequestDetails: mintingRequestDetails,
-            mintNftResponseDetails: mintingResponseDetails
-        }
+        mintAndRegisterResponseObj: MintNftRequestAndResponse) {
 
         // Store the NFT details in a property whose name
-        //  is the ipaId value.
-        this.listOfNftObjs[idOfNftTrimmed] = nftDetails
+        //  is the ipId value.
+        this.listOfNftObjs[mintAndRegisterResponseObj.ipId] = mintAndRegisterResponseObj
+
+        // Add it to the array we keep in chronological order
+        //  of NFT creation.
+        this.aryOfNftObjectsInterface.push(mintAndRegisterResponseObj)
     }
 
     // -------------------- END  : NFT ARRAY FUNCTIONS ------------
@@ -433,16 +431,15 @@ export class UserBlockchainPresence {
      * @param imageDetailsForNftMinting - The NFT minting
      *  details object that describes the NFT.
      *
-     * @returns - Returns TRUE if the NFT was minted and
-     *  registered successfully, FALSE if not.
+     * @returns - Returns the response object that contains
+     *  the mint and register results.
      */
-    public async mintAndRegisterNft(imageDetailsForNftMinting: MintNftImageDetails): Promise<boolean> {
+    public async mintAndRegisterNft(imageDetailsForNftMinting: MintNftImageDetails): Promise<MintNftRequestAndResponse> {
 
         // Ensure that preflight checks are done and MetaMask is connected
         const isReady = await this.preflightCheck();
         if (!isReady) {
-            console.error("MetaMask is not ready for transactions.");
-            return false
+            throw new Error("MetaMask is not ready for transactions.");
         }
 
         // Set up StoryClient configuration using Metamask account and provider
@@ -489,26 +486,21 @@ export class UserBlockchainPresence {
         const mintAndRegisterResponseObj: CreateIpAssetWithPilTermsResponse =
             await storyClientObj.ipAsset.mintAndRegisterIpAssetWithPilTerms(mintAndRegisterRequestObj)
 
-        console.log(`Root IPA created at transaction hash ${mintAndRegisterResponseObj.txHash}, IPA ID: ${mintAndRegisterResponseObj.ipId}`)
-        console.log(`View on the explorer: https://explorer.story.foundation/ipa/${mintAndRegisterResponseObj.ipId}`)
-
         if (typeof mintAndRegisterResponseObj.ipId === 'undefined' || isHexUninitializedValue(mintAndRegisterResponseObj.ipId) )
             throw new Error(`Invalid ID for the mint and register operation.`);
 
-        console.log(`Adding NFT to user's list of owned NFTs.`)
-
-        // Add the NFT details to the user's blockchain presence object.
-        this.addNftDetailsIntoSpgCollection(
-            mintAndRegisterResponseObj.ipId,
-            mintAndRegisterRequestObj,
-            mintAndRegisterResponseObj
-        )
-
+        console.log(`Root IPA created at transaction hash ${mintAndRegisterResponseObj.txHash}, IPA ID: ${mintAndRegisterResponseObj.ipId}`)
         console.log(`View on the explorer: https://explorer.story.foundation/ipa/${mintAndRegisterResponseObj.ipId}`)
 
         // -------------------- END  : MINT AND REGISTER NFT ------------
 
-        return true;
+        const mintNftRequestAndResponseObj = {
+            ipId: mintAndRegisterResponseObj.ipId,
+            mintNftRequestDetails: mintAndRegisterRequestObj,
+            mintNftResponseDetails: mintAndRegisterResponseObj
+        }
+
+        return mintNftRequestAndResponseObj;
     }
 
     /**
@@ -718,6 +710,72 @@ export class UserBlockchainPresence {
             console.log('preflightCheck: Successful.');
         }
         return true;
+    }
+
+    /**
+     * Returns an NFT from our array of NFTs.
+     *
+     * @param ndxOfNft - The index into the NFT arrays
+     *  for the desired NFT details.  -1 will get  you
+     *   the details for the most recently created NFT.
+     *
+     * @returns - Returns the NFT details object at the
+     *  desired array slot.  If the array is empty, then
+     *  NULL is returned.  If ndxOfNft is -1, the details
+     *  of the most recently created NFT will be returned.
+     */
+    public getNftByIndex(ndxOfNft=-1): unknown | null {
+
+        // TODO: Use different explorers for different blockchains.
+        if (ndxOfNft < -1 || ndxOfNft >= this.aryOfNftObjectsInterface.length)
+            throw new Error(`Invalid NFT objects array index.`);
+
+        // If ndxOfNft is -1, that means get the latest one
+        //  added.
+        if (ndxOfNft === -1) {
+            if (this.aryOfNftObjectsInterface.length < 1)
+                // No NFTs yet.
+                return null
+            else
+                // Return the most recently created NFT.
+                return this.aryOfNftObjectsInterface[this.aryOfNftObjectsInterface.length - 1]
+        } else {
+            // Return the requested NFT at the desired slot index.
+            return this.aryOfNftObjectsInterface[ndxOfNft]
+        }
+    }
+
+    /**
+     * This function returns the explore page URL that will show
+     *  the blockchain details for a desired NFT object.
+     *
+     * @param ndxOfNft - The index into the NFT arrays
+     *  for the desired NFT details.  -1 will get  you
+     *   the details for the most recently created NFT.
+     *
+     * @returns - Returns the explorer page URL for the
+     *  desired NFT, found in our array of NFTs
+     *  at the specified index.
+     */
+    public getNftExplorerPageUrl(ndxOfNft=-1) {
+        // Get the Nft at the specified index from our array of those.
+        const nftDetails =
+            this.getNftByIndex(ndxOfNft);
+
+        if (!nftDetails)
+            throw new Error(`Invalid NFT index of the NFT array is empty.`);
+
+        const mintRequestAndResponseDetailsObj =
+            nftDetails as MintNftRequestAndResponse;
+
+        const nftId =
+            mintRequestAndResponseDetailsObj.mintNftResponseDetails.ipId;
+
+        // TODO: Have different explorer URLs for different blockchains.
+        const explorerPageUrl =
+            `https://explorer.story.foundation/ipa/${nftId}`
+
+        return explorerPageUrl
     }
 
     /**
