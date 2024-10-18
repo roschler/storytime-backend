@@ -22,6 +22,20 @@ FUTURE FEATURES:
 
 NEXT:
 
+    >>>> BUG: Need to serialize and deserialize (reviver) BigInt.  See this:
+
+    https://github.com/GoogleChromeLabs/jsbi/issues/30
+
+    ```
+        toObject() {
+            return JSON.parse(JSON.stringify(this, (key, value) =>
+                typeof value === 'bigint'
+                    ? value.toString()
+                    : value // return everything else unchanged
+            ));
+        }
+    ```
+
     >>>>> Badly need cancelable (when new image is requested)
       503 retry with exponential back-off.  Also, when a 503
       error occurs, we should not lose the user's prompt.  It's

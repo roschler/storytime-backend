@@ -38,14 +38,14 @@
       "type": "custom"
     },
     "type": "walletClient",
-    "uid": "c1c59e779d5"
+    "uid": "f6c3144e7c7"
   },
   "chainId": "0x5e9",
   "spgNftCollectionDetails": {
     "name": "Livepeer Image Helper",
     "symbol": "LIH",
-    "contract_address": "0x223E5E3e40eC09BcE61EC97fC20b12a3E0e432bb",
-    "tx_hash": "0xed363c27834f367a0859110d8d2aabcb648134d91f6548709418154d717e1258"
+    "contract_address": "0x0496D3B571E5Cb09CBA9E106Fb5d38277651389E",
+    "tx_hash": "0x88270dd77546eea6fc11f3e3f2c59334dfc2a16c175781217e4c30a089f2566b"
   },
   "listOfNftObjs": {},
   "enforceChainId": "0x5e9"
