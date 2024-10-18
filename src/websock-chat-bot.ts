@@ -43,6 +43,7 @@ import { Hex, http } from 'viem'
 import { RPCProviderUrl } from "./story-protocol/utils"
 import { uploadJSONToIPFS } from "./story-protocol/uploadToIpfs"
 import { createHash } from "node:crypto"
+import { UserBlockchainPresence } from "./blockchain/user-blockchain-presence"
 
 
 const CONSOLE_CATEGORY = 'websocket'
@@ -356,23 +357,18 @@ async function wsConnection(
 
 				// Process the request.
 				//
-				// Every request must have a public address and
-				//  a valid, non-null user blockchain presence
-				//  object.
+				// Every request must have a  a valid, non-null
+				//  user blockchain presence object.
 				const {
-					user_public_address,
-					user_blockchain_presence
+					user_blockchain_presence_stringified
 				} = message.payload as StoreUserBlockchainPresenceRequest;
 
-				if (!user_public_address || user_public_address.trim().length < 1)
-					throw new Error(`BAD REQUEST: The user public address is missing.`);
-
-				if (user_blockchain_presence === null || typeof user_blockchain_presence === 'undefined')
-					throw new Error(`BAD REQUEST: The user blockchain  is missing.`);
+				if (user_blockchain_presence_stringified.length < 1)
+					throw new Error(`BAD REQUEST: The user blockchain presence string is empty.`);
 
 				// Reconstitute the user blockchain presence object.
 				const userBlockchainPresenceObj =
-					reconstituteUserBlockchainPresence(user_blockchain_presence)
+					UserBlockchainPresence.fromJsonString(user_blockchain_presence_stringified)
 
 				// Reject any user blockchain presence object with
 				//  an uninstantiated SPG NFT collection contract
@@ -382,7 +378,7 @@ async function wsConnection(
 				}
 
 				// Store it.
-				await writeUserBlockchainPresence(user_public_address, userBlockchainPresenceObj)
+				await writeUserBlockchainPresence(userBlockchainPresenceObj)
 
 				const resultOfOperation: OperationResult =
 					{ result: true }

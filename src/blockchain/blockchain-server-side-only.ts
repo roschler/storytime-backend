@@ -105,20 +105,20 @@ export async function readUserBlockchainPresence(userPublicAddress: string): Pro
 /**
  * Writes the blockchain presence of a user to a file.
  *
- * @param {string} userPublicAddress - The public address of the user.
  * @param {UserBlockchainPresence} userBlockchainPresenceObj - The UserBlockchainPresence object to save.
+ *
  * @returns {Promise<void>} - Resolves when the write operation completes.
  * @throws {Error} - If the public address is invalid or the file write operation fails.
  */
 export async function writeUserBlockchainPresence(
-	userPublicAddress: string,
 	userBlockchainPresenceObj: UserBlockchainPresence
 ): Promise<void> {
 	// Validate userPublicAddress
-	if (!userPublicAddress || userPublicAddress.trim().length === 0) {
+	if (!userBlockchainPresenceObj.publicAddress || userBlockchainPresenceObj.publicAddress.trim().length === 0) {
 		throw new Error('userPublicAddress cannot be empty.');
 	}
-	const trimmedAddress = userPublicAddress.trim();
+
+	const trimmedAddress = userBlockchainPresenceObj.publicAddress.trim();
 
 	// Build the file path using the existing function
 	const filePath = buildUserBlockchainPresenceFilename(trimmedAddress);

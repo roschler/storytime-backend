@@ -118,6 +118,13 @@ export interface GetUserBlockchainPresenceRequest {
 	user_public_address: string
 }
 
+// We use this type to cover all the plain JSON objects
+//  we receive from the back-end object.
+export type PlainJsonObject = Record<string, unknown>;
+
+// Stringified JSON objects.
+export type StringifiedJsonObject = string;
+
 /**
  * This is the expected request payload for a request from
  *  the client front-end to share a generated image on
@@ -127,12 +134,9 @@ export interface GetUserBlockchainPresenceRequest {
  *  used by the client front-end.
  */
 export interface StoreUserBlockchainPresenceRequest {
-	// The public address of the user making the request.
-	user_public_address: string,
-
 	// The user blockchain presence object to store for the
-	//  given public address.
-	user_blockchain_presence: UserBlockchainPresence
+	//  given public address in stringified format.
+	user_blockchain_presence_stringified: StringifiedJsonObject
 }
 
 /**

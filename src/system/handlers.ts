@@ -211,9 +211,16 @@ export const sendMintNftImageDetailsMessage = (client: WebSocket, payload: MintN
  *  back to the client.
  *
  * @param client - The target websocket client.
- * @param payload - The message payload.
+ * @param userBlockchainPresenceObj - The user blockchain presence
+ *  object to send as a result of a request.
  */
-export const sendUserBlockchainPresence = (client: WebSocket, payload: UserBlockchainPresence|null) => {
+export const sendUserBlockchainPresence = (client: WebSocket, userBlockchainPresenceObj: UserBlockchainPresence|null) => {
+
+	const payload =
+		userBlockchainPresenceObj ===  null
+	? null
+			: userBlockchainPresenceObj.toJsonString()
+
 	_send(client, {
 		type: "get_user_blockchain_presence_result",
 		payload,
