@@ -25,7 +25,7 @@ type PilFieldsArray = PilField[];
 /**
  * Class representing a collection of programmable IP license (PIL) field descriptions.
  */
-class PilFieldsDescribed {
+export class PilFieldsDescribed {
 	/**
 	 * Array holding the described PIL fields.
 	 */
