@@ -91,7 +91,7 @@ export async function readUserBlockchainPresence(userPublicAddress: string): Pro
 	const filePath = buildUserBlockchainPresenceFilename(trimmedAddress);
 
 	// Read the raw JSON data from the file
-	const rawJson: any = readJsonFile(filePath);
+	const rawJson: any = readJsonFile(filePath, UserBlockchainPresence.fromJsonString);
 
 	if (!rawJson)
 		return null
@@ -127,5 +127,11 @@ export async function writeUserBlockchainPresence(
 	const dataToWrite = { ...userBlockchainPresenceObj };
 
 	// Write the JSON data to the file
-	writeJsonFile(filePath, dataToWrite);
+	writeJsonFile(
+		filePath,
+		dataToWrite,
+		// We use an anonymous function, or we will lose the
+		//  "this" pointer, and an anonymous function looks
+		//  cleaner than using bind().
+		() => userBlockchainPresenceObj.toJsonString());
 }
