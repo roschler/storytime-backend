@@ -3,7 +3,7 @@
 
 import fs from "fs"
 import path from "node:path"
-import { processChatVolley } from "../src/process-chat-volley"
+import { processImageChatVolley } from "../src/process-chat-volley"
 import { getDefaultState } from "../src/chat-volleys/chat-volleys"
 
 const errPrefix: string = '(test-directly-image-prompt) ';
@@ -70,11 +70,11 @@ if (true) {
 
 			const userInput = "No I said I wanted the deer to be bright yellow, not blue and why is the image out of focus and too dark?  Also, I want the deer to be looking at the camera.  Also, the image is really unimaginative.";
 
-			// processChatVolley needs a state object.
+			// processImageChatVolley needs a state object.
 			const initialState = getDefaultState()
 
 			const aryImageUrls =
-				await processChatVolley(null, initialState, dummyUserId, userInput)
+				await processImageChatVolley(null, initialState, dummyUserId, userInput)
 
 			// Generate the HTML
 			const htmlContent = generateHTML(aryImageUrls);

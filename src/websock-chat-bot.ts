@@ -32,7 +32,7 @@ import { isFlagged } from "./openai-common"
 import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { processChatVolley, shareImageOnTwitter } from "./process-chat-volley"
+import { processImageChatVolley, processLicenseChatVolley, shareImageOnTwitter } from "./process-chat-volley"
 import {
 	readUserBlockchainPresence,
 	reconstituteUserBlockchainPresence, writeUserBlockchainPresence,
@@ -52,7 +52,7 @@ const appName = 'Chatbot'
 // What do we say when the user is trying to be problematic?
 const badPromptError =
 	process.env.HARMFUL_PROMPT_RESPONSE ??
-	"Let's keep the conversation positive and focused on generating healthy images."
+	"Let's keep the conversation positive and focused on healthy topics."
 
 // Enable this in the `.env.local` file to stream text to the console
 
@@ -238,8 +238,8 @@ async function wsConnection(
 			// Parse out the JSON message object.
 			const message = JSON.parse(raw.toString());
 
-			// Is it a request message?
-			if (message.type === "request") {
+			// Is it an image assistant request message?
+			if (message.type === "request_image_assistant") {
 				// -------------------- BEGIN: PROCESS IMAGE GEN USER INPUT FROM CLIENT ------------
 
 				// Yes.  Process a chat volley.
@@ -260,7 +260,7 @@ async function wsConnection(
 				//  passing the request to AI handlers
 				const flagged = await isFlagged(prompt);
 				if (flagged) {
-					console.log(`User prompt was flagged as harmful: ${prompt}`);
+					console.log(`Image generation user prompt was flagged as harmful: ${prompt}`);
 
 					// Tell the client the prompt was considered harmful
 					//  so that it can notify the user.
@@ -273,17 +273,72 @@ async function wsConnection(
 
 				// Submit the request to the LLM to get the image prompt
 				//  we should send to Livepeer for image generation purposes.
+				//
+				// NOTE: processImageChatVolley will send a websocket response
+				//  once it has received the new images.  It will send the
+				//  "answer" it generated out-of-band with the via
+				//  the sendTextMessage() function, and an intervening
+				//  state messages with sendStateMessage().  The client
+				//  knows the volley is finished when it receives a
+				//  "data.type === "image" message, and that message
+				//  contains the image URls for the generated images.
 				const isChatVolleySuccessful =
-					await processChatVolley(client, initialState, user_id, prompt)
-
-				// await handleImageGenAssistanceRequest(client, state, message.payload);
-
-				// Extract the image generation prompt from the response.
-				// const imageGenerationPrompt = extractImageGenerationPrompt(message)
+					await processImageChatVolley(client, initialState, user_id, prompt)
 
 				return isChatVolleySuccessful
+			}
+			// Is it an image assistant request message?
+			else if (message.type === "request_license_assistant") {
+				// -------------------- BEGIN: PROCESS LICENSE USER INPUT FROM CLIENT ------------
 
-				// -------------------- END  : PROCESS IMAGE GEN USER INPUT FROM CLIENT ------------
+				// Yes.  Process a chat volley.
+				//
+				// Every request must have a user ID and user input fields.
+				const { user_id, prompt } = message.payload;
+
+				if (!user_id || user_id.trim().length < 1)
+					throw new Error(`BAD REQUEST: User ID is missing.`);
+
+				if (!prompt || prompt.trim().length < 1)
+					throw new Error(`BAD REQUEST: User input is missing.`);
+
+				// Create a unique request ID.
+				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
+
+				// Check if the prompt is flagged as harmful before
+				//  passing the request to AI handlers
+				const flagged = await isFlagged(prompt);
+				if (flagged) {
+					console.log(`License user prompt was flagged as harmful: ${prompt}`);
+
+					// Tell the client the prompt was considered harmful
+					//  so that it can notify the user.
+					sendErrorMessage(client, {
+						error: badPromptError,
+					});
+
+					return false; // Exit
+				}
+
+				// Submit the request to the LLM to get the answer
+				//  we should send to the user for license terms
+				//  discussion purposes.
+				//
+				// NOTE: processLicenseChatVolley will send a websocket response
+				//  once it has received the new images.  It will send the
+				//  "answer" it generated out-of-band with the via
+				//  the sendTextMessage() function, and an intervening
+				//  state messages with sendStateMessage().  The client
+				//  knows the chat volley is finished when we send them
+				//  a "data.type === "license_response".  The payload
+				//  of that message will have a flag telling the
+				//  client if the user has accepted the license
+				//  terms for its NFT, or not.
+				const isChatVolleySuccessful =
+					await processLicenseChatVolley(client, initialState, user_id, prompt)
+
+				return isChatVolleySuccessful
+				// -------------------- END  : PROCESS LICENSE INPUT FROM CLIENT ------------
 			} else if (message.type === "share_image_on_twitter") {
 				// -------------------- BEGIN: SHARE IMAGE ON TWITTER ------------
 

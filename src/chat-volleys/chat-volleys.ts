@@ -365,10 +365,20 @@ export class ChatHistory {
 	public aryChatVolleys: ChatVolley[];
 
 	/**
-	 * Constructs an instance of ChatHistory.
+	 * The chatbot name this history belongs  to.
+	 * @type {string}
 	 */
-	constructor() {
+	public chatbotName: string = '';
+
+	/**
+	 * Constructs an instance of ChatHistory.
+	 *
+	 * @param chatbotName - The name of the chatbot the history
+	 *  belongs to.
+	 */
+	constructor(chatbotName: EnumChatbotNameValues) {
 		this.aryChatVolleys = [];
+		this.chatbotName = chatbotName;
 	}
 
 	/**
@@ -462,7 +472,7 @@ Use the chat history to help guide your efforts.  Here it is now:
 
 	// Deserialization method
 	static fromJSON(json: any): ChatHistory {
-		const history = new ChatHistory();
+		const history = new ChatHistory(json.chatbotName);
 		history.aryChatVolleys = json.aryChatVolleys.map((volley: any) => ChatVolley.fromJSON(volley));
 		return history;
 	}
@@ -482,13 +492,38 @@ Use the chat history to help guide your efforts.  Here it is now:
 export const DIR_CHAT_HISTORY_FILES = 'chat-history-files';
 
 /**
+ * This enum holds the names of all the chatbots this
+ *  system implements.
+ */
+export const EnumChatbotNames = {
+	// The chatbot that helps the user craft image generation
+	//  prompts.
+	IMAGE_ASSISTANT: "image_assistant",
+	// The chatbot that helps the user craft the license
+	//  terms for their asset (e.g. - NFT).
+	LICENSE_ASSISTANT: "license_assistant"
+} as const;
+
+/**
+ * Type for the values of enumChatbotNames (i.e., "image_assistant" | "license_assistant").
+ */
+export type EnumChatbotNameValues = typeof enumChatbotNames[EnumChatbotNameValues];
+
+
+/**
  * Builds the full path to the user's chat history file.
  *
- * @param {string} userId - The user ID to build the file name for.
+ * @param userId - The user ID to build the file name for.
+ * @param chatbotName - The name of the chatbot the history
+ *  belongs to.
+ *
  * @returns {string} The full path to the user's chat history JSON file.
+ *
  * @throws {Error} If the userId is empty or contains invalid characters for a file name.
  */
-export function buildChatHistoryFilename(userId: string): string {
+export function buildChatHistoryFilename(
+		userId: string,
+		chatbotName: EnumChatbotNameValues): string {
 	const trimmedUserId = userId.trim();
 
 	// Validate that the userId is not empty
@@ -507,7 +542,7 @@ export function buildChatHistoryFilename(userId: string): string {
 		getCurrentOrAncestorPathForSubDirOrDie(CONSOLE_CATEGORY, DIR_CHAT_HISTORY_FILES);
 
 	// Build the full path to the chat history file
-	const primaryFileName = `${trimmedUserId}-chat-history.json`;
+	const primaryFileName = `${trimmedUserId}--${chatbotName}-chat-history.json`;
 
 	// Construct the path dynamically
 	const fullFilePath = path.join(resolvedFilePath, primaryFileName);
@@ -521,10 +556,18 @@ export function buildChatHistoryFilename(userId: string): string {
  * Writes the ChatHistory object to disk as a JSON file.
  *
  * @param {string} userId - The user ID associated with the chat history.
+ * @param chatbotName - The name of the chatbot the history
+ *  belongs to.
+ *
  * @param {ChatHistory} chatHistory - The chat history object to write to disk.
  */
-export function writeChatHistory(userId: string, chatHistory: ChatHistory): void {
-	const filename = buildChatHistoryFilename(userId);
+export function writeChatHistory(
+		userId: string,
+		chatHistory: ChatHistory,
+		chatbotName: EnumChatbotNameValues
+	): void {
+
+	const filename = buildChatHistoryFilename(userId, chatbotName);
 	const jsonData = JSON.stringify(chatHistory, null, 2);  // Pretty print the JSON
 
 	writeJsonFile(filename, jsonData);
@@ -534,10 +577,14 @@ export function writeChatHistory(userId: string, chatHistory: ChatHistory): void
  * Reads the chat history for a given user.
  *
  * @param {string} userId - The user ID whose chat history should be read.
+ * @param chatbotName - The name of the chatbot the history
+ *  belongs to.
  *
  * @returns {ChatHistory} The chat history object for the given user.  If one does not exist yet a brand new chat history object will be returned.
  */
-export async function readChatHistory(userId: string): Promise<ChatHistory>  {
+export async function readChatHistory(
+		userId: string,
+		chatbotName: EnumChatbotNameValues): Promise<ChatHistory>  {
 	const trimmedUserId = userId.trim()
 
 	// Validate that the userId is not empty
@@ -546,14 +593,13 @@ export async function readChatHistory(userId: string): Promise<ChatHistory>  {
 	}
 
 	// Build the full path to the chat history file
-	const fullPathToJsonFile = buildChatHistoryFilename(trimmedUserId);
+	const fullPathToJsonFile = buildChatHistoryFilename(trimmedUserId, chatbotName);
 
 	// Check if the file exists
 	if (fs.existsSync(fullPathToJsonFile)) {
 		// -------------------- BEGIN: LOAD EXISTING FILE ------------
 
-		const filename = buildChatHistoryFilename(userId);
-		const jsonData = readJsonFile(filename);
+		const jsonData = readJsonFile(fullPathToJsonFile);
 		const parsedData = JSON.parse(jsonData);
 
 		if (parsedData.__type === 'ChatHistory') {
@@ -566,7 +612,7 @@ export async function readChatHistory(userId: string): Promise<ChatHistory>  {
 	} else {
 		// -------------------- BEGIN: BRAND NEW USER ------------
 
-		return new ChatHistory()
+		return new ChatHistory(chatbotName)
 
 		// -------------------- END  : BRAND NEW USER ------------
 	}

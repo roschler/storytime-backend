@@ -3,7 +3,7 @@
 import type WebSocket from "ws"
 import {
 	ChatVolley,
-	CurrentChatState,
+	CurrentChatState, EnumChatbotNames,
 	readChatHistory,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
@@ -267,11 +267,45 @@ function isStringIntentDetectedWithMatchingValue(
 
 // -------------------- END  : HELPER FUNCTIONS ------------
 
+// -------------------- BEGIN: PROCESS **IMAGE** CHAT VOLLEY ------------
+
+/**
+ * This is the function that processes one chat volley
+ *  for the license assistant.
+ *
+ * @param client
+ * @param initialState
+ * @param userId_in
+ * @param userInput_in
+ */
+export async function processLicenseChatVolley(
+		client: WebSocket | null,
+		initialState: StateType,
+		userId_in: string,
+		userInput_in: string): Promise<string[]> {
+
+	const userId = userId_in.trim()
+
+	if (userId.length < 1)
+		throw new Error(`The user ID is empty or invalid.`);
+
+	const userInput = userInput_in.trim()
+
+	if (userInput.length < 1)
+		throw new Error(`The user input is empty or invalid.`);
+
+
+	// Use "license_response" as the response payload type along
+	// with a LicenseType payload.
+}
+
+// -------------------- END  : PROCESS **IMAGE** CHAT VOLLEY ------------
+
 // -------------------- BEGIN: MAIN FUNCTION ------------
 
 /**
- * This function processes one chat volley for the given
- *  user.
+ * This function processes one chat volley for the
+ *  Livepeer image assistant
  *
  * @param client - The client WebSocket connection we are
  *  servicing.  Pass NULL if this call is being made from
@@ -284,7 +318,7 @@ function isStringIntentDetectedWithMatchingValue(
  * @return - Returns the array of images generated if
  *  successful, throws an error if not.
  */
-export async function processChatVolley(
+export async function processImageChatVolley(
 		client: WebSocket | null,
 		initialState: StateType,
 		userId_in: string,
@@ -306,7 +340,7 @@ export async function processChatVolley(
 	//  ending state.  If not, create a default
 	//  chat state object.
 	const  chatHistoryObj =
-		await readChatHistory(userId);
+		await readChatHistory(userId, EnumChatbotNames.IMAGE_ASSISTANT);
 
 	const chatVolley_previous =
 		chatHistoryObj.getLastVolley()
@@ -797,14 +831,13 @@ export async function processChatVolley(
 			client,
 			newState
 		)
+
 		sendTextMessage(
 				client,
 			{
 				delta: responseSentToClient
 			}
 		)
-
-
 	}
 
 	// -------------------- END  : CREATE RESPONSE FOR USER ------------
@@ -829,7 +862,7 @@ export async function processChatVolley(
 	chatHistoryObj.addChatVolley(newChatVolleyObj)
 
 	// Update storage.
-	writeChatHistory(userId, chatHistoryObj)
+	writeChatHistory(userId, chatHistoryObj, EnumChatbotNames.IMAGE_ASSISTANT)
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
@@ -909,9 +942,9 @@ export async function shareImageOnTwitter(
 
 	sendSimpleStateMessage(client,'Preparing tweet...')
 
-	// Get the chat history object for the given user.
+	// Get the image assistant chat history object for the given user.
 	const chatHistoryObj =
-		await readChatHistory(userId);
+		await readChatHistory(userId, EnumChatbotNames.IMAGE_ASSISTANT);
 
 	// Get the last chat volley.
 	const lastChatVolleyObj =

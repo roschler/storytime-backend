@@ -40,6 +40,16 @@ export interface ImageDimensions{
 }
 
 /**
+ * This is the websocket message we send back to the front-end
+ *  that lets it know whether or not the user is satisfied
+ *  with the license terms for its NFT, currently being
+ *  discussed with the license assistant.
+ */
+export interface LicenseType {
+	is_license_ok_with_user: boolean
+}
+
+/**
  * This is the response payload created as a result of
  *  a Twitter share request from the client front-end.
  *
