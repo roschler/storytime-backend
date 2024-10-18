@@ -294,6 +294,8 @@ export async function processLicenseChatVolley(
 	if (userInput.length < 1)
 		throw new Error(`The user input is empty or invalid.`);
 
+	// TODO: Build license terms assistant chatbot.
+
 
 	// Use "license_response" as the response payload type along
 	// with a LicenseType payload.

@@ -24,6 +24,8 @@ NEXT:
 
     >>>> BUG: Need to serialize and deserialize (reviver) BigInt.  See this:
 
+    >>>> Try moving the chat history into the user prompt, out of the system prompt
+
     https://github.com/GoogleChromeLabs/jsbi/issues/30
 
     ```
