@@ -175,7 +175,7 @@ export const sendJsonObjectMessage = (client: WebSocket, jsonObj: object) => {
 	const payload = JSON.stringify(jsonObj)
 
 	_send(client, {
-		type: "json_object_stringified",
+		type: "json_response_object_stringified",
 		payload,
 	})
 }

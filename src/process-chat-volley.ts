@@ -369,7 +369,7 @@ export async function processLicenseChatVolley(
 			g_TextCompletionParams,
 			true);
 
-	const jsonResponse =
+	const jsonResponseObj =
 		textCompletion.json_response as LicenseTermsLlmJsonResponse;
 
 	// Now send the response message to the client.
@@ -386,7 +386,8 @@ export async function processLicenseChatVolley(
 		sendJsonObjectMessage(
 			client,
 			{
-				license_terms_response: jsonResponse
+				json_type: "license_response",
+				json_object: jsonResponseObj
 			}
 		)
 	}
@@ -929,7 +930,7 @@ export async function processImageChatVolley(
 			newState
 		)
 
-		sendJsonObjectMessage(
+		sendTextMessage(
 				client,
 			{
 				delta: responseSentToClient
