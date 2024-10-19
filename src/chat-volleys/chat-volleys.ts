@@ -505,10 +505,9 @@ export const EnumChatbotNames = {
 } as const;
 
 /**
- * Type for the values of enumChatbotNames (i.e., "image_assistant" | "license_assistant").
+ * Type for the values of EnumChatbotNames (i.e., "image_assistant" | "license_assistant").
  */
-export type EnumChatbotNameValues = typeof enumChatbotNames[EnumChatbotNameValues];
-
+export type EnumChatbotNameValues = typeof EnumChatbotNames[keyof typeof EnumChatbotNames];
 
 /**
  * Builds the full path to the user's chat history file.

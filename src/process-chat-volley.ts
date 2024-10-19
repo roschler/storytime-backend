@@ -277,12 +277,16 @@ function isStringIntentDetectedWithMatchingValue(
  * @param initialState
  * @param userId_in
  * @param userInput_in
+ *
+ * @returns - Returns TRUE if the user has indicated they
+ *  are satisfied with the license terms, FALSE if not
+ *  indicating the chat session should continue.
  */
 export async function processLicenseChatVolley(
-		client: WebSocket | null,
-		initialState: StateType,
+		_client: WebSocket | null,
+		_initialState: StateType,
 		userId_in: string,
-		userInput_in: string): Promise<string[]> {
+		userInput_in: string): Promise<boolean> {
 
 	const userId = userId_in.trim()
 
@@ -299,6 +303,7 @@ export async function processLicenseChatVolley(
 
 	// Use "license_response" as the response payload type along
 	// with a LicenseType payload.
+	return false
 }
 
 // -------------------- END  : PROCESS **IMAGE** CHAT VOLLEY ------------
