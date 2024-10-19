@@ -6,7 +6,7 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, TwitterCardDetails, OperationResult, MintNftImageDetails, JsonObjectType,
+	Genre, TwitterCardDetails, OperationResult, MintNftImageDetails,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
