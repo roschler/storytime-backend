@@ -3,7 +3,10 @@ import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 import { getCurrentOrAncestorPathForSubDirOrDie, readTextFile } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
-import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
+import {
+	enumIntentDetectorId_image_assistant,
+	enumIntentDetectorId_license_assistant
+} from "./intents/enum-intents"
 import { ChatHistory, CurrentChatState_license_assistant, StringOrNull } from "./chat-volleys/chat-volleys"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
@@ -84,43 +87,96 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
 	return textContent;
 }
 
+/**
+ * Given a chat h istory object  and the current license assistant PilTerms,
+ *  session state, create a chat history summary.
+ *
+ * @param chatHistoryObj - The chat history object for the current
+ *  user.
+ * @param bIsStartNewLicenseTermsSession - If TRUE, then
+ *  the user wants to craft a completely new license, otherwise
+ *  we are continuing to build an existing one.
+ *
+ * @return Returns the system prompt to use in the
+ *  upcoming text completion call.
+ */
+export function buildChatHistorySummary(
+	chatHistoryObj: ChatHistory,
+	bIsStartNewLicenseTermsSession: boolean): StringOrNull {
+	// Extract the most recent chat history and create
+	//  a block of plain text from it.
+	//
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
+	// const chatHistorySummaryAsText =
+	//	chatHistoryObj.buildChatHistoryPrompt()
+
+	let strChatHistory: StringOrNull = null;
+
+	if (!bIsStartNewLicenseTermsSession) {
+		// Get the last chat volley.
+		const lastChatVolleyObj =
+			chatHistoryObj.getLastVolley()
+
+		// Build the chat history.
+		const strChatHistory_local =
+			// -1 means we want everything available.  Since we
+			//  start a new session with each new NFT, the chat
+			//  histories should not be too long.
+			chatHistoryObj.buildChatHistoryPrompt(-1);
+
+		if (strChatHistory_local.length > 0)
+			strChatHistory = strChatHistory_local;
+	}
+
+	return strChatHistory
+}
+
 // -------------------- BEGIN: INTENT TO PROMPT TEXT MAPPING ------------
 
 // This array maps all the intents we created to the
 //  LLM text completion prompt text that is associated
 //  with the intent, and the primary name of the
 //  resource that has the prompt text.
-const g_AryIntentPrompts:
+const g_AryIntentPrompts_image_assistant:
 	{ [key: string]:
 			{
 				primary_resource_name: string,
 				prompt_text: string }} = {};
 
+const g_AryIntentPrompts_license_assistant:
+	{ [key: string]:
+		{
+			primary_resource_name: string,
+				prompt_text: string }} = {};
+
+// -------------------- BEGIN: IMAGE ASSISTANT INTENTS ------------
+
 // Assign the correct resource name to each intent.
 
 // >>>>> INTENT: IS_TEXT_WANTED_ON_IMAGE
-g_AryIntentPrompts[enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE] =
+g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.IS_TEXT_WANTED_ON_IMAGE] =
 	{
 		primary_resource_name: "intent-detector-is-text-wanted-on-image.txt",
 		prompt_text: ""
 	};
 
 // >>>>> INTENT: START_NEW_IMAGE
-g_AryIntentPrompts[enumIntentDetectorId.START_NEW_IMAGE] =
+g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.START_NEW_IMAGE] =
 	{
 		primary_resource_name: "intent-start-new-image.txt",
 		prompt_text: ""
 	};
 
 // >>>>> INTENT: USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT
-g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT] =
+g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT] =
 	{
 		primary_resource_name: "intent-user-complaint-image-quality-or-content.txt",
 		prompt_text: ""
 	};
 
 // >>>>> INTENT: USER_COMPLAINT_IMAGE_GENERATION_SPEED
-g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED] =
+g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_GENERATION_SPEED] =
 	{
 		primary_resource_name: "intent-user-complaint-image-generation-too-slow.txt",
 		prompt_text: ""
@@ -130,12 +186,12 @@ g_AryIntentPrompts[enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED] =
 //  at this time to make sure that every one of them has a
 //  corresponding prompt resource, and then we load that into
 //  our array of intent prompts.
-for (const intentId of Object.values(enumIntentDetectorId)) {
-	if (typeof g_AryIntentPrompts[intentId] === 'undefined')
-		throw new Error(`Unable to find a prompt entry for intent ID: "${intentId}"`);
+for (const intentId of Object.values(enumIntentDetectorId_image_assistant)) {
+	if (typeof g_AryIntentPrompts_image_assistant[intentId] === 'undefined')
+		throw new Error(`Unable to find a prompt entry for image assistant intent ID: "${intentId}"`);
 
 	const primaryResourceName: string =
-		g_AryIntentPrompts[intentId].primary_resource_name;
+		g_AryIntentPrompts_image_assistant[intentId].primary_resource_name;
 
 	if (primaryResourceName.length < 1)
 		throw new Error(`The primary resource name is empty for intent ID: "${intentId}"`);
@@ -147,15 +203,59 @@ for (const intentId of Object.values(enumIntentDetectorId)) {
 	const trimmedPromptText = promptText.trim();
 
 	if (trimmedPromptText.length < 1)
-		throw new Error(`The prompt text resource is empty for intent ID: "${intentId}"`);
+		throw new Error(`The prompt text resource is empty for image assistant intent ID: "${intentId}"`);
 
 	// Success.  Store the prompt text.
-	g_AryIntentPrompts[intentId].prompt_text = trimmedPromptText;
+	g_AryIntentPrompts_image_assistant[intentId].prompt_text = trimmedPromptText;
 
-	console.info(CONSOLE_CATEGORY, `Successfully initialized prompt text for intent ID: "${intentId}"`)
+	console.info(CONSOLE_CATEGORY, `Successfully initialized prompt text for image assistantintent ID: "${intentId}"`)
 }
 
-console.info(CONSOLE_CATEGORY, `All intents initialized.`)
+// -------------------- END  : IMAGE ASSISTANT INTENTS ------------
+
+// -------------------- BEGIN: LICENSE ASSISTANT INTENTS ------------
+
+// >>>>> INTENT:
+g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE] =
+	{
+		primary_resource_name: "intent-detector-question-or-form-fill-reply.txt",
+		prompt_text: ""
+	};
+
+// Load it.
+g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE].prompt_text =
+	readImageGenerationSubPromptOrDie(
+		g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE].primary_resource_name);
+
+
+// -------------------- END  : LICENSE ASSISTANT INTENTS ------------
+
+/**
+ * This is a kludge to search all the intent prompt arrays for
+ *  a particular intent ID, and then return the prompt text
+ *  associated.
+ *
+ *  TODO: Do this in a structured manner.
+ *
+ * @param intentId - The ID of the desired intent.
+ *
+ * @returns - Returns the prompt text for the desired intent
+ *  if that intent is found, NULL if no such intent with
+ *  the given ID exists.
+ */
+function findIntentPromptText(intentId: string): StringOrNull {
+	if (intentId in g_AryIntentPrompts_image_assistant) {
+		return g_AryIntentPrompts_image_assistant[intentId].prompt_text.trim()
+	}
+
+	if (intentId in g_AryIntentPrompts_license_assistant) {
+		return g_AryIntentPrompts_license_assistant[intentId].prompt_text.trim()
+	}
+
+	return null
+}
+
+console.info(CONSOLE_CATEGORY, `All image assistant intents initialized.`)
 
 
 /**
@@ -186,17 +286,14 @@ export async function executeIntentCompletion(
 		textCompletionParams: OpenAIParams_text_completion,
 		userInput: string) {
 
-	if (!isValidEnumIntentDetectorId(intentId))
-		throw new Error(`Invalid intent ID: "${intentId}"`);
-
 	const trimmedUserInput: string = userInput.trim();
 
 	if (trimmedUserInput.length < 1)
 		throw new Error(`The user input is empty`);
 
-	const intentPromptText = g_AryIntentPrompts[intentId].prompt_text.trim();
+	const intentPromptText = findIntentPromptText(intentId);
 
-	if (intentPromptText.length < 1)
+	if (!intentPromptText  || intentPromptText.length < 1)
 		throw new Error(`The intent prompt text is empty`);
 
 	return await chatCompletionImmediate(
@@ -233,10 +330,12 @@ export async function processAllIntents(
 	}
 
 	// Validate that all intent IDs in aryIntentIds are valid
-	const invalidIntents = aryIntentIds.filter(id => !isValidEnumIntentDetectorId(id));
+	/*
+	const invalidIntents = aryIntentIds.filter(id => !isValidEnumIntentDetectorId_image_assistant(id));
 	if (invalidIntents.length > 0) {
 		throw new Error(`Invalid intent IDs found: ${invalidIntents.join(', ')}`);
 	}
+	 */
 
 	// Use Promise.all to execute all intents in parallel
 	const promises = aryIntentIds.map(async (intentId) => {
@@ -474,21 +573,13 @@ export function buildChatBotSystemPrompt_license_assistant(
 	const systemPrompt_license_assistant =
 		readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
 
-	// Extract the most recent chat history and create
-	//  a block of plain text from it.
-	//
-	// IMPORTANT!: This variable name must match the one used
-	//  in the system prompt text file!
-	// const chatHistorySummaryAsText =
-	//	chatHistoryObj.buildChatHistoryPrompt()
+	const strChatHistory = buildChatHistorySummary(chatHistoryObj, bIsStartNewLicenseTermsSession);
 
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	let pilTermsFieldDescriptionsObject =
 		// We start with a PilTerms object in the default state.
 		CurrentChatState_license_assistant.createDefaultObject();
-
-	let strChatHistory: StringOrNull = null;
 
 	if (!bIsStartNewLicenseTermsSession) {
 		// Get the last chat volley.
@@ -499,18 +590,6 @@ export function buildChatBotSystemPrompt_license_assistant(
 			pilTermsFieldDescriptionsObject =
 				lastChatVolleyObj.chat_state_at_end_license_assistant
 		}
-
-		// Pass in the chat history.
-		const aryChatHistorySummaries:string[] = [];
-
-		const strChatHistory_local =
-			// -1 means we want everything available.  Since we
-			//  start a new session with each new NFT, the chat
-			//  histories should not be too long.
-			chatHistoryObj.buildChatHistoryPrompt(-1);
-
-		if (strChatHistory_local.length > 0)
-			strChatHistory = strChatHistory_local;
 	}
 
 	// Initialize the adorned user prompt.

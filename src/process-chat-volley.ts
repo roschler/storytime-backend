@@ -14,7 +14,7 @@ import {
 } from "./enum-image-generation-models"
 import {
 	buildChatBotSystemPrompt_image_assistant,
-	buildChatBotSystemPrompt_license_assistant,
+	buildChatBotSystemPrompt_license_assistant, buildChatHistorySummary,
 	g_ExtendedWrongContentPrompt,
 	g_ImageGenPromptToTweetPrompt,
 	g_TextCompletionParams,
@@ -24,8 +24,11 @@ import {
 } from "./openai-chat-bot"
 import {
 	enumChangeDescription,
-	enumIntentDetectorId, MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE,
-	MIN_STEPS, MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT,
+	enumIntentDetectorId_image_assistant,
+	enumIntentDetectorId_license_assistant,
+	MIN_GUIDANCE_SCALE_IMAGE_TEXT_OR_WRONG_COMPLAINT_VALUE,
+	MIN_STEPS,
+	MIN_STEPS_FOR_IMAGE_ON_TEXT_OR_WRONG_CONTENT_COMPLAINT,
 	NUM_GUIDANCE_SCALE_ADJUSTMENT_VALUE,
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
@@ -350,6 +353,100 @@ export async function processLicenseChatVolley(
 	const chatState_current =
 		chatState_start.clone();
 
+	// -------------------- BEGIN: DETERMINE USER INPUT TYPE ------------
+
+	// First we need to ask the LLM if what kind of a reply
+	//  have they made.  For now, the two types are:
+	//
+	// 		TYPE: query_for_information - a request for general information
+	//		TYPE: form_fill_reply
+	//
+	// The array of intent detector JSON response objects
+	//  will be put here.
+	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [];
+
+	if (client) {
+		let newState = initialState
+
+		// We haven't started the image request yet but
+		//  overall, we are indeed waiting for images.
+		newState.waiting_for_images = true
+		newState.state_change_message = 'Thinking...'
+
+		sendStateMessage(client, newState)
+	}
+
+	// -------------------- BEGIN: USER INPUT TYPE DETECTOR ------------
+
+	// Run the user input by all intents.
+	console.info(CONSOLE_CATEGORY, `Doing intents through OpenAI...`)
+
+	// Add the chat history to the user prompt.
+	let adornedUserInput = userInput;
+
+	const strChatHistory = buildChatHistorySummary(chatHistoryObj, bStartNewLicenseTerms);
+
+	if (strChatHistory)
+		adornedUserInput += strChatHistory
+
+	const aryIntentDetectResultObjs =
+		await processAllIntents(
+			Object.values(enumIntentDetectorId_license_assistant),
+			g_TextCompletionParamsForIntentDetector,
+			adornedUserInput)
+
+	// Dump the user input to the console.
+	console.info(CONSOLE_CATEGORY, `Adorned user input:\n\n${adornedUserInput}\n\n`)
+
+	// Dump the results to the console.
+	showIntentResultObjects(aryIntentDetectResultObjs);
+
+	// If any of the results errored out, for now, we throw
+	//  an error.
+	//
+	// TODO: Add recovery or mitigation code instead.
+	if (aryIntentDetectResultObjs.some(
+		(intentResultObj) =>
+			intentResultObj.is_error === true
+	)) {
+		throw new Error(`$One or more of the intent detector calls failed.`)
+	}
+
+	// Create an array of the intent detector JSON response
+	//  objects.
+	console.info(CONSOLE_CATEGORY, `Creating an array of intent detector JSON responses objects.`)
+
+	aryIntentDetectResultObjs.forEach(
+		(intentResultObj) => {
+			// Merge the intent detector ID into the
+			//  JSON response object.
+			const jsonResponseObj = {
+				intent_detector_id:  intentResultObj.result_or_error.intent_detector_id,
+				array_child_objects: intentResultObj.result_or_error.json_response
+			}
+
+			aryIntentDetectorJsonResponseObjs.push(jsonResponseObj)
+		}
+	)
+
+	if (aryIntentDetectorJsonResponseObjs.length < 1)
+		throw new Error(`The array of intent detectors JSON response objects is empty.`);
+
+	// Show the user reply type.
+	const userReplyType =
+		getStringIntentDetectionValue(
+			aryIntentDetectorJsonResponseObjs,
+			enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE,
+			'user_input_type',
+			null
+		);
+
+	console.info(CONSOLE_CATEGORY, `userReplyType: ${userReplyType}`)
+
+
+	// -------------------- END  : DETERMINE USER INPUT TYPE ------------
+
+
 	// Build the system prompt.
 	const systemAndUserPromptToLLM =
 		buildChatBotSystemPrompt_license_assistant(
@@ -372,6 +469,14 @@ export async function processLicenseChatVolley(
 	const jsonResponseObj =
 		textCompletion.json_response as LicenseTermsLlmJsonResponse;
 
+
+	console.info(`// -------------------- BEGIN: CHAT VOLLEY ------------`)
+
+	console.info(`jsonResponseObj object:`);
+	console.dir(jsonResponseObj, {depth: null, colors: true});
+
+	console.info(`// -------------------- END  : CHAT VOLLEY ------------`)
+
 	// -------------------- BEGIN: UPDATE PILTERMS OBJECT ------------
 
 	// TODO: This is where we need to analyze the response from
@@ -382,10 +487,6 @@ export async function processLicenseChatVolley(
 	// -------------------- END  : UPDATE PILTERMS OBJECT ------------
 
 	// -------------------- BEGIN: UPDATE CHAT HISTORY ------------
-
-	// The array of intent detector JSON response objects
-	//  will be put here.
-	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
 
 	const newChatVolleyObj =
 		new ChatVolley(
@@ -497,7 +598,7 @@ export async function processImageChatVolley(
 	/*
 	const result =
 		await executeIntentCompletion(
-			enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
+			enumIntentDetectorId_image_assistant.IS_TEXT_WANTED_ON_IMAGE,
 			g_TextCompletionParamsForIntentDetector,
 			userInput)
 
@@ -516,7 +617,7 @@ export async function processImageChatVolley(
 
 	// The array of intent detector JSON response objects
 	//  will be put here.
-	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
+	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [];
 
 	let bIsStartNewImage = false;
 	let wrongContentText: string | null = null
@@ -540,7 +641,7 @@ export async function processImageChatVolley(
 
 		const aryIntentDetectResultObjs =
 			await processAllIntents(
-				Object.values(enumIntentDetectorId),
+				Object.values(enumIntentDetectorId_image_assistant),
 				g_TextCompletionParamsForIntentDetector,
 				userInput)
 
@@ -612,7 +713,7 @@ export async function processImageChatVolley(
 
 		const extWrongContentJsonResponseObj: IntentJsonResponseObject =
 			{
-				intent_detector_id: enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				intent_detector_id: enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				array_child_objects: textCompletion.json_response as object[]
 			}
 
@@ -671,7 +772,7 @@ export async function processImageChatVolley(
 		const bIsStartNewImageDetected =
 			getBooleanIntentDetectionValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.START_NEW_IMAGE,
+				enumIntentDetectorId_image_assistant.START_NEW_IMAGE,
 				'start_new_image'
 			);
 
@@ -692,7 +793,7 @@ export async function processImageChatVolley(
 		const bIsTextOnImageDesired =
 			getBooleanIntentDetectionValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.IS_TEXT_WANTED_ON_IMAGE,
+				enumIntentDetectorId_image_assistant.IS_TEXT_WANTED_ON_IMAGE,
 				'is_text_wanted_on_image'
 			);
 
@@ -729,7 +830,7 @@ export async function processImageChatVolley(
 		const bIsImageBlurry =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
 				'blurry'
 			);
@@ -747,7 +848,7 @@ export async function processImageChatVolley(
 		const bIsImageGenerationTooSlow =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
+				enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_GENERATION_SPEED,
 				'complaint_type',
 				'generate_image_too_slow'
 			);
@@ -775,7 +876,7 @@ export async function processImageChatVolley(
 		const bIsWrongContent =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
 				'wrong_content',
 			);
@@ -788,7 +889,7 @@ export async function processImageChatVolley(
 			wrongContentText =
 				getStringIntentDetectionValue(
 					aryIntentDetectorJsonResponseObjs,
-					enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+					enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 					'complaint_type',
 					'complaint_text'
 				)
@@ -828,7 +929,7 @@ export async function processImageChatVolley(
 		const bIsMisspelled =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
 				'problems_with_text'
 			);
@@ -838,7 +939,7 @@ export async function processImageChatVolley(
 		const bIsImageBoring =
 			isStringIntentDetectedWithMatchingValue(
 				aryIntentDetectorJsonResponseObjs,
-				enumIntentDetectorId.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+				enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 				'complaint_type',
 				'boring'
 			);

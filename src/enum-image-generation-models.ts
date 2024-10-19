@@ -20,13 +20,13 @@ export enum enumImageGenerationModelId {
 
 /**
  * This function returns TRUE if the given value is a valid
- *   enumIntentDetectorId value, FALSE if not.
+ *   enumIntentDetectorId_image_assistant value, FALSE if not.
  */
 export function isValidEnumImageGenerationModelId(enImageGenerationModelId: string) {
 	return Object.values(enumImageGenerationModelId).includes(enImageGenerationModelId as enumImageGenerationModelId);
 }
 
-// -------------------- END  : enumIntentDetectorId ------------
+// -------------------- END  : enumIntentDetectorId_image_assistant ------------
 
 // Some defaults.
 // This model leads to a service unavailable message: 502
