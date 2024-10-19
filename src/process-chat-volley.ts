@@ -3,7 +3,7 @@
 import type WebSocket from "ws"
 import {
 	ChatVolley,
-	CurrentChatState_image_assistant, EnumChatbotNames,
+	CurrentChatState_image_assistant, CurrentChatState_license_assistant, EnumChatbotNames,
 	readChatHistory,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
@@ -343,7 +343,7 @@ export async function processLicenseChatVolley(
 	// const previousChatVolleyPrompt = chatVolley_previous?.prompt;
 
 	const chatState_start =
-		chatVolley_previous?.chat_state_at_start_image_assistant ?? CurrentChatState_image_assistant.createDefaultObject();
+		chatVolley_previous?.chat_state_at_start_license_assistant ?? CurrentChatState_license_assistant.createDefaultObject();
 
 	// Make a clone of the starting chat state so that we can
 	//  have it as a reference as we make state changes.
@@ -371,6 +371,46 @@ export async function processLicenseChatVolley(
 
 	const jsonResponseObj =
 		textCompletion.json_response as LicenseTermsLlmJsonResponse;
+
+	// -------------------- BEGIN: UPDATE PILTERMS OBJECT ------------
+
+	// TODO: This is where we need to analyze the response from
+	//  the LLM and make changes to the PilTerms object and/or
+	//  set the flag that indicates the user has accepted the
+	//  license terms, and therefore is ready to mint the NFT.
+
+	// -------------------- END  : UPDATE PILTERMS OBJECT ------------
+
+	// -------------------- BEGIN: UPDATE CHAT HISTORY ------------
+
+	// The array of intent detector JSON response objects
+	//  will be put here.
+	const aryIntentDetectorJsonResponseObjs: IntentJsonResponseObject[] = [] ;
+
+	const newChatVolleyObj =
+		new ChatVolley(
+			false,
+			null,
+			userInput,
+			'',
+			'',
+			textCompletion,
+			textCompletion.text_response,
+			null,
+			null,
+			chatState_start,
+			chatState_current,
+			aryIntentDetectorJsonResponseObjs,
+			systemAndUserPromptToLLM.systemPrompt + ' <=> ' + systemAndUserPromptToLLM.userPrompt
+		)
+
+	chatHistoryObj.addChatVolley(newChatVolleyObj)
+
+	// Update storage.
+	writeChatHistory(userId, chatHistoryObj, EnumChatbotNames.IMAGE_ASSISTANT)
+
+	// -------------------- END  : UPDATE CHAT HISTORY ------------
+
 
 	// Now send the response message to the client.
 	if (client) {
@@ -953,6 +993,8 @@ export async function processImageChatVolley(
 			responseSentToClient,
 			chatState_start,
 			chatState_current,
+			null,
+			null,
 			aryIntentDetectorJsonResponseObjs,
 			fullPromptToLLM
 		)

@@ -79,7 +79,7 @@ You should give your answer in the license_response JSON object format.  Here is
 
 {
     "system_prompt": <This is the answer you have crafted for the user>,
-    "pilTerms": <This is the PilTerms JSON object.  Any values you were able to determine during the chat volley should be assigned to the related field or fields.  Leave the other fields alone.>
+    "pil_terms": <This is the PilTerms JSON object.  Any values you were able to determine during the chat volley should be assigned to the related field or fields.  Leave the other fields alone.>
     "isUserSatisfiedWithLicense": <This should be boolean true if the user indicated they are satisfied with the current terms of the license, boolean false if not.>
 }
 

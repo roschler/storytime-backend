@@ -495,7 +495,7 @@ export function buildChatBotSystemPrompt_license_assistant(
 		const lastChatVolleyObj =
 			chatHistoryObj.getLastVolley()
 
-		if (lastChatVolleyObj) {
+		if (lastChatVolleyObj && lastChatVolleyObj.chat_state_at_end_license_assistant) {
 			pilTermsFieldDescriptionsObject =
 				lastChatVolleyObj.chat_state_at_end_license_assistant
 		}

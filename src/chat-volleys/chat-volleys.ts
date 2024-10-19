@@ -200,7 +200,7 @@ export class CurrentChatState_license_assistant {
 	constructor(
 		pilTerms: PilTermsExtended | null) {
 
-		// If the given pilTerms input parameter is null, then create
+		// If the given pil_terms input parameter is null, then create
 		//  a default one.
 		this.pilTerms =
 			pilTerms === null
@@ -332,12 +332,12 @@ export class ChatVolley {
 	/**
 	 * The state of the chat at the start of the volley.
 	 */
-	public chat_state_at_start_image_assistant: CurrentChatState_image_assistant;
+	public chat_state_at_start_image_assistant: CurrentChatState_image_assistant | null;
 
 	/**
 	 * The state of the chat at the end of the volley.
 	 */
-	public chat_state_at_end_image_assistant: CurrentChatState_image_assistant;
+	public chat_state_at_end_image_assistant: CurrentChatState_image_assistant | null;
 
 	// -------------------- END  : IMAGE ASSISTANT FIELDS ------------
 
@@ -346,12 +346,12 @@ export class ChatVolley {
 	/**
 	 * The state of the chat at the start of the volley.
 	 */
-	public chat_state_at_start_license_assistant: CurrentChatState_license_assistant;
+	public chat_state_at_start_license_assistant: CurrentChatState_license_assistant | null;
 
 	/**
 	 * The state of the chat at the end of the volley.
 	 */
-	public chat_state_at_end_license_assistant: CurrentChatState_license_assistant;
+	public chat_state_at_end_license_assistant: CurrentChatState_license_assistant | null;
 
 
 	// -------------------- END  : LICENSE ASSISTANT FIELDS ------------
@@ -373,13 +373,12 @@ export class ChatVolley {
 	 * @param negative_prompt - The negative prompt that was passed to the image generator model.
 	 * @param text_completion_response - The whole response from the image generator prompt maker LLM.
 	 * @param response_sent_to_client - The response we sent to the user via the client websocket connection.
-	 * @param chat_state_at_start - The state of the chat at the start of the volley.
-	 * @param chat_state_at_end - The state of the chat at the end of the volley.
+	 * @param chat_state_at_start_image_assistant -  For image assistant chats, the state of the chat at the start of the volley.
+	 * @param chat_state_at_end_image_assistant - For image assistant chats, the state of the chat at the end of the volley.
+	 * @param chat_state_at_start_license_assistant - For license assistant chats, the state of the chat at the start of the volley.
+	 * @param chat_state_at_end_license_assistant - For license assistant chats, the state of the chat at the end of the volley.
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
-	 * @param full_prompt_to_system - The full prompt we sent to the LLM
-	 *  for consideration.
-	 *
-	 * @param
+	 * @param full_prompt_to_system - The full prompt we sent to the LLM for consideration.
 	 */
 	constructor(
 		is_new_session: boolean,
@@ -389,8 +388,10 @@ export class ChatVolley {
 		negative_prompt: string,
 		text_completion_response: TextCompletionResponse,
 		response_sent_to_client: string,
-		chat_state_at_start: CurrentChatState_image_assistant,
-		chat_state_at_end: CurrentChatState_image_assistant,
+		chat_state_at_start_image_assistant: CurrentChatState_image_assistant | null,
+		chat_state_at_end_image_assistant: CurrentChatState_image_assistant | null,
+		chat_state_at_start_license_assistant: CurrentChatState_license_assistant | null,
+		chat_state_at_end_license_assistant: CurrentChatState_license_assistant | null,
 		array_of_intent_detections: IntentJsonResponseObject[],
 		full_prompt_to_system: string
 	) {
@@ -405,8 +406,10 @@ export class ChatVolley {
 
 		this.user_input = user_input;
 		this.text_completion_response = text_completion_response;
-		this.chat_state_at_start_image_assistant = chat_state_at_start;
-		this.chat_state_at_end_image_assistant = chat_state_at_end;
+		this.chat_state_at_start_image_assistant = chat_state_at_start_image_assistant;
+		this.chat_state_at_end_image_assistant = chat_state_at_end_image_assistant;
+		this.chat_state_at_start_license_assistant = chat_state_at_start_license_assistant;
+		this.chat_state_at_end_license_assistant = chat_state_at_end_license_assistant;
 		this.array_of_intent_detections = array_of_intent_detections;
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
@@ -417,7 +420,7 @@ export class ChatVolley {
 	/**
 	 * This function returns the total time it took to
 	 *  process this chat volley.
-	 */
+	 *
 	public getVolleyRoundTripTime_milliseconds(): number {
 		const deltaChatStates =
 			this.chat_state_at_end_image_assistant.timestamp -
@@ -425,6 +428,7 @@ export class ChatVolley {
 
 		return deltaChatStates;
 	}
+		*/
 
 	/**
 	 * This function creates a JSON object but as a
@@ -475,8 +479,22 @@ export class ChatVolley {
 			timestamp: this.timestamp,
 			user_input: this.user_input,
 			text_completion_response: this.text_completion_response,
-			chat_state_at_start: this.chat_state_at_start_image_assistant.toJSON(),
-			chat_state_at_end: this.chat_state_at_end_image_assistant.toJSON(),
+			chat_state_at_start_image_assistant:
+				this.chat_state_at_start_image_assistant === null
+					? null
+					: this.chat_state_at_start_image_assistant.toJSON(),
+			chat_state_at_end_image_assistant:
+				this.chat_state_at_end_image_assistant === null
+					? null
+					: this.chat_state_at_end_image_assistant.toJSON(),
+			chat_state_at_start_license_assistant:
+				this.chat_state_at_start_license_assistant === null
+					? null
+					: this.chat_state_at_start_license_assistant.toJSON(),
+			chat_state_at_end_license_assistant:
+				this.chat_state_at_end_license_assistant === null
+					? null
+					: this.chat_state_at_end_license_assistant.toJSON(),
 			prompt: this.prompt,
 			negative_prompt: this.negative_prompt,
 			response_to_user: this.response_to_user,
@@ -495,8 +513,10 @@ export class ChatVolley {
 			json.negative_prompt,
 			json.text_completion_response,
 			json.response_to_user,
-			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_start),
-			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_end),
+			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_start_image_assistant),
+			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_end_image_assistant),
+			CurrentChatState_license_assistant.fromJSON(json.chat_state_at_start_license_assistant),
+			CurrentChatState_license_assistant.fromJSON(json.chat_state_at_end_license_assistant),
 			json.array_of_intent_detections,
 			json.full_prompt_to_system
 		);
