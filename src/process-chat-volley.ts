@@ -13,7 +13,11 @@ import {
 	IntentJsonResponseObject,
 } from "./enum-image-generation-models"
 import {
-	buildChatBotSystemPrompt_image_assistant, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
+	buildChatBotSystemPrompt_image_assistant,
+	buildChatBotSystemPrompt_license_assistant,
+	g_ExtendedWrongContentPrompt,
+	g_ImageGenPromptToTweetPrompt,
+	g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
 	processAllIntents,
 	showIntentResultObjects,
@@ -26,8 +30,18 @@ import {
 	NUM_STEPS_ADJUSTMENT_VALUE,
 } from "./intents/enum-intents"
 import { chatCompletionImmediate } from "./openai-common"
-import { ImageGeneratorLlmJsonResponse, ImageGenPromptToTweetLlmJsonResponse } from "./openai-parameter-objects"
-import { generateImages_chat_bot, sendImageMessage, sendStateMessage, sendTextMessage } from "./system/handlers"
+import {
+	ImageGeneratorLlmJsonResponse,
+	ImageGenPromptToTweetLlmJsonResponse,
+	LicenseTermsLlmJsonResponse,
+} from "./openai-parameter-objects"
+import {
+	generateImages_chat_bot,
+	sendImageMessage,
+	sendJsonObjectMessage,
+	sendStateMessage,
+	sendTextMessage,
+} from "./system/handlers"
 import { ImageDimensions, StateType, TwitterCardDetails } from "./system/types"
 import { putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
 import { URL } from "url"
@@ -273,20 +287,26 @@ function isStringIntentDetectedWithMatchingValue(
  * This is the function that processes one chat volley
  *  for the license assistant.
  *
- * @param client
- * @param initialState
- * @param userId_in
- * @param userInput_in
+ * @param client - The client websocket we are servicing.
+ * @param initialState - The initial state of the session
+ *  at the top of this call, before we (may) alter it
+ * @param userId_in - The user ID for the user we are
+ *  chatting with.
+ * @param userInput_in - The latest user input.
+ * @param bStartNewLicenseTerms - If TRUE, then this is a
+ *  new license terms session for a new NFT.  If FALSE, then
+ *  we are continuing an existing license terms session.
  *
  * @returns - Returns TRUE if the user has indicated they
  *  are satisfied with the license terms, FALSE if not
  *  indicating the chat session should continue.
  */
 export async function processLicenseChatVolley(
-		_client: WebSocket | null,
-		_initialState: StateType,
+		client: WebSocket | null,
+		initialState: StateType,
 		userId_in: string,
-		userInput_in: string): Promise<boolean> {
+		userInput_in: string,
+		bStartNewLicenseTerms: boolean): Promise<boolean> {
 
 	const userId = userId_in.trim()
 
@@ -298,6 +318,15 @@ export async function processLicenseChatVolley(
 	if (userInput.length < 1)
 		throw new Error(`The user input is empty or invalid.`);
 
+	// >>>>> Status message: Tell the client we are thinking.
+	if (client) {
+		let newState = initialState
+
+		newState.state_change_message = 'Thinking...'
+
+		sendStateMessage(client, newState)
+	}
+
 	// We need a starting chat state. If we have a
 	//  chat history for the user, load it and use
 	//  the last (most recent) chat volley object's
@@ -305,14 +334,13 @@ export async function processLicenseChatVolley(
 	//  chat state object.
 	//
 	// Load the license chat history for the current user.
-	const  chatHistoryObj =
+	const chatHistoryObj =
 		await readChatHistory(userId, EnumChatbotNames.LICENSE_ASSISTANT);
 
 	const chatVolley_previous =
 		chatHistoryObj.getLastVolley()
 
-	const previousChatVolleyPrompt =
-		chatVolley_previous?.prompt;
+	// const previousChatVolleyPrompt = chatVolley_previous?.prompt;
 
 	const chatState_start =
 		chatVolley_previous?.chat_state_at_start_image_assistant ?? CurrentChatState_image_assistant.createDefaultObject();
@@ -322,13 +350,50 @@ export async function processLicenseChatVolley(
 	const chatState_current =
 		chatState_start.clone();
 
+	// Build the system prompt.
+	const systemAndUserPromptToLLM =
+		buildChatBotSystemPrompt_license_assistant(
+			userInput,
+			chatHistoryObj,
+			bStartNewLicenseTerms
+		)
 
-	// Load the system prompt.
+	// Get the response from the LLM.
+	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`)
 
+	const textCompletion =
+		await chatCompletionImmediate(
+			'MAIN-IMAGE-GENERATION-PROMPT',
+			systemAndUserPromptToLLM.systemPrompt,
+			systemAndUserPromptToLLM.userPrompt,
+			g_TextCompletionParams,
+			true);
+
+	const jsonResponse =
+		textCompletion.json_response as LicenseTermsLlmJsonResponse;
+
+	// Now send the response message to the client.
+	if (client) {
+		let newState = initialState
+
+		newState.state_change_message = 'New response...'
+
+		sendStateMessage(
+			client,
+			newState
+		)
+
+		sendJsonObjectMessage(
+			client,
+			{
+				license_terms_response: jsonResponse
+			}
+		)
+	}
 
 	// Use "license_response" as the response payload type along
 	// with a LicenseType payload.
-	return false
+	return true
 }
 
 // -------------------- END  : PROCESS **IMAGE** CHAT VOLLEY ------------
@@ -864,7 +929,7 @@ export async function processImageChatVolley(
 			newState
 		)
 
-		sendTextMessage(
+		sendJsonObjectMessage(
 				client,
 			{
 				delta: responseSentToClient

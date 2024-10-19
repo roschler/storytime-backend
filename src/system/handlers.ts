@@ -6,7 +6,7 @@ import {
 	StateType,
 	ErrorType,
 	TextType,
-	Genre, TwitterCardDetails, OperationResult, MintNftImageDetails,
+	Genre, TwitterCardDetails, OperationResult, MintNftImageDetails, JsonObjectType,
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
@@ -160,6 +160,22 @@ const _request = async (options: object): Promise<Response> => {
 export const sendTextMessage = (client: WebSocket, payload: TextType) => {
 	_send(client, {
 		type: "text",
+		payload,
+	})
+}
+
+/**
+ * Send a JSON object to the client.
+ *
+ * @param client - The target websocket client.
+ * @param jsonObj - The JSON object to send.  It will
+ *  be stringified.
+ */
+export const sendJsonObjectMessage = (client: WebSocket, jsonObj: object) => {
+	const payload = JSON.stringify(jsonObj)
+
+	_send(client, {
+		type: "json_object_stringified",
 		payload,
 	})
 }

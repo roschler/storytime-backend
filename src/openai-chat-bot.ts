@@ -1,16 +1,27 @@
-import { chatCompletionImmediate, chatCompletionStream } from "./openai-common"
+import { chatCompletionImmediate } from "./openai-common"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
 import { getCurrentOrAncestorPathForSubDirOrDie, readTextFile } from "./common-routines"
 import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
 import { ChatHistory, CurrentChatState_license_assistant, StringOrNull } from "./chat-volleys/chat-volleys"
-import { WebSocket } from "ws"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
 
-// -------------------- BEGIN: TEXT COMPLETION PARAMETER OBJECTS ------------
+// -------------------- BEGIN: TYPES AND INTERFACES ------------
 
+/**
+ * A simple interface type for grouping a user prompt and a
+ *  system prompt.
+ */
+export interface UserAndSystemPrompt {
+	userPrompt: string,
+	systemPrompt: string
+}
+
+// -------------------- END  : TYPES AND INTERFACES ------------
+
+// -------------------- BEGIN: TEXT COMPLETION PARAMETER OBJECTS ------------
 
 // The text completion parameter object for chatbot text
 //  completion calls, initialized to the default starting
@@ -446,13 +457,22 @@ export function buildChatBotSystemPrompt_image_assistant(
 export function buildChatBotSystemPrompt_license_assistant(
 	userPrompt: string,
 	chatHistoryObj: ChatHistory,
-	bIsStartNewLicenseTermsSession: boolean): string {
+	bIsStartNewLicenseTermsSession: boolean): UserAndSystemPrompt {
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
 		throw new Error(`The user prompt is empty.`);
 
 	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
+
+	// For now, we read in the contents of the license terms
+	//  system prompt, so we can edit it and change the
+	//  behavior of the system without having to restart
+	//  the back-end server.
+	//
+	// TODO: Make this a one-time read on start up.
+	const systemPrompt_license_assistant =
+		readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
 
 	// Extract the most recent chat history and create
 	//  a block of plain text from it.
@@ -466,7 +486,7 @@ export function buildChatBotSystemPrompt_license_assistant(
 	//  in the system prompt text file!
 	let pilTermsFieldDescriptionsObject =
 		// We start with a PilTerms object in the default state.
-		JSON.stringify(CurrentChatState_license_assistant.createDefaultObject());
+		CurrentChatState_license_assistant.createDefaultObject();
 
 	let strChatHistory: StringOrNull = null;
 
@@ -476,16 +496,8 @@ export function buildChatBotSystemPrompt_license_assistant(
 			chatHistoryObj.getLastVolley()
 
 		if (lastChatVolleyObj) {
-			const strPilTermsExtended =
-				JSON.stringify(lastChatVolleyObj.chat_state_at_end_license_assistant.toJSON())
-
-			// Build the last prompt information the LLM needs to
-			//  modify the existing content, including the current
-			//  state of the PilTerms object.
 			pilTermsFieldDescriptionsObject =
-				`
-					${strPilTermsExtended}\n
-				`
+				lastChatVolleyObj.chat_state_at_end_license_assistant
 		}
 
 		// Pass in the chat history.
@@ -494,53 +506,42 @@ export function buildChatBotSystemPrompt_license_assistant(
 		const strChatHistory_local =
 			// -1 means we want everything available.  Since we
 			//  start a new session with each new NFT, the chat
-			//  historys should not be too long.
+			//  histories should not be too long.
 			chatHistoryObj.buildChatHistoryPrompt(-1);
 
 		if (strChatHistory_local.length > 0)
 			strChatHistory = strChatHistory_local;
 	}
 
-	// We always pass in a PilTerms object, since it controls
-	//  the dialogue.
+	// Initialize the adorned user prompt.
 	let adornedUserPrompt = '';
 
-	adornedUserPrompt +
+	// We always pass in a PilTerms object, since it controls
+	//  the dialogue flow.
+	adornedUserPrompt += JSON.stringify(pilTermsFieldDescriptionsObject.toJSON())
 
+	// Do we have any chat history?
 	if (strChatHistory)
-		// Add the chat history.
+		// Yes. Add the chat history.
 		adornedUserPrompt += strChatHistory;
 
 
 	// Append the most recently received user input.
 	adornedUserPrompt +=
-		`Here is the current user input.  Use it to guide the improvements to your revised prompt:\n${useUserPrompt}\n`
+		`Here is the current user input:\n${useUserPrompt}\n`
 
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];
 
-	// Not using this prompt for now.  Needs curation.
-	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
+	arySubPrompts.push(systemPrompt_license_assistant)
+	arySubPrompts.push(adornedUserPrompt)
 
-	// Main image generation system prompt.  Use it as a
-	//  template string so that we can insert the needed values
-	//  in the right place.
+	const systemPrompt = arySubPrompts.join(' ')
 
-	// NOTE: Because they are only found in the system
-	//  prompt eval string, the IDE will incorrectly
-	//  flag them as unused variables.
-	const evalStrMainSystemPrompt =
-		'`' + g_MainImageGenerationSystemPrompt + '`';
-
-	const evaluatedSystemPrompt =
-		eval(evalStrMainSystemPrompt)
-
-	arySubPrompts.push(evaluatedSystemPrompt)
-
-	// Main tips document.
-	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
-
-	return arySubPrompts.join(' ')
+	return {
+		systemPrompt: systemPrompt,
+		userPrompt: adornedUserPrompt
+	}
 }
 
 

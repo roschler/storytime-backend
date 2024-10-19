@@ -109,7 +109,7 @@ export interface TextCompletionResponse {
 
 // -------------------- END  : TEXT COMPLETION RESPONSE INTERFACE ------------
 
-// -------------------- BEGIN: EXPECTED JSON RESPONSE OBJECT FORMAT FOR LLM TEXT COMPLETIONS ------------
+// -------------------- BEGIN: EXPECTED JSON RESPONSE OBJECT FORMAT FOR IMAGE ASSISTANT TEXT COMPLETIONS ------------
 
 // This interface describes the JSON object we tell the image generator
 //  prompt LLM to produce.
@@ -123,8 +123,23 @@ export interface ImageGeneratorLlmJsonResponse
 	"user_input_has_complaints": boolean
 }
 
+// -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR IMAGE ASSISTANT TEXT COMPLETIONS ------------
 
-// -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LLM TEXT COMPLETIONS ------------
+// -------------------- BEGIN: EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------
+
+// This interface describes the JSON object we tell the license assistant
+//  LLM to produce.
+//
+// NOTE: Remember to update this object if we change the license assistant
+//  LLM system prompt and to update it on the client front-end as well!
+export interface LicenseTermsLlmJsonResponse
+{
+	system_prompt: string; // <This is the answer you have crafted for the user>,
+	pilTerms: unknown; // <This is the PilTerms JSON object.  Any values you were able to determine during the chat volley should be assigned to the related field or fields.>
+	isUserSatisfiedWithLicense: boolean; // <This should be TRUE if the user indicated they are satisfied with the current terms of the license, FALSE if not.>
+}
+
+// -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------
 
 // -------------------- BEGIN: EXPECTED JSON RESPONSE FOR IMAGE GEN PROMPT TO TWEET TEXT COMPLETIONS ------------
 

@@ -32,10 +32,9 @@ import { isFlagged } from "./openai-common"
 import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { processImageChatVolley, processLicenseChatVolley, shareImageOnTwitter } from "./process-chat-volley"
+import { processLicenseChatVolley } from "./process-chat-volley"
 import {
-	readUserBlockchainPresence,
-	reconstituteUserBlockchainPresence, writeUserBlockchainPresence,
+	readUserBlockchainPresence, writeUserBlockchainPresence,
 } from "./blockchain/blockchain-server-side-only"
 import { sendSimpleStateMessage } from "./common-routines"
 import { IpMetadata, StoryClient, StoryConfig } from "@story-protocol/core-sdk"
