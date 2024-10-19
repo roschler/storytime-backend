@@ -14,7 +14,7 @@ import {
 	StoreUserBlockchainPresenceRequest,
 	OperationResult,
 	MintNftRequest,
-	MintNftImageDetails,
+	MintNftImageDetails, LicenseAssistantRequest,
 } from "./system/types"
 import {
 	sendStateMessage,
@@ -32,7 +32,7 @@ import { isFlagged } from "./openai-common"
 import { Stream } from 'openai/streaming';
 import { ChatCompletionChunk } from "openai/resources/chat/completions"
 import { OpenAIParams_text_completion } from "./openai-parameter-objects"
-import { processLicenseChatVolley } from "./process-chat-volley"
+import { processImageChatVolley, processLicenseChatVolley, shareImageOnTwitter } from "./process-chat-volley"
 import {
 	readUserBlockchainPresence, writeUserBlockchainPresence,
 } from "./blockchain/blockchain-server-side-only"
@@ -292,25 +292,25 @@ async function wsConnection(
 
 				// Yes.  Process a chat volley.
 				//
-				// Every request must have a user ID and user input fields.
-				const { user_id, prompt } = message.payload;
+				// Every request must have a user ID, user input fields.
+				const licenseAssistantRequestObj = message.payload as LicenseAssistantRequest;
 
-				if (!user_id || user_id.trim().length < 1)
+				if (!licenseAssistantRequestObj.user_id || licenseAssistantRequestObj.user_id.trim().length < 1)
 					throw new Error(`BAD REQUEST: User ID is missing.`);
 
-				if (!prompt || prompt.trim().length < 1)
+				if (!licenseAssistantRequestObj.prompt || licenseAssistantRequestObj.prompt.trim().length < 1)
 					throw new Error(`BAD REQUEST: User input is missing.`);
 
 				// Create a unique request ID.
 				initialState.current_request_id = `${Date.now()}-${crypto.randomUUID()}`;
 
-				// Check if the prompt is flagged as harmful before
+				// Check if the licenseAssistantRequestObj.prompt is flagged as harmful before
 				//  passing the request to AI handlers
-				const flagged = await isFlagged(prompt);
+				const flagged = await isFlagged(licenseAssistantRequestObj.prompt);
 				if (flagged) {
-					console.log(`License user prompt was flagged as harmful: ${prompt}`);
+					console.log(`License user licenseAssistantRequestObj.prompt was flagged as harmful: ${licenseAssistantRequestObj.prompt}`);
 
-					// Tell the client the prompt was considered harmful
+					// Tell the client the licenseAssistantRequestObj.prompt was considered harmful
 					//  so that it can notify the user.
 					sendErrorMessage(client, {
 						error: badPromptError,
@@ -334,7 +334,12 @@ async function wsConnection(
 				//  client if the user has accepted the license
 				//  terms for its NFT, or not.
 				const isChatVolleySuccessful =
-					await processLicenseChatVolley(client, initialState, user_id, prompt)
+					await processLicenseChatVolley(
+						client,
+						initialState,
+						licenseAssistantRequestObj.user_id,
+						licenseAssistantRequestObj.prompt,
+						licenseAssistantRequestObj.is_new_license_session)
 
 				return isChatVolleySuccessful
 				// -------------------- END  : PROCESS LICENSE INPUT FROM CLIENT ------------

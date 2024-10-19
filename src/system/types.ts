@@ -40,6 +40,22 @@ export interface ImageDimensions{
 }
 
 /**
+ * This is the payload we expect for a request to process
+ *  a license assistant chat volley.
+ */
+export interface LicenseAssistantRequest {
+	// The ID of the current user.
+	user_id: string,
+	// The latest user input.
+	prompt: string,
+	// If TRUE, then we should treat the next license
+	//  assistant chat volley as the start of a new
+	//  license terms session.  If FALSE, then we
+	//  should treat it as an ongoing session.
+	is_new_license_session: boolean
+}
+
+/**
  * This is the websocket message we send back to the front-end
  *  that lets it know whether or not the user is satisfied
  *  with the license terms for its NFT, currently being
