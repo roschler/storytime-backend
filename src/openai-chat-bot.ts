@@ -514,7 +514,7 @@ export function buildChatBotSystemPrompt_license_assistant(
 	}
 
 	// Initialize the adorned user prompt.
-	let adornedUserPrompt = '';
+	let adornedUserPrompt = '\nHere is the current state of the PilTerms object you are building:\n';
 
 	// We always pass in a PilTerms object, since it controls
 	//  the dialogue flow.
@@ -528,13 +528,17 @@ export function buildChatBotSystemPrompt_license_assistant(
 
 	// Append the most recently received user input.
 	adornedUserPrompt +=
-		`Here is the current user input:\n${useUserPrompt}\n`
+		`\nHere is the current user input:\n${useUserPrompt}\n`
 
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];
 
 	arySubPrompts.push(systemPrompt_license_assistant)
-	arySubPrompts.push(adornedUserPrompt)
+
+	// We don't add the user prompt to the system prompt,
+	//  otherwise we don't take advantage of prompt caching
+	//  by the LLM provider.
+	// arySubPrompts.push(adornedUserPrompt)
 
 	const systemPrompt = arySubPrompts.join(' ')
 

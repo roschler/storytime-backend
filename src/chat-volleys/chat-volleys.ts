@@ -513,10 +513,18 @@ export class ChatVolley {
 			json.negative_prompt,
 			json.text_completion_response,
 			json.response_to_user,
-			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_start_image_assistant),
-			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_end_image_assistant),
-			CurrentChatState_license_assistant.fromJSON(json.chat_state_at_start_license_assistant),
-			CurrentChatState_license_assistant.fromJSON(json.chat_state_at_end_license_assistant),
+			json.chat_state_at_start_image_assistant === null
+				? null
+				: CurrentChatState_image_assistant.fromJSON(json.chat_state_at_start_image_assistant),
+			json.chat_state_at_end_image_assistant === null
+				? null
+				: CurrentChatState_image_assistant.fromJSON(json.chat_state_at_end_image_assistant),
+			json.chat_state_at_start_license_assistant === null
+				? null
+				: CurrentChatState_license_assistant.fromJSON(json.chat_state_at_start_license_assistant),
+			json.chat_state_at_end_license_assistant === null
+				? null
+				: CurrentChatState_license_assistant.fromJSON(json.chat_state_at_end_license_assistant),
 			json.array_of_intent_detections,
 			json.full_prompt_to_system
 		);

@@ -15,7 +15,7 @@ export class OpenAIParams_text_completion {
 	 * @type {number} Maximum tokens parameter value.
 	 * @default 150
 	 */
-	public max_tokens_param_val: number = 150;
+	public max_tokens_param_val: number = 2000;
 
 	/**
 	 * @type {number} Temperature parameter value.

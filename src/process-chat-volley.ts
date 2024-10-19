@@ -407,7 +407,7 @@ export async function processLicenseChatVolley(
 	chatHistoryObj.addChatVolley(newChatVolleyObj)
 
 	// Update storage.
-	writeChatHistory(userId, chatHistoryObj, EnumChatbotNames.IMAGE_ASSISTANT)
+	writeChatHistory(userId, chatHistoryObj, EnumChatbotNames.LICENSE_ASSISTANT)
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
