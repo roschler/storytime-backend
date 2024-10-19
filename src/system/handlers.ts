@@ -10,7 +10,7 @@ import {
 } from "./types"
 import path from "node:path"
 import { OpenAIParams_text_completion } from "../openai-parameter-objects"
-import { CurrentChatState } from "../chat-volleys/chat-volleys"
+import { CurrentChatState_image_assistant } from "../chat-volleys/chat-volleys"
 import { StatusCodes } from 'http-status-codes';
 import { UserBlockchainPresence } from "../blockchain/user-blockchain-presence"
 
@@ -87,7 +87,7 @@ export const generateImages_chat_bot =
 	async (
 		prompt: string,
 		negative_prompt: string,
-		chatStateObj: CurrentChatState): Promise<any> => {
+		chatStateObj: CurrentChatState_image_assistant): Promise<any> => {
 
 	let urls
 

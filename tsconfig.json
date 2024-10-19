@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"target": "es2017", // Required or Vercel will throw errors during the NPM build step.
+		"target": "es2017",
 		"sourceMap": true,
 		"outDir": "./dist",
 		"rootDir": "./src",
@@ -16,8 +16,10 @@
 		"experimentalDecorators": true,
 		"moduleResolution": "Node",
 		"module": "CommonJS",
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"types": ["node"],  // Add this line
+		"typeRoots": ["./node_modules/@types"]  // Add this line
 	},
 	"exclude": ["node_modules"],
-	"include": ["./src/**/*.ts"]
+	"include": ["./src/**/*.ts", "./node_modules/readable-stream"]  // Add readable-stream if needed
 }

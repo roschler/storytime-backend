@@ -7,6 +7,53 @@
 //  generation parameters.
 import { getCurrentOrAncestorPathForSubDirOrDie, getUnixTimestamp } from "../common-routines"
 
+import fs from "fs"
+import path from "node:path"
+import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
+import { TextCompletionResponse } from "../openai-parameter-objects"
+import {
+	DEFAULT_GUIDANCE_SCALE,
+	DEFAULT_IMAGE_GENERATION_MODEL_ID, DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS,
+	enumImageGenerationModelId,
+	IntentJsonResponseObject,
+} from "../enum-image-generation-models"
+import { StateType } from "../system/types"
+
+export type BooleanOrNull = boolean | null;
+export type NumberOrNull = number | null;
+export type StringOrNull = string | null;
+
+/**
+ * This class has the same fields as the PilTerms struct
+ *  but as JavaScript object with JavaScript types that
+ *  can optionally be NULL.
+ */
+export class PilTermsExtended {
+	public transferable: BooleanOrNull = null;
+	public royaltyPolicy: StringOrNull = null;
+	public mintingFee: NumberOrNull = null;
+	public expiration: NumberOrNull = null;
+	public commercialUse: BooleanOrNull = null;
+	public commercialAttribution: BooleanOrNull = null;
+	public commercializerChecker: StringOrNull = null;
+	public commercializerCheckerData: StringOrNull = null;
+	public commercialRevShare: NumberOrNull = null;
+	public commercialRevCelling: NumberOrNull = null;
+	public derivativesAllowed: BooleanOrNull = null;
+	public derivativesAttribution: BooleanOrNull = null;
+	public derivativesApproval: BooleanOrNull = null;
+	public derivativesReciprocal: BooleanOrNull = null;
+	public derivativeRevCelling: NumberOrNull = null;
+	public currency: StringOrNull = null;
+	public url: StringOrNull = null;
+
+	/**
+	 * @constructor
+	 */
+	constructor() {
+	}
+}
+
 /*
 The parentheses in the recommended negative prompt are part of the syntax used to influence how strongly the model weighs certain words or phrases. Here's a breakdown:
 
@@ -21,24 +68,12 @@ const CONSOLE_CATEGORY = 'chat-volley'
 
 // -------------------- END  : DEFAULT IMAGE GENERATION VALUES ------------
 
-// -------------------- BEGIN: class, CurrentChatState ------------
-
-import fs from "fs"
-import path from "node:path"
-import { readJsonFile, writeJsonFile } from "../json/json-file-substitute"
-import { TextCompletionResponse } from "../openai-parameter-objects"
-import {
-	DEFAULT_GUIDANCE_SCALE,
-	DEFAULT_IMAGE_GENERATION_MODEL_ID, DEFAULT_NUMBER_OF_IMAGE_GENERATION_STEPS,
-	enumImageGenerationModelId,
-	IntentJsonResponseObject,
-} from "../enum-image-generation-models"
-import { StateType } from "../system/types"
+// -------------------- BEGIN: class, CurrentChatState_image_assistant ------------
 
 /**
- * Represents the current state of the chat, particularly for image generation settings.
+ * Represents the current state of an image assistant chat.
  */
-export class CurrentChatState {
+export class CurrentChatState_image_assistant {
 	/**
 	 * The model currently selected for image generation.
 	 */
@@ -68,7 +103,7 @@ export class CurrentChatState {
 	public timestamp: number = getUnixTimestamp() ;
 
 	/**
-	 * Constructs an instance of CurrentChatState.
+	 * Constructs an instance of CurrentChatState_image_assistant.
 	 *
 	 * @param model_id - The model currently selected for image generation.
 	 * @param loras - The LoRA object that has the currently selected, if any, LoRA models.
@@ -90,9 +125,9 @@ export class CurrentChatState {
 	 * Create an object of this type, initialized with
 	 *  our default values.
 	 */
-	public static createDefaultObject(): CurrentChatState {
+	public static createDefaultObject(): CurrentChatState_image_assistant {
 		const newObj =
-			new CurrentChatState(
+			new CurrentChatState_image_assistant(
 				DEFAULT_IMAGE_GENERATION_MODEL_ID,
 				{},
 				DEFAULT_GUIDANCE_SCALE,
@@ -107,7 +142,7 @@ export class CurrentChatState {
 	// Serialization method
 	public toJSON() {
 		return {
-			__type: 'CurrentChatState',
+			__type: 'CurrentChatState_image_assistant',
 			model_id: this.model_id,
 			loras: this.loras,
 			guidance_scale: this.guidance_scale,
@@ -117,8 +152,8 @@ export class CurrentChatState {
 	}
 
 	// Deserialization method
-	static fromJSON(json: any): CurrentChatState {
-		return new CurrentChatState(
+	static fromJSON(json: any): CurrentChatState_image_assistant {
+		return new CurrentChatState_image_assistant(
 			json.model_id,
 			json.loras,
 			json.guidance_scale,
@@ -129,14 +164,91 @@ export class CurrentChatState {
 	// Use the serialization methods to clone a current chat state
 	//  object, to avoid unwanted couplings between objects.
 	public clone() {
-		return CurrentChatState.fromJSON(this.toJSON())
+		return CurrentChatState_image_assistant.fromJSON(this.toJSON())
 	}
 
 	// -------------------- END  : SERIALIZATION METHODS ------------
 }
 
 
-// -------------------- END  : class, CurrentChatState ------------
+// -------------------- END  : class, CurrentChatState_image_assistant ------------
+
+// -------------------- BEGIN: class, CurrentChatState_image_assistant ------------
+
+/**
+ * Represents the current state of a license assistant chat.
+ */
+export class CurrentChatState_license_assistant {
+	/**
+	 * The PilTerms object for license terms.
+	 */
+	public pilTerms: PilTermsExtended;
+
+	/**
+	 * The timestamp for the date/time this object was created.
+	 */
+	public timestamp: number = getUnixTimestamp() ;
+
+	/**
+	 * Constructs an instance of CurrentChatState_license_assistant.
+	 *
+	 * @param model_id - The model currently selected for _license_assistantlicense terms.
+	 * @param loras - The LoRA object that has the currently selected, if any, LoRA models.
+	 * @param guidance_scale - The current value set for the context free guidance parameter.
+	 * @param steps - The current value set for the number of steps to use when generating an image.
+	 */
+	constructor(
+		pilTerms: PilTermsExtended | null) {
+
+		// If the given pilTerms input parameter is null, then create
+		//  a default one.
+		this.pilTerms =
+			pilTerms === null
+				? new PilTermsExtended()
+				: pilTerms
+	}
+
+	/**
+	 * Create an object of this type, initialized with
+	 *  our default values.
+	 */
+	public static createDefaultObject(): CurrentChatState_license_assistant {
+		const newObj =
+			new CurrentChatState_license_assistant(null);
+
+		return newObj
+	}
+
+
+	// -------------------- BEGIN: SERIALIZATION METHODS ------------
+
+	// Serialization method
+	public toJSON() {
+		return {
+			__type: 'CurrentChatState_license_assistant',
+			pilTerms: this.pilTerms,
+			timestamp: this.timestamp,
+		};
+	}
+
+	// Deserialization method
+	static fromJSON(json: any): CurrentChatState_license_assistant {
+		return new CurrentChatState_license_assistant(
+			json.pilTerms
+		);
+	}
+
+	// Use the serialization methods to clone a current chat state
+	//  object, to avoid unwanted couplings between objects.
+	public clone() {
+		return CurrentChatState_license_assistant.fromJSON(this.toJSON())
+	}
+
+	// -------------------- END  : SERIALIZATION METHODS ------------
+}
+
+
+// -------------------- END  : class, CurrentChatState_license_assistant ------------
 
 // -------------------- BEGIN: ChatVolley ------------
 
@@ -171,12 +283,12 @@ export class ChatVolley {
 	/**
 	 * The state of the chat at the start of the volley.
 	 */
-	public chat_state_at_start: CurrentChatState;
+	public chat_state_at_start: CurrentChatState_image_assistant;
 
 	/**
 	 * The state of the chat at the end of the volley.
 	 */
-	public chat_state_at_end: CurrentChatState;
+	public chat_state_at_end: CurrentChatState_image_assistant;
 
 	/**
 	 * The full prompt that was passed to the
@@ -236,8 +348,8 @@ export class ChatVolley {
 		negative_prompt: string,
 		text_completion_response: TextCompletionResponse,
 		response_sent_to_client: string,
-		chat_state_at_start: CurrentChatState,
-		chat_state_at_end: CurrentChatState,
+		chat_state_at_start: CurrentChatState_image_assistant,
+		chat_state_at_end: CurrentChatState_image_assistant,
 		array_of_intent_detections: IntentJsonResponseObject[],
 		full_prompt_to_system: string
 	) {
@@ -340,8 +452,8 @@ export class ChatVolley {
 			json.negative_prompt,
 			json.text_completion_response,
 			json.response_to_user,
-			CurrentChatState.fromJSON(json.chat_state_at_start),
-			CurrentChatState.fromJSON(json.chat_state_at_end),
+			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_start),
+			CurrentChatState_image_assistant.fromJSON(json.chat_state_at_end),
 			json.array_of_intent_detections,
 			json.full_prompt_to_system
 		);

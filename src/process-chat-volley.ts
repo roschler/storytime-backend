@@ -3,7 +3,7 @@
 import type WebSocket from "ws"
 import {
 	ChatVolley,
-	CurrentChatState, EnumChatbotNames,
+	CurrentChatState_image_assistant, EnumChatbotNames,
 	readChatHistory,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
@@ -298,6 +298,31 @@ export async function processLicenseChatVolley(
 	if (userInput.length < 1)
 		throw new Error(`The user input is empty or invalid.`);
 
+	// We need a starting chat state. If we have a
+	//  chat history for the user, load it and use
+	//  the last (most recent) chat volley object's
+	//  ending state.  If not, create a default
+	//  chat state object.
+	//
+	// Load the license chat history for the current user.
+	const  chatHistoryObj =
+		await readChatHistory(userId, EnumChatbotNames.LICENSE_ASSISTANT);
+
+	const chatVolley_previous =
+		chatHistoryObj.getLastVolley()
+
+	const previousChatVolleyPrompt =
+		chatVolley_previous?.prompt;
+
+	const chatState_start =
+		chatVolley_previous?.chat_state_at_start ?? CurrentChatState_image_assistant.createDefaultObject();
+
+	// Make a clone of the starting chat state so that we can
+	//  have it as a reference as we make state changes.
+	const chatState_current =
+		chatState_start.clone();
+
+
 	// TODO: Build license terms assistant chatbot.
 
 
@@ -356,7 +381,7 @@ export async function processImageChatVolley(
 		chatVolley_previous?.prompt;
 
 	const chatState_start =
-		chatVolley_previous?.chat_state_at_start ?? CurrentChatState.createDefaultObject();
+		chatVolley_previous?.chat_state_at_start ?? CurrentChatState_image_assistant.createDefaultObject();
 
 	// Make a clone of the starting chat state so that we can
 	//  have it as a reference as we make state changes.
