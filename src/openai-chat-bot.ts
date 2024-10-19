@@ -4,7 +4,7 @@ import { getCurrentOrAncestorPathForSubDirOrDie, readTextFile } from "./common-r
 import path from "node:path"
 import fs from "fs"
 import { enumIntentDetectorId, isValidEnumIntentDetectorId } from "./intents/enum-intents"
-import { ChatHistory } from "./chat-volleys/chat-volleys"
+import { ChatHistory, CurrentChatState_license_assistant, StringOrNull } from "./chat-volleys/chat-volleys"
 import { WebSocket } from "ws"
 
 const CONSOLE_CATEGORY = 'open-ai-chat-bot'
@@ -316,7 +316,7 @@ export const g_ImageGenPromptToTweetPrompt =
 
 /**
  * Given a user prompt and the current image generation parameters,
- *  create a new image generation prompt.
+ *  create a new image generation prompt for the image assistant.
  *
  * @param userPrompt - The current prompt from the user.
  * @param chatHistoryObj - The chat history object for the current
@@ -333,7 +333,7 @@ export const g_ImageGenPromptToTweetPrompt =
  * @return Returns the system prompt to use in the
  *  upcoming text completion call.
  */
-export function buildChatBotSystemPrompt(
+export function buildChatBotSystemPrompt_image_assistant(
 		userPrompt: string,
 		wrongContentText: string | null,
 		chatHistoryObj: ChatHistory,
@@ -430,31 +430,118 @@ export function buildChatBotSystemPrompt(
 }
 
 /**
- * Use the Chat-bot pipeline to help the user create an
- *  image with generative AI and the help of an assistant
- *  LLM.
+ * Given a user prompt and the current license assistant PilTerms,
+ *  create a license terms generation prompt for the license assistant.
  *
- * @param client - The websocket client that sent the request
- * @param userInput - The most recent input from the user
- * @param chatHistoryObj - The chat history object associated
- *  with the user
+ * @param userPrompt - The current prompt from the user.
+ * @param chatHistoryObj - The chat history object for the current
+ *  user.
+ * @param bIsStartNewLicenseTermsSession - If TRUE, then
+ *  the user wants to craft a completely new license, otherwise
+ *  we are continuing to build an existing one.
+ *
+ * @return Returns the system prompt to use in the
+ *  upcoming text completion call.
  */
-export async function assistUserWithImageGeneration(
-		client: WebSocket,
-		userInput: string,
-		chatHistoryObj: ChatHistory) {
-	console.log(
-		`OpenAI settings: top_p=${g_TextCompletionParams.top_p_param_val}, max_tokens=${g_TextCompletionParams.max_tokens_param_val}, temperature=${g_TextCompletionParams.temperature_param_val}, presence_penalty=${g_TextCompletionParams.presence_penalty_param_val}, frequency_penalty=${g_TextCompletionParams.frequency_penalty_param_val}`,
-	)
+export function buildChatBotSystemPrompt_license_assistant(
+	userPrompt: string,
+	chatHistoryObj: ChatHistory,
+	bIsStartNewLicenseTermsSession: boolean): string {
+	const useUserPrompt = userPrompt.trim();
 
-	console.info(CONSOLE_CATEGORY, `Client ready state: ${client.readyState}`)
-	console.info(CONSOLE_CATEGORY, `userPrompt: ${userInput}`)
-	console.info(CONSOLE_CATEGORY, `Recent chat history:\n${chatHistoryObj.buildChatHistoryPrompt()}`)
+	if (useUserPrompt.length < 1)
+		throw new Error(`The user prompt is empty.`);
 
-	// Once the test harness code is done.  Create a shareable
-	//  function that does what it does and call it here, but
-	//  with sending the post-processed LLM response to the
-	//  client immediately, and then calling without await
-	//  the image generation request.
-	throw new Error(`assistUserWithImageGeneration: Not implemented yet.`);
+	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
+
+	// Extract the most recent chat history and create
+	//  a block of plain text from it.
+	//
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
+	// const chatHistorySummaryAsText =
+	//	chatHistoryObj.buildChatHistoryPrompt()
+
+	// IMPORTANT!: This variable name must match the one used
+	//  in the system prompt text file!
+	let pilTermsFieldDescriptionsObject =
+		// We start with a PilTerms object in the default state.
+		JSON.stringify(CurrentChatState_license_assistant.createDefaultObject());
+
+	let strChatHistory: StringOrNull = null;
+
+	if (!bIsStartNewLicenseTermsSession) {
+		// Get the last chat volley.
+		const lastChatVolleyObj =
+			chatHistoryObj.getLastVolley()
+
+		if (lastChatVolleyObj) {
+			const strPilTermsExtended =
+				JSON.stringify(lastChatVolleyObj.chat_state_at_end_license_assistant.toJSON())
+
+			// Build the last prompt information the LLM needs to
+			//  modify the existing content, including the current
+			//  state of the PilTerms object.
+			pilTermsFieldDescriptionsObject =
+				`
+					${strPilTermsExtended}\n
+				`
+		}
+
+		// Pass in the chat history.
+		const aryChatHistorySummaries:string[] = [];
+
+		const strChatHistory_local =
+			// -1 means we want everything available.  Since we
+			//  start a new session with each new NFT, the chat
+			//  historys should not be too long.
+			chatHistoryObj.buildChatHistoryPrompt(-1);
+
+		if (strChatHistory_local.length > 0)
+			strChatHistory = strChatHistory_local;
+	}
+
+	// We always pass in a PilTerms object, since it controls
+	//  the dialogue.
+	let adornedUserPrompt = '';
+
+	adornedUserPrompt +
+
+	if (strChatHistory)
+		// Add the chat history.
+		adornedUserPrompt += strChatHistory;
+
+
+	// Append the most recently received user input.
+	adornedUserPrompt +=
+		`Here is the current user input.  Use it to guide the improvements to your revised prompt:\n${useUserPrompt}\n`
+
+	// Build the full prompt from our sub-prompts.
+	const arySubPrompts = [];
+
+	// Not using this prompt for now.  Needs curation.
+	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
+
+	// Main image generation system prompt.  Use it as a
+	//  template string so that we can insert the needed values
+	//  in the right place.
+
+	// NOTE: Because they are only found in the system
+	//  prompt eval string, the IDE will incorrectly
+	//  flag them as unused variables.
+	const evalStrMainSystemPrompt =
+		'`' + g_MainImageGenerationSystemPrompt + '`';
+
+	const evaluatedSystemPrompt =
+		eval(evalStrMainSystemPrompt)
+
+	arySubPrompts.push(evaluatedSystemPrompt)
+
+	// Main tips document.
+	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
+
+	return arySubPrompts.join(' ')
 }
+
+
+

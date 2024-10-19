@@ -253,17 +253,23 @@ export class CurrentChatState_license_assistant {
 // -------------------- BEGIN: ChatVolley ------------
 
 /**
+ * NOTE: To avoid a major refactoring, for now, we are
+ *  keeping the image generation and license terms
+ *  fields in the same object (although we do create
+ *  separate ChatHistory files for the image assistant
+ *  and license assistant chat sessions).
+ *
+ * TODO: Later, create separate object trees for the
+ *  image and license assistants.
+ */
+
+
+/**
  * Represents a volley of communication between the user and the system, tracking various states.
  */
 export class ChatVolley {
-	/**
-	 * If TRUE, then this chat volley is considered to
-	 *  be the start of a new image generation session.
-	 *  If FALSE, then it is considered to be a
-	 *  continuation of an existing image generation
-	 *  session.
-	 */
-	public is_new_image: boolean;
+
+	// -------------------- BEGIN: COMMON ASSISTANT FIELDS ------------
 
 	/**
 	 * The current date/time in Unix timestamp format.
@@ -279,16 +285,6 @@ export class ChatVolley {
 	 * The response from our system.
 	 */
 	public text_completion_response: TextCompletionResponse;
-
-	/**
-	 * The state of the chat at the start of the volley.
-	 */
-	public chat_state_at_start: CurrentChatState_image_assistant;
-
-	/**
-	 * The state of the chat at the end of the volley.
-	 */
-	public chat_state_at_end: CurrentChatState_image_assistant;
 
 	/**
 	 * The full prompt that was passed to the
@@ -319,13 +315,56 @@ export class ChatVolley {
 	 */
 	public full_prompt_to_system: string;
 
+	// -------------------- END  : COMMON ASSISTANT FIELDS ------------
+
+	// -------------------- BEGIN: IMAGE ASSISTANT FIELDS ------------
+
+	/**
+	 * If TRUE, then this chat volley is considered to
+	 *  be the start of a new image generation or license
+	 *  terms session.
+	 *
+	 *  If FALSE, then it is considered to be a
+	 *  continuation of an existing session.
+	 */
+	public is_new_session: boolean;
+
+	/**
+	 * The state of the chat at the start of the volley.
+	 */
+	public chat_state_at_start_image_assistant: CurrentChatState_image_assistant;
+
+	/**
+	 * The state of the chat at the end of the volley.
+	 */
+	public chat_state_at_end_image_assistant: CurrentChatState_image_assistant;
+
+	// -------------------- END  : IMAGE ASSISTANT FIELDS ------------
+
+	// -------------------- BEGIN: LICENSE ASSISTANT FIELDS ------------
+
+	/**
+	 * The state of the chat at the start of the volley.
+	 */
+	public chat_state_at_start_license_assistant: CurrentChatState_license_assistant;
+
+	/**
+	 * The state of the chat at the end of the volley.
+	 */
+	public chat_state_at_end_license_assistant: CurrentChatState_license_assistant;
+
+
+	// -------------------- END  : LICENSE ASSISTANT FIELDS ------------
+
+
 	/**
 	 * Constructs an instance of ChatVolley.
 	 *
-	 * @param is_new_image - If TRUE, then this volley is considered
-	 *  the start of a new image creation session.  If FALSE, then
-	 *  it is considered the continuation of an existing image
-	 *  generation session.
+	 * @param is_new_session - If TRUE, then this volley is considered
+	 *  the start of a new image generation or license terms session.
+	 *
+	 *  If FALSE, then it is considered the continuation of an existing
+	 *   session.
 	 * @param override_timestamp - If you want to assign a specific
 	 *  timestamp value, use this parameter to do that.  Otherwise,
 	 *  pass NULL and the current date/time will be used.
@@ -339,9 +378,11 @@ export class ChatVolley {
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
 	 * @param full_prompt_to_system - The full prompt we sent to the LLM
 	 *  for consideration.
+	 *
+	 * @param
 	 */
 	constructor(
-		is_new_image: boolean,
+		is_new_session: boolean,
 		override_timestamp: number | null,
 		user_input: string,
 		prompt: string,
@@ -353,7 +394,7 @@ export class ChatVolley {
 		array_of_intent_detections: IntentJsonResponseObject[],
 		full_prompt_to_system: string
 	) {
-		this.is_new_image = is_new_image;
+		this.is_new_session = is_new_session;
 
 		// If an override timestamp was provided, use it.
 		//  Otherwise, default to the current date/time.
@@ -364,8 +405,8 @@ export class ChatVolley {
 
 		this.user_input = user_input;
 		this.text_completion_response = text_completion_response;
-		this.chat_state_at_start = chat_state_at_start;
-		this.chat_state_at_end = chat_state_at_end;
+		this.chat_state_at_start_image_assistant = chat_state_at_start;
+		this.chat_state_at_end_image_assistant = chat_state_at_end;
 		this.array_of_intent_detections = array_of_intent_detections;
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
@@ -379,8 +420,8 @@ export class ChatVolley {
 	 */
 	public getVolleyRoundTripTime_milliseconds(): number {
 		const deltaChatStates =
-			this.chat_state_at_end.timestamp -
-				this.chat_state_at_start.timestamp;
+			this.chat_state_at_end_image_assistant.timestamp -
+				this.chat_state_at_start_image_assistant.timestamp;
 
 		return deltaChatStates;
 	}
@@ -408,17 +449,19 @@ export class ChatVolley {
 	 *   will be passed to the LLM as part of
 	 *   the recent chat history.
 	 *
-	 * NOTE!:  Make sure the format matches that we
-	 *  illustrated in the main system prompt!
+	 * NOTE!: Make sure the format matches that we
+	 *  illustrated in the main system prompt for
+	 *  each chatbot assistant type!
 	 */
 	public buildChatVolleySummary_text() {
 		const strSummary =
-		    	`USER INPUT: ${this.user_input},\n
-		    	 SYSTEM RESPONSE: ${this.prompt},\n`
+		    `USER INPUT: ${this.user_input},\n
+		     SYSTEM RESPONSE: ${this.response_to_user},\n\n`
 
-		    	 // TODO: Re-enable this once we solve the vanishing
-				 //  previous image content issue.
-		    	 // NEGATIVE PROMPT: ${this.negative_prompt}\n`
+		     // TODO: Re-enable this once we solve the vanishing
+			 //  previous image content issue.  Needs to be
+			 //  different for the different chatbot types, possibly.
+		     // NEGATIVE PROMPT: ${this.negative_prompt}\n`
 		return strSummary
 	}
 
@@ -428,12 +471,12 @@ export class ChatVolley {
 	public toJSON() {
 		return {
 			__type: 'ChatVolley',
-			is_new_image: this.is_new_image,
+			is_new_image: this.is_new_session,
 			timestamp: this.timestamp,
 			user_input: this.user_input,
 			text_completion_response: this.text_completion_response,
-			chat_state_at_start: this.chat_state_at_start.toJSON(),
-			chat_state_at_end: this.chat_state_at_end.toJSON(),
+			chat_state_at_start: this.chat_state_at_start_image_assistant.toJSON(),
+			chat_state_at_end: this.chat_state_at_end_image_assistant.toJSON(),
 			prompt: this.prompt,
 			negative_prompt: this.negative_prompt,
 			response_to_user: this.response_to_user,
@@ -531,9 +574,18 @@ export class ChatHistory {
 	 * @param numChatVolleys - The number of chat volleys
 	 *  to include in the history.  The most recent ones
 	 *  will be chosen from the end of the array up to
-	 *  the number available.
+	 *  the number available.  Pass in -1 if you want
+	 *  the entire chat history.
 	 */
 	public buildChatHistoryPrompt(numChatVolleys: number = 4): string {
+		if (numChatVolleys === -1) {
+			numChatVolleys = this.aryChatVolleys.length - 1;
+
+			if (numChatVolleys === 0)
+				// No chat history at this time.
+				return '';
+		}
+
 		if (numChatVolleys < 1)
 			throw new Error(`The number of chat volleys must be greater than 0.`);
 		if (!Number.isInteger(numChatVolleys))
@@ -562,7 +614,6 @@ What they said to you is prefixed by the string "USER INPUT:"
 Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
   
 Use the chat history to help guide your efforts.  Here it is now:
-
 				`
 
 			strChatHistory =

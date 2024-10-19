@@ -19,6 +19,8 @@ FUTURE FEATURES:
 - Incorporate the augmentation parameter some stable diffusion models support
 - Incorporate LoRA model usage (micro-grant)
 - Detect new image creation session.  If that happens, reset the current state object for the chat session.
+- Our current strategy with image generation is to NOT pass in the recent
+    chat history, but just the last prompt.
 
 NEXT:
 

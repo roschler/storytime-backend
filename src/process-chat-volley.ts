@@ -13,7 +13,7 @@ import {
 	IntentJsonResponseObject,
 } from "./enum-image-generation-models"
 import {
-	buildChatBotSystemPrompt, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
+	buildChatBotSystemPrompt_image_assistant, g_ExtendedWrongContentPrompt, g_ImageGenPromptToTweetPrompt, g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
 	processAllIntents,
 	showIntentResultObjects,
@@ -315,7 +315,7 @@ export async function processLicenseChatVolley(
 		chatVolley_previous?.prompt;
 
 	const chatState_start =
-		chatVolley_previous?.chat_state_at_start ?? CurrentChatState_image_assistant.createDefaultObject();
+		chatVolley_previous?.chat_state_at_start_image_assistant ?? CurrentChatState_image_assistant.createDefaultObject();
 
 	// Make a clone of the starting chat state so that we can
 	//  have it as a reference as we make state changes.
@@ -323,7 +323,7 @@ export async function processLicenseChatVolley(
 		chatState_start.clone();
 
 
-	// TODO: Build license terms assistant chatbot.
+	// Load the system prompt.
 
 
 	// Use "license_response" as the response payload type along
@@ -381,7 +381,7 @@ export async function processImageChatVolley(
 		chatVolley_previous?.prompt;
 
 	const chatState_start =
-		chatVolley_previous?.chat_state_at_start ?? CurrentChatState_image_assistant.createDefaultObject();
+		chatVolley_previous?.chat_state_at_start_image_assistant ?? CurrentChatState_image_assistant.createDefaultObject();
 
 	// Make a clone of the starting chat state so that we can
 	//  have it as a reference as we make state changes.
@@ -793,7 +793,7 @@ export async function processImageChatVolley(
 	// Now we need to get help from the LLM on creating or refining
 	//  a good prompt for the user.
 	const fullPromptToLLM =
-		buildChatBotSystemPrompt(
+		buildChatBotSystemPrompt_image_assistant(
 			userInput,
 			wrongContentText,
 			chatHistoryObj,

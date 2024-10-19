@@ -82,5 +82,3 @@ You should give your answer in the license_response JSON object format.  Here is
     "PilTerms": <This is the PilTerms JSON object.  Any values you were able to determine during the chat volley should be assigned to the related field or fields.>
     "is_user_satisfied_with_license_terms": <This should be TRUE if the user indicated they are satisfied with the current terms of the license, FALSE if not.>
 }
-
-Here is a helpful JSON object that contains descriptions of each of the fields in the PilTerms object.  Use it to guide your answers and to help you generate answers to the user, based on the PilTerms field or fields they are talking about.
