@@ -14,7 +14,7 @@ output
 
 # Node stuff
 dist
-node_modules
+# node_modules
 .vscode
 
 # ROS:chrome extension generator GITIGNORE elements

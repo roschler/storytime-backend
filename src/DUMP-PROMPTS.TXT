@@ -227,35 +227,7 @@ What they said to you is prefixed by the string "USER INPUT:"
 Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
   
 Use the chat history to help guide your efforts.  Here it is now:
-				USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
-    "confidence": "VERY HIGH",
-    "next_question": "Great! You have chosen the 'Commercial Remix' license. Please hit the Story Protocol button to finalize your choice.",
-    "is_license_choice_confirmed": true,
-    "defaultMintingFee": 1.5,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 4
-},
-
-
-USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "UNKNOWN",
-    "confidence": "VERY LOW",
-    "next_question": "Great! Could you please specify the type of license you are interested in? Is it Non-Commercial Social Remixing, Commercial Use, or Commercial Remix?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": false,
-    "derivativesAllowed": false,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: What are those?,
+				USER INPUT: What are those?,
 
 		     SYSTEM RESPONSE: {
     "best_license_guess": "UNKNOWN",
@@ -339,4 +311,32 @@ USER INPUT: 2.2 Eth,
 },
 
 
-yes
+USER INPUT: yes,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Remix",
+    "confidence": "VERY HIGH",
+    "next_question": "Great! You have chosen the 'Commercial Remix' license with a 3% revenue share from derivative works and a minting fee of 2.2 Eth. Please hit the Story Protocol button to finalize your choice.",
+    "is_license_choice_confirmed": true,
+    "defaultMintingFee": 2.2,
+    "commercialUse": true,
+    "derivativesAllowed": true,
+    "commercialRevShare": 3
+},
+
+
+USER INPUT: yes,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "UNKNOWN",
+    "confidence": "VERY LOW",
+    "next_question": "Could you please specify the type of license you need? Are you looking for a Non-Commercial Social Remixing, Commercial Use, or Commercial Remix license?",
+    "is_license_choice_confirmed": false,
+    "defaultMintingFee": 0,
+    "commercialUse": false,
+    "derivativesAllowed": false,
+    "commercialRevShare": 0
+},
+
+
+What's a license?
