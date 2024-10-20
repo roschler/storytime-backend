@@ -587,7 +587,7 @@ async function wsConnection(
 
 				// -------------------- END  : MINT NFT ------------
 			} else {
-				throw new Error(`BAD REQUEST: Unknown message type -> ${message.type}.`);
+				throw new Error(`BAD REQUEST(ws.client.on): Unknown message type -> ${message.type}.`);
 			}
 		} catch (err) {
 			const errMsg =
