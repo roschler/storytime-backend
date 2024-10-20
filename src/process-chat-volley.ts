@@ -18,7 +18,7 @@ import {
 	g_ExtendedWrongContentPrompt,
 	g_ImageGenPromptToTweetPrompt,
 	g_TextCompletionParams,
-	g_TextCompletionParamsForIntentDetector, g_TextCompletionParamsReasoning,
+	g_TextCompletionParamsForIntentDetector, g_TextCompletionParamsLicenseAssistant,
 	processAllIntents, readImageGenerationSubPromptOrDie,
 	showIntentResultObjects,
 } from "./openai-chat-bot"
@@ -169,9 +169,15 @@ function getStringIntentDetectionValue(
 		// Check if the object's intent_detector_id matches the provided intentDetectorId
 		if (jsonResponseObjExt.intent_detector_id === intentDetectorId) {
 
+			// Mitigate for single objects.
+			let aryChildObjects =
+				Array.isArray(jsonResponseObjExt.array_child_objects)
+					? jsonResponseObjExt.array_child_objects
+					: [ jsonResponseObjExt.array_child_objects ];
+
 			// Iterate its child objects and look for a child object
 			//  with the desired property name.
-			jsonResponseObjExt.array_child_objects.forEach(
+			aryChildObjects.forEach(
 				(childObj) => {
 					// Does the child object have a property with the desired
 					//  name?
@@ -425,7 +431,7 @@ export async function processLicenseChatVolley(
 		(intentResultObj) =>
 			intentResultObj.is_error === true
 	)) {
-		throw new Error(`$One or more of the intent detector calls failed.`)
+		throw new Error(`One or more of the intent detector calls failed.`)
 	}
 
 	// Create an array of the intent detector JSON response
@@ -569,7 +575,7 @@ export async function processLicenseChatVolley(
 			systemAndUserPromptToLLM.systemPrompt,
 			systemAndUserPromptToLLM.userPrompt,
 			// g_TextCompletionParams,
-			g_TextCompletionParamsReasoning,
+			g_TextCompletionParamsLicenseAssistant,
 			true);
 
 	console.info(`textCompletion.text_response object:`);

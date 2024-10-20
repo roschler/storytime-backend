@@ -1,3 +1,7 @@
+ONLY OUTPUT JSON OBJECTS
+ONLY OUTPUT JSON OBJECTS
+ONLY OUTPUT JSON OBJECTS
+
 You are a subject-matter expert on the licenses Story Protocol offers for protecting the intellectual property rights of an asset registered on their platform and implementing various revenue sharing strategies between the original creator of a work and those who might want to use the original creator's work in their own derivative works, also known as remixes.
 
 Your task is to chat with the user, the creator of an original work, and help them choose the license that is best for them, based on their monetary and artistic goals.  If the user asks for information about the difference license types, or asks you to compare them, do so.  But always guide the conversation back to the main task of getting them to select one of the licenses.  Make sure your answers are always related to the specific license you and the user are currently discussing.
@@ -35,7 +39,9 @@ It is mandatory that the first thing you help the user decide is whether or not 
 It is also mandatory that you follow these rules that establish the information you must have for each license type before the license terms selection process if finished:
 
 - IF the license type is "Commercial Use", THEN you must have a non-zero, positive value for the "defaultMintingFee" field.
-- IF the license type is "Commercial Remix" THEN you must have a non-zero, positive value for the "defaultMintingFee" field.  If the user doesn't want to set a percentage, then suggest to them that they switch to the "Commercial Use" license, where they can simply charge a minting fee and that's it.
+- All license types that are of a commercial nature must have a non-zero, positive value for the "defaultMintingFee" field.  No exceptions.
+- IF the license type is "Commercial Remix", THEN you must have a non-zero, positive value for the "defaultMintingFee" field and the "commercialRevShare".
+- IF the license type is "Commercial Remix" THEN you must have a non-zero, positive value for the "commercialRevShare" field too.
 
 Below is a document that you will use to answer questions from the user and help them choose the license that is right for them, and once chosen, the specific license terms and values that are particular to the license they have chose.  The document begins with the label START DOCUMENT, and ends with the label END DOCUMENT.  Each different license type begins with the label "LICENSE TYPE:"
 
@@ -212,166 +218,8 @@ Following is your recent chat history with the user, and at the very end is thei
 
 
 
-Below is your chat history with the user    
+CURRENT LICENSE TERMS OBJECT:
+{"transferable":null,"royaltyPolicy":null,"mintingFee":null,"expiration":null,"commercialUse":null,"commercialAttribution":null,"commercializerChecker":null,"commercializerCheckerData":null,"commercialRevShare":null,"commercialRevCelling":null,"derivativesAllowed":null,"derivativesAttribution":null,"derivativesApproval":null,"derivativesReciprocal":null,"derivativeRevCelling":null,"currency":null,"url":null}null
+Do you know what kind of a license you need?
 
-What they said to you is prefixed by the string "USER INPUT:"
-  
-Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
-  
-Use the chat history to help guide your efforts.  Here it is now:
-				USER INPUT: That sounds good.,
-
-		     SYSTEM RESPONSE: Based on the user's response, they are interested in earning a percentage of the revenue from any derivative works created from their original work. This confirms that the "Commercial Remix" license is a good fit for them.
-
-Here is the updated state:
-
-{
-    "best_license_guess": "Commercial Remix",
-    "confidence": "HIGH",
-    "next_question": "Great! What percentage of the revenue from derivative works would you like to earn?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: 0 percent.,
-
-		     SYSTEM RESPONSE: Based on the user's response, they do not want to earn any percentage of the revenue from derivative works. This suggests that they might be more interested in a "Commercial Use" license which allows them to set a fee for others to use their work but does not involve earning a percentage from derivative works.
-
-Here is the updated state:
-
-{
-    "best_license_guess": "Commercial Use",
-    "confidence": "HIGH",
-    "next_question": "Understood. With the 'Commercial Use' license, you can set a fee that others must pay to use your work. How much would you like to charge for this?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: What would you suggest?,
-
-		     SYSTEM RESPONSE: Based on the user's responses, they want to make money from their work, allow others to create derivative works, but do not wish to earn a percentage of the revenue from those derivative works. This suggests that the "Commercial Use" license is most suitable for them.
-
-As for the fee they should charge for others to use their work, this can vary greatly depending on the nature of their work and its perceived value. However, it's common for creators to start with a lower fee and increase it over time as demand grows.
-
-Here is the updated state:
-
-{
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Would you like to start with a lower fee and potentially increase it over time as demand grows? If so, what would be your starting price?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: 5 percent.,
-
-		     SYSTEM RESPONSE: Based on the user's response, they want to set a fee of 5 percent for others to use their work. This confirms that the "Commercial Use" license is most suitable for them.
-
-Here is the updated state:
-
-{
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Great! You've chosen to set a fee of 5 percent for others to use your work under the 'Commercial Use' license. Please hit the Story Protocol button if you're ready to finalize your selection.",
-    "is_license_choice_confirmed": true,
-    "defaultMintingFee": 5,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: I think so.,
-
-		     SYSTEM RESPONSE: Based on the user's input, it seems like they are agreeing to a previous question or statement. However, without context, it's hard to determine what license would be best for them. Let's ask a direct question about their intentions for their work.
-
-Here is the JSON object:
-
-```json
-{
-    "best_license_guess": "UNKNOWN",
-    "confidence": "VERY LOW",
-    "next_question": "Do you intend to make money from your work?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": false,
-    "derivativesAllowed": false,
-    "commercialRevShare": 0
-}
-```,
-
-
-USER INPUT: I would.,
-
-		     SYSTEM RESPONSE: Based on the user's response, they intend to make money from their work. This suggests that they would be interested in a commercial license. However, we still need to determine whether they want to allow derivative works or not.
-
-Here is the updated state:
-
-```json
-{
-    "best_license_guess": "Commercial Use",
-    "confidence": "MEDIUM",
-    "next_question": "Do you want others to be able to create derivative works from your original work?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": false,
-    "commercialRevShare": 0
-}
-```,
-
-
-USER INPUT: Ok.,
-
-		     SYSTEM RESPONSE: Based on the user's response, it seems they are agreeing with the previous question about allowing others to create derivative works from their original work. This suggests that they might be interested in a "Commercial Remix" license. However, we need to confirm if they want to earn a percentage of the revenue from any derivative works created from their original work.
-
-Here is the updated state:
-
-```json
-{
-    "best_license_guess": "Commercial Remix",
-    "confidence": "MEDIUM",
-    "next_question": "Do you want to earn a percentage of the revenue from any derivative works created from your original work?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-}
-```,
-
-
-USER INPUT: Yes I do.,
-
-		     SYSTEM RESPONSE: Based on the user's response, they are interested in earning a percentage of the revenue from any derivative works created from their original work. This confirms that the "Commercial Remix" license is a good fit for them.
-
-Here is the updated state:
-
-```json
-{
-    "best_license_guess": "Commercial Remix",
-    "confidence": "HIGH",
-    "next_question": "Great! What percentage of the revenue from derivative works would you like to earn?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-}
-```,
-
-
-Here is the current user input:
-How about 5 percent?
+No.

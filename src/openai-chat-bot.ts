@@ -46,12 +46,13 @@ export const g_TextCompletionParamsForIntentDetector =
 
 // The text completion parameters object for making calls with
 //  the o1-mini model, the fast reasoning model.
-export const g_TextCompletionParamsReasoning =
+export const g_TextCompletionParamsLicenseAssistant =
 	new OpenAIParams_text_completion({
 		// Getting 400 unsupported value errors for o1-mini
 		// model_param_val: 'o1-mini'
 		// model_param_val: 'gpt-4-turbo'
-		model_param_val: 'gpt-4'
+		model_param_val: 'gpt-4',
+		temperature_param_val: 0.4
 	})
 
 
@@ -606,45 +607,54 @@ export function buildChatBotSystemPrompt_license_assistant(
 	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
 	console.info(CONSOLE_CATEGORY, `Sub-assistant name: ${subAssistantName}`);
 
-	const strChatHistory =
+	let strChatHistory =
 		buildChatHistorySummary(chatHistoryObj, bIsStartNewLicenseTermsSession, numMessages);
 
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	let pilTermsFieldDescriptionsObject =
 		// We start with a PilTerms object in the default state.
-		CurrentChatState_license_assistant.createDefaultObject();
+		CurrentChatState_license_assistant.createDefaultObject().pilTerms;
 
-	if (!bIsStartNewLicenseTermsSession) {
+	if (bIsStartNewLicenseTermsSession) {
+		// Add a question or the license assistant form fill
+		//  agent gets confused if you just say "yes" for
+		//  the first user input, because it has no context.
+		strChatHistory += '\nDo you know what kind of a license you need?\n';
+
+	} else {
 		// Get the last chat volley.
 		const lastChatVolleyObj =
 			chatHistoryObj.getLastVolley()
 
 		if (lastChatVolleyObj && lastChatVolleyObj.chat_state_at_end_license_assistant) {
 			pilTermsFieldDescriptionsObject =
-				lastChatVolleyObj.chat_state_at_end_license_assistant
+				lastChatVolleyObj.chat_state_at_end_license_assistant.pilTerms;
 		}
 	}
 
 	// Initialize the adorned user prompt.
 	// let adornedUserPrompt = '\nHere is the current state of the PilTerms object you are building:\n';
 
-	// We always pass in a PilTerms object, since it controls
-	//  the dialogue flow.
-	// adornedUserPrompt += JSON.stringify(pilTermsFieldDescriptionsObject.toJSON())
-
-
 	let adornedUserPrompt = '';
 
+	// We always pass in a PilTerms object, since it controls
+	//  the dialogue flow.
+	// Append the current PilTerms ob ject.
+	adornedUserPrompt +=
+		'\nCURRENT LICENSE TERMS OBJECT:\n';
+
+	adornedUserPrompt += JSON.stringify(pilTermsFieldDescriptionsObject)
+
+	// TODO: Testing license assistant without chat history.
 	// Do we have any chat history?
 	if (strChatHistory)
 		// Yes. Add the chat history.
 		adornedUserPrompt += strChatHistory;
 
-
 	// Append the most recently received user input.
 	adornedUserPrompt +=
-		`\nHere is the current user input:\n${useUserPrompt}\n`
+		`\n${useUserPrompt}\n`;
 
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];

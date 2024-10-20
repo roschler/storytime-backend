@@ -206,6 +206,7 @@ export async function chatCompletionImmediate(
 			temperature: textCompletionParams.temperature_param_val,
 			max_tokens: textCompletionParams.max_tokens_param_val,
 			top_p: textCompletionParams.top_p_param_val,
+			// response_format:  { "type": "json_object" }
 		});
 
 		let textResponse = ''
