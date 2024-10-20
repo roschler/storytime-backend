@@ -18,7 +18,7 @@ import {
 	g_ExtendedWrongContentPrompt,
 	g_ImageGenPromptToTweetPrompt,
 	g_TextCompletionParams,
-	g_TextCompletionParamsForIntentDetector,
+	g_TextCompletionParamsForIntentDetector, g_TextCompletionParamsReasoning,
 	processAllIntents, readImageGenerationSubPromptOrDie,
 	showIntentResultObjects,
 } from "./openai-chat-bot"
@@ -35,7 +35,7 @@ import {
 import { chatCompletionImmediate } from "./openai-common"
 import {
 	ImageGeneratorLlmJsonResponse,
-	ImageGenPromptToTweetLlmJsonResponse,
+	ImageGenPromptToTweetLlmJsonResponse, LicenseAssistantNuevoResponse,
 	LicenseTermsLlmJsonResponse,
 } from "./openai-parameter-objects"
 import {
@@ -49,9 +49,17 @@ import { ImageDimensions, StateType, TwitterCardDetails } from "./system/types"
 import { putLivepeerImageToS3 } from "./aws-helpers/aws-image-helpers"
 import { URL } from "url"
 import { writeTwitterCardDetails } from "./twitter/twitter-helper-functions"
-import { sendSimpleStateMessage } from "./common-routines"
+import { sendSimpleStateMessage, writeTextFile } from "./common-routines"
 
 const CONSOLE_CATEGORY = 'process-chat-volley'
+
+// These are the registered "simple" licenses Story Protocol
+//  has made available to us.
+export enum EnumStoryProtocolLicenses {
+	NON_COMMERCIAL_SOCIAL_REMIXING = "Non-Commercial Social Remixing",
+	COMMERCIAL_USE = "Commercial Use",
+	COMMERCIAL_REMIX = "Commercial Remix"
+}
 
 // -------------------- BEGIN: HELPER FUNCTIONS ------------
 
@@ -314,6 +322,8 @@ export async function processLicenseChatVolley(
 		userInput_in: string,
 		bStartNewLicenseTerms: boolean): Promise<boolean> {
 
+	const bIsSimpleLicense = true;
+
 	const userId = userId_in.trim()
 
 	if (userId.length < 1)
@@ -480,6 +490,10 @@ export async function processLicenseChatVolley(
 
 	// -------------------- END  : DETERMINE USER INPUT TYPE ------------
 
+
+	// TODO: STOP FORCING EVERYTHING TO "form_fill_reply"
+	userReplyType = "form_fill_reply"
+
 	// -------------------- BEGIN: SELECT SUB-ASSISTANT ------------
 
 	// Now that we know the type of user input it is, run it by
@@ -524,22 +538,36 @@ export async function processLicenseChatVolley(
 			userReplyType,
 			subAssistantPromptText,
 			chatHistoryObj,
-			bStartNewLicenseTerms
+			bStartNewLicenseTerms,
+			8
 		)
 
 	// Get the response from the LLM.
 	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`)
 
-	let jsonResponseObj = null;
+	// Write out the last prompt pair for debugging purposes.
+	writeTextFile('./DUMP-PROMPTS.TXT', systemAndUserPromptToLLM.systemPrompt + '\n\n' +
+		systemAndUserPromptToLLM.userPrompt)
+
+	let jsonResponseObj: LicenseAssistantNuevoResponse;
 
 	const textCompletion =
 		await chatCompletionImmediate(
 			userReplyType,
 			systemAndUserPromptToLLM.systemPrompt,
 			systemAndUserPromptToLLM.userPrompt,
-			g_TextCompletionParams,
+			// g_TextCompletionParams,
+			g_TextCompletionParamsReasoning,
 			true);
 
+	console.info(`textCompletion.text_response object:`);
+	console.dir(textCompletion.text_response, {depth: null, colors: true});
+
+	// Get the JSON object returned to us.
+	const nuevoLicenseLLMResponse: LicenseAssistantNuevoResponse =
+		textCompletion.json_response as LicenseAssistantNuevoResponse;
+
+	/*
 	if (userReplyType === "query_for_information" || originalUserReplyType === "query_for_information") {
 		// The librarian sub-assistant insists on giving simple text answers, so
 		//  we make a JSON response object from it.
@@ -555,23 +583,34 @@ export async function processLicenseChatVolley(
 
 		console.info(textCompletion.text_response);
 	} else {
-		jsonResponseObj =
-			textCompletion.json_response as LicenseTermsLlmJsonResponse;
+		if (bIsSimpleLicense) {
+			jsonResponseObj = nuevoLicenseLLMResponse;
+		} else {
+			jsonResponseObj =
+				textCompletion.json_response as LicenseTermsLlmJsonResponse;
+		}
 
 		console.info(`jsonResponseObj object:`);
 		console.dir(jsonResponseObj, {depth: null, colors: true});
 	}
+	 */
 
 	// -------------------- END  : MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
 
 	// -------------------- BEGIN: UPDATE CHAT HISTORY PILTERMS STATE ------------
 
-	if (jsonResponseObj.pil_terms) {
-		// Update the current chat state with the updated PilTerms object.
-		chatState_current.pilTerms = jsonResponseObj.pil_terms as PilTermsExtended;
+	if (bIsSimpleLicense) {
+		// STUB
+	} else {
+		/*
+		if (jsonResponseObj.pil_terms) {
+			// Update the current chat state with the updated PilTerms object.
+			chatState_current.pilTerms = jsonResponseObj.pil_terms as PilTermsExtended;
 
-		console.info(`jsonResponseObj object:`);
-		console.dir(jsonResponseObj, {depth: null, colors: true});
+			console.info(`jsonResponseObj object:`);
+			console.dir(jsonResponseObj, { depth: null, colors: true });
+		}
+		 */
 	}
 
 	// -------------------- END  : UPDATE CHAT HISTORY PILTERMS STATE ------------
@@ -620,59 +659,97 @@ export async function processLicenseChatVolley(
 
 	// -------------------- BEGIN: MAKE THE LICENSE EXPLAINER CALL ------------
 
-	/* eslint-disable */
-	function removeNullProperties(obj: Record<string, any>): Record<string, any> {
-		const newObj: Record<string, any> = {};
-
-		for (const key in obj) {
-			if (obj[key] !== null) {
-				newObj[key] = obj[key];
-			}
-		}
-
-		return newObj;
-	}
-	/* eslint-enable */
-
 	let textCompletionExplainer = null;
 
 	let licenseTermsExplanation =
 		'Your license terms will appear here...';
 
-	if (chatState_current.pilTerms) {
+	if (bIsSimpleLicense) {
+		// Once the LLM has some confidence in their
+		//  license choice out of the 3 simple
+		//  licenses, we will show the overview
+		//  text as the explanation text.
+		if (["MEDIUM", "HIGH", "VERY HIGH"].includes(nuevoLicenseLLMResponse.confidence)) {
+			if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.NON_COMMERCIAL_SOCIAL_REMIXING) {
 
-		const licenseExplainerSystemPromptText =
-			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-explainer.txt');
+				licenseTermsExplanation = `
+				LICENSE TYPE: Non-Commercial Social Remixing
+				
+				Allows others to remix your work. This license allows for endless free remixing while tracking all uses of your work while giving you full credit. Similar to: TikTok plus attribution.
+				`;
+			} else if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.COMMERCIAL_USE) {
+				licenseTermsExplanation = `
+				LICENSE TYPE: Commercial Use
 
-		if (licenseExplainerSystemPromptText.length < 1)
-			throw new Error(`The explainer license system prompt text is empty.`);
+				OVERVIEW: Retain control over reuse of your work, while allowing anyone to appropriately use the work in exchange for the economic terms you set. This is similar to Shutterstock with creator-set rules.
+				`;
+			} else if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.COMMERCIAL_REMIX) {
+				licenseTermsExplanation =
+					`
+					LICENSE TYPE: Commercial Remix
 
-		const pilTermsNoNulls =
-			removeNullProperties(chatState_current.pilTerms);
-
-		// If the object has all NULL properties, don't
-		//  bother creating a license terms explanation.
-		if (Object.keys(pilTermsNoNulls).length > 0) {
-
-		// The latest PilTerms object with null properties
-		//  removed is the user input.
-		const pilTermsAsUserInput =
-			JSON.stringify(pilTermsNoNulls);
-
-		// Make the text completion call to the license explainer.
-		textCompletionExplainer =
-			await chatCompletionImmediate(
-				'LICENSE-ASSISTANT-EXPLAINER',
-				licenseExplainerSystemPromptText,
-				pilTermsAsUserInput,
-				g_TextCompletionParams,
-				false);
+					OVERVIEW: The world can build on your creation while you earn money from it! This license allows for endless free remixing while tracking all uses of your work while giving you full credit, with each derivative paying a percentage of revenue to its "parent" intellectual property.
+					`;
+			} else {
+				throw new Error(`Unknown license type.`);
+			}
 		}
 
-		if (textCompletionExplainer && textCompletionExplainer.text_response) {
-			licenseTermsExplanation = textCompletionExplainer.text_response;
+	} else {
+		// -------------------- BEGIN: FULL PILTERMS EXPLAINER ------------
+
+		/* eslint-disable */
+		function removeNullProperties(obj: Record<string, any>): Record<string, any> {
+			const newObj: Record<string, any> = {};
+
+			for (const key in obj) {
+				if (obj[key] !== null) {
+					newObj[key] = obj[key];
+				}
+			}
+
+			return newObj;
 		}
+		/* eslint-enable */
+
+		if (chatState_current.pilTerms) {
+
+			const licenseExplainerSystemPromptText =
+				readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-explainer.txt');
+
+			if (licenseExplainerSystemPromptText.length < 1)
+				throw new Error(`The explainer license system prompt text is empty.`);
+
+			const pilTermsNoNulls =
+				removeNullProperties(chatState_current.pilTerms);
+
+			// If the object has all NULL properties, don't
+			//  bother creating a license terms explanation.
+			if (Object.keys(pilTermsNoNulls).length > 0) {
+
+				// The latest PilTerms object with null properties
+				//  removed is the user input.
+				const pilTermsAsUserInput =
+					JSON.stringify(pilTermsNoNulls);
+
+				// Make the text completion call to the license explainer.
+				textCompletionExplainer =
+					await chatCompletionImmediate(
+						'LICENSE-ASSISTANT-EXPLAINER',
+						licenseExplainerSystemPromptText,
+						pilTermsAsUserInput,
+						g_TextCompletionParams,
+						false);
+			}
+
+			if (textCompletionExplainer && textCompletionExplainer.text_response) {
+				licenseTermsExplanation = textCompletionExplainer.text_response;
+			}
+		}
+		// -------------------- END  : FULL PILTERMS EXPLAINER ------------
 	}
+
+
 
 	// -------------------- END  : MAKE THE LICENSE EXPLAINER CALL ------------
 

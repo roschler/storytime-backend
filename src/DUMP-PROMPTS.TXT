@@ -170,3 +170,87 @@ In response to the user's latest input, you must output a JSON object like this:
 }
 
 Following is your recent chat history with the user, and at the very end is their current user input, which you should use to update your knowledge.
+
+
+
+Below is your chat history with the user    
+
+What they said to you is prefixed by the string "USER INPUT:"
+  
+Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
+  
+Use the chat history to help guide your efforts.  Here it is now:
+				USER INPUT: Yes.,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "Great! What would you like to set as the price for others to use your original work commercially?"
+},
+
+
+USER INPUT: 2 Eth,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "Understood, you want to set the price at 2 Eth for others to use your work commercially. Do you also want to receive a royalty every time your work is sold or re-sold?"
+},
+
+
+USER INPUT: Yes that sounds great.,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "Fantastic! How much royalty would you like to receive every time your work is sold or re-sold?"
+},
+
+
+USER INPUT: How does 7 percent sound?,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "7 percent sounds reasonable. Now, do you want to allow others to commercialize the derivative works of your original work?"
+},
+
+
+USER INPUT: No that's dumb.,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "Understood, you don't want others to commercialize derivative works of your original work. Do you want to allow others to distribute your work anywhere?"
+},
+
+
+USER INPUT: What is a license?,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Commercial Use",
+    "confidence": "VERY HIGH",
+    "next_question": "A license is a legal agreement granting permission to use a work in certain ways. In the context of Story Protocol, it defines how others can use your original work. Would you like to allow others to distribute your work anywhere?"
+},
+
+
+USER INPUT: No I don't.,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Non-Commercial Social Remixing",
+    "confidence": "VERY HIGH",
+    "next_question": "Do you want others to be able to remix your work and distribute it anywhere while giving you full credit?"
+},
+
+
+USER INPUT: Sure.,
+
+		     SYSTEM RESPONSE: {
+    "best_license_guess": "Non-Commercial Social Remixing",
+    "confidence": "VERY HIGH",
+    "next_question": "Just to confirm, you are okay with others remixing your work for non-commercial purposes and distributing it anywhere as long as they give you full credit, correct?"
+},
+
+
+Here is the current user input:
+Yes.

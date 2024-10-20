@@ -44,6 +44,17 @@ export const g_TextCompletionParamsForIntentDetector =
 		// model_param_val: 'gpt-4'
 	})
 
+// The text completion parameters object for making calls with
+//  the o1-mini model, the fast reasoning model.
+export const g_TextCompletionParamsReasoning =
+	new OpenAIParams_text_completion({
+		// Getting 400 unsupported value errors for o1-mini
+		// model_param_val: 'o1-mini'
+		// model_param_val: 'gpt-4-turbo'
+		model_param_val: 'gpt-4'
+	})
+
+
 // -------------------- END  : TEXT COMPLETION PARAMETER OBJECTS ------------
 
 // -------------------- BEGIN: LOAD PROMPT BUILDER TEXT FILES ------------
@@ -96,13 +107,17 @@ export function readImageGenerationSubPromptOrDie(primaryFileName: string) {
  * @param bIsStartNewLicenseTermsSession - If TRUE, then
  *  the user wants to craft a completely new license, otherwise
  *  we are continuing to build an existing one.
+ * @param numMessages - The number of the most recent
+ *  chat history messages to include.  -1 means give me
+ *  everything.
  *
  * @return Returns the system prompt to use in the
  *  upcoming text completion call.
  */
 export function buildChatHistorySummary(
-	chatHistoryObj: ChatHistory,
-	bIsStartNewLicenseTermsSession: boolean): StringOrNull {
+		chatHistoryObj: ChatHistory,
+		bIsStartNewLicenseTermsSession: boolean,
+		numMessages: number = -1): StringOrNull {
 	// Extract the most recent chat history and create
 	//  a block of plain text from it.
 	//
@@ -122,7 +137,7 @@ export function buildChatHistorySummary(
 			// -1 means we want everything available.  Since we
 			//  start a new session with each new NFT, the chat
 			//  histories should not be too long.
-			chatHistoryObj.buildChatHistoryPrompt(-1);
+			chatHistoryObj.buildChatHistoryPrompt(numMessages);
 
 		if (strChatHistory_local.length > 0)
 			strChatHistory = strChatHistory_local;
@@ -564,6 +579,8 @@ export function buildChatBotSystemPrompt_image_assistant(
  * @param bIsStartNewLicenseTermsSession - If TRUE, then
  *  the user wants to craft a completely new license, otherwise
  *  we are continuing to build an existing one.
+ * @param numMessages - The number of the most recent chat
+ *  messages to include in the prompt.  -1 means give me everything
  *
  * @return Returns the system prompt to use in the
  *  upcoming text completion call.
@@ -573,7 +590,8 @@ export function buildChatBotSystemPrompt_license_assistant(
 		subAssistantName: string,
 		subAssistantPromptText: string,
 		chatHistoryObj: ChatHistory,
-		bIsStartNewLicenseTermsSession: boolean): UserAndSystemPrompt {
+		bIsStartNewLicenseTermsSession: boolean,
+		numMessages: number = -1): UserAndSystemPrompt {
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
@@ -588,7 +606,8 @@ export function buildChatBotSystemPrompt_license_assistant(
 	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
 	console.info(CONSOLE_CATEGORY, `Sub-assistant name: ${subAssistantName}`);
 
-	const strChatHistory = buildChatHistorySummary(chatHistoryObj, bIsStartNewLicenseTermsSession);
+	const strChatHistory =
+		buildChatHistorySummary(chatHistoryObj, bIsStartNewLicenseTermsSession, numMessages);
 
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
@@ -608,11 +627,14 @@ export function buildChatBotSystemPrompt_license_assistant(
 	}
 
 	// Initialize the adorned user prompt.
-	let adornedUserPrompt = '\nHere is the current state of the PilTerms object you are building:\n';
+	// let adornedUserPrompt = '\nHere is the current state of the PilTerms object you are building:\n';
 
 	// We always pass in a PilTerms object, since it controls
 	//  the dialogue flow.
-	adornedUserPrompt += JSON.stringify(pilTermsFieldDescriptionsObject.toJSON())
+	// adornedUserPrompt += JSON.stringify(pilTermsFieldDescriptionsObject.toJSON())
+
+
+	let adornedUserPrompt = '';
 
 	// Do we have any chat history?
 	if (strChatHistory)

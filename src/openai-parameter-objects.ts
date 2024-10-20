@@ -140,6 +140,22 @@ export interface LicenseTermsLlmJsonResponse
 	license_terms_explained: string; // The current friendly explanation of the license terms the user has specified so far.
 }
 
+// This is the new interface the LLM returns.  We are using a more
+//  powerful LLM model than before.
+//
+// NOTE: Remember to update this object if we change the license assistant
+//  LLM system prompt and to update it on the client front-end as well!
+export interface LicenseAssistantNuevoResponse
+{
+	// This is the license type the LLM has determined
+	//  is the best match for the user.
+	best_license_guess: string,
+	// This is the LLM's confidence in it's license guess.
+	confidence: string,
+	// This is the next question to ask the user.
+	next_question: string
+}
+
 // -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------
 
 // -------------------- BEGIN: EXPECTED JSON RESPONSE FOR IMAGE GEN PROMPT TO TWEET TEXT COMPLETIONS ------------

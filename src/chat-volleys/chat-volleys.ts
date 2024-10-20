@@ -607,9 +607,9 @@ export class ChatHistory {
 	 */
 	public buildChatHistoryPrompt(numChatVolleys: number = 4): string {
 		if (numChatVolleys === -1) {
-			numChatVolleys = this.aryChatVolleys.length - 1;
+			numChatVolleys = this.aryChatVolleys.length;
 
-			if (numChatVolleys === 0)
+			if (numChatVolleys <= 0)
 				// No chat history at this time.
 				return '';
 		}
