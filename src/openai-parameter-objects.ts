@@ -154,6 +154,12 @@ export interface LicenseAssistantNuevoResponse
 	confidence: string,
 	// This is the next question to ask the user.
 	next_question: string
+	// The current friendly explanation of the license terms the user has specified so far.
+	license_terms_explained: string;
+	// TRUE if the LLM has received an answer at least one
+	//  YES/TRUE answer to a license choice confirmation
+	//  question, FALSE if not.
+	is_license_choiced_confirmed: boolean;
 }
 
 // -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------

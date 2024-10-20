@@ -672,23 +672,14 @@ export async function processLicenseChatVolley(
 		if (["MEDIUM", "HIGH", "VERY HIGH"].includes(nuevoLicenseLLMResponse.confidence)) {
 			if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.NON_COMMERCIAL_SOCIAL_REMIXING) {
 
-				licenseTermsExplanation = `
-				LICENSE TYPE: Non-Commercial Social Remixing
-				
-				Allows others to remix your work. This license allows for endless free remixing while tracking all uses of your work while giving you full credit. Similar to: TikTok plus attribution.
+				licenseTermsExplanation = `LICENSE TYPE: Non-Commercial Social Remixing\n\nAllows others to remix your work. This license allows for endless free remixing while tracking all uses of your work while giving you full credit. Similar to: TikTok plus attribution.
 				`;
 			} else if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.COMMERCIAL_USE) {
-				licenseTermsExplanation = `
-				LICENSE TYPE: Commercial Use
-
-				OVERVIEW: Retain control over reuse of your work, while allowing anyone to appropriately use the work in exchange for the economic terms you set. This is similar to Shutterstock with creator-set rules.
+				licenseTermsExplanation = `LICENSE TYPE: Commercial Use\n\nOVERVIEW: Retain control over reuse of your work, while allowing anyone to appropriately use the work in exchange for the economic terms you set. This is similar to Shutterstock with creator-set rules.
 				`;
 			} else if (nuevoLicenseLLMResponse.best_license_guess === EnumStoryProtocolLicenses.COMMERCIAL_REMIX) {
 				licenseTermsExplanation =
-					`
-					LICENSE TYPE: Commercial Remix
-
-					OVERVIEW: The world can build on your creation while you earn money from it! This license allows for endless free remixing while tracking all uses of your work while giving you full credit, with each derivative paying a percentage of revenue to its "parent" intellectual property.
+					`LICENSE TYPE: Commercial Remix\n\nOVERVIEW: The world can build on your creation while you earn money from it! This license allows for endless free remixing while tracking all uses of your work while giving you full credit, with each derivative paying a percentage of revenue to its "parent" intellectual property.
 					`;
 			} else {
 				throw new Error(`Unknown license type.`);
@@ -768,14 +759,14 @@ export async function processLicenseChatVolley(
 
 		// Add the current license terms explanation text to
 		//  the payload.
-		jsonResponseObj.license_terms_explained =
+		nuevoLicenseLLMResponse.license_terms_explained =
 			licenseTermsExplanation
 
 		sendJsonObjectMessage(
 			client,
 			{
 				json_type: "license_response",
-				json_object: jsonResponseObj
+				json_object: nuevoLicenseLLMResponse
 			}
 		)
 	}
