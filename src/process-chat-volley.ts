@@ -549,8 +549,6 @@ export async function processLicenseChatVolley(
 	writeTextFile('./DUMP-PROMPTS.TXT', systemAndUserPromptToLLM.systemPrompt + '\n\n' +
 		systemAndUserPromptToLLM.userPrompt)
 
-	let jsonResponseObj: LicenseAssistantNuevoResponse;
-
 	const textCompletion =
 		await chatCompletionImmediate(
 			userReplyType,

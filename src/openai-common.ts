@@ -141,12 +141,33 @@ export async function chatCompletionImmediate(
 	//  object which are not allowed, or forgets to double-quote
 	//  all property names.
 	function conformJsonObjectString(strJsonObj: string): string {
-		// Step 1: Remove comments (single-line and multi-line)
-		const withoutComments = strJsonObj
+		// Every now and then the engine throws in some text
+		//  outside and around the JSON object or array of
+		//  JSON objects.  This function removes
+		//  that unwanted, out-of-band text.
+		function removeOutOfBandText(strJsonObj: string): string {
+			const topLevelBracesOrBracketsRegex = /({[\s\S]*}|[[\s\S]*])/;
+			const match = strJsonObj.match(topLevelBracesOrBracketsRegex);
+
+			if (match) {
+				return match[0];
+			}
+
+			// Return the original string if no braces or brackets were found
+			return strJsonObj;
+		}
+
+
+		// Step 1: Remove out-of-band text.
+		const withoutOutOfBandText =
+			removeOutOfBandText(strJsonObj);
+
+		// Step 2: Remove comments (single-line and multi-line)
+		const withoutComments = withoutOutOfBandText
 			.replace(/\/\/.*(?=\n|\r)/g, '') // Remove single-line comments
 			.replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
 
-		// Step 2: Ensure all property names are surrounded by double quotes
+		// Step 3: Ensure all property names are surrounded by double quotes
 		const withProperQuotes = withoutComments.replace(
 			/([a-zA-Z0-9_]+)\s*:/g, // Matches unquoted keys followed by colon
 			'"$1":' // Surround the key with double quotes
@@ -194,13 +215,17 @@ export async function chatCompletionImmediate(
 		textResponse =
 			response.choices?.map((choice) => choice.message?.content).join(' ') || '';
 
+		let conformedTextResponse;
+
 		if (bIsJsonResponseExpected) {
 			try {
-				const conformedTextResponse =
+
+				conformedTextResponse =
 					conformJsonObjectString(textResponse)
 
 				// We should be able to parse the text response into
 				//  an object.
+
 				jsonResponse = JSON.parse(conformedTextResponse);
 			} catch (parseError) {
 				return {

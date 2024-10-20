@@ -159,7 +159,16 @@ export interface LicenseAssistantNuevoResponse
 	// TRUE if the LLM has received an answer at least one
 	//  YES/TRUE answer to a license choice confirmation
 	//  question, FALSE if not.
-	is_license_choiced_confirmed: boolean;
+	is_license_choice_confirmed: boolean;
+	// For commercial licenses, the minting fee for the license.
+	defaultMintingFee: number;
+	// TRUE if commercial use is allowed, FALSE if not.
+	commercialUse: boolean;
+	// TRUE if derivative works are allowed, FALSE if not.
+	derivativesAllowed: boolean;
+	// The percentage or revenue required from a derivative works
+	//  earnings, or 0 if none.
+	commercialRevShare: number;
 }
 
 // -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------

@@ -167,7 +167,11 @@ In response to the user's latest input, you must output a JSON object like this:
     best_license_guess: <PUT HERE YOUR BEST GUESS AS TO WHAT LICENSE TYPE FITS THE USERS NEEDS>,
     confidence: <PUT HERE ONE OF THE FOLLOWING VALUES THAT BEST INDICATES YOUR CONFIDENCE IN THE best_license_guess VALUE YOU SELECTED.  CHOOSE FROM THIS LIST, IN ORDER OF INCREASING CONFIDENCE: UNKNOWN, VERY LOW, LOW, MEDIUM, HIGH, VERY HIGH>
     next_question: <PUT HERE THE BEST QUESTION YOU CAN THINK OF TO HELP THE USER FIGURE OUT WHAT LICENSE IS BEST FOR THEM.  IF YOU FEEL VERY CONFIDENT IN YOUR LICENSE CHOICE, TELL THE USER TO HIT THE STORY PROTOCOL BUTTON AGAIN IF THEY ARE READY TO ACCEPT THE LICENSE>,
-    is_license_choiced_confirmed: <IF YOU HAVE ASKED THE USER TO CLARIFY A LICENSE CHOICE YOU HAVE CONFIDENCE IN, AND THEY HAVE CONFIRMED IT AS THEIR DESIRED CHOICE, PUT boolean TRUE HERE, OTHERWISE PUT boolean FALSE>
+    is_license_choice_confirmed: <IF YOU HAVE ASKED THE USER TO CLARIFY A LICENSE CHOICE YOU HAVE CONFIDENCE IN, AND THEY HAVE CONFIRMED IT AS THEIR DESIRED CHOICE, PUT boolean TRUE HERE, OTHERWISE PUT boolean FALSE>
+    defaultMintingFee: <PUT HERE THE MINTING FEE THE USER SPECIFIED OR 0 IF THERE IS NO MINTING FEE OR IF THE LICENSE TYPE IS "Non-Commercial Social Remixing">
+    commercialUse: <PUT boolean TRUE HERE IF THE USER APPROVED COMMERCIAL USE, boolean FALSE IF NOT  OR IF THE LICENSE TYPE IS "Non-Commercial Social Remixing">
+    derivativesAllowed: <PUT boolean TRUE HERE IF THE USER APPROVED DERIVATIVE WORKS, boolean FALSE IF NOT>
+    commercialRevShare: <PUT THE PERCENTAGE THE USER SPECIFIED FOR THE AMOUNT THEY WANT TO MAKE OFF OF DERIVATIVE WORKS, OR 0 IF THEY HAVE NOT SPECIFIED THAT OR IF THE LICENSE TYPE IS "Non-Commercial Social Remixing">
 }
 
 
@@ -175,92 +179,5 @@ Following is your recent chat history with the user, and at the very end is thei
 
 
 
-Below is your chat history with the user    
-
-What they said to you is prefixed by the string "USER INPUT:"
-  
-Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
-  
-Use the chat history to help guide your efforts.  Here it is now:
-				USER INPUT: Yes.,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "HIGH",
-    "next_question": "Fantastic! Do you want to set a specific fee that others must pay in order to use your creation?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Yes.  I'd like 1 Eth.,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Perfect! You've set a fee of 1 Eth for others to use your creation. Are you comfortable with others commercializing your original and derivative works?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Will I get paid if they do?,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Yes, with the 'Commercial Use' license, you will get paid the fee of 1 Eth each time someone wants to use your creation. Are you comfortable with this arrangement?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Yes.,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Great! Just to confirm, you're okay with others not being able to claim credit for your original work, correct?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: What did you just ask me?,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "I asked if you are okay with the condition that others cannot claim your original work as their own. Are you comfortable with this?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Yes. That sounds good.,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Excellent! Just to be clear, this license does not allow others to create derivative works from your original work. Are you okay with this?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Yes. I am.,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Great! To confirm, you are choosing the 'Commercial Use' license which allows others to use your work for a fee of 1 Eth, but they cannot create derivative works from it. Is this correct?",
-    "is_license_choiced_confirmed": false
-},
-
-
-USER INPUT: Yes I love it1,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "VERY HIGH",
-    "next_question": "Fantastic! I'm glad you're happy with your choice. Just to wrap up, can you confirm that the 'Commercial Use' license is indeed the one you want for your work?",
-    "is_license_choiced_confirmed": false
-},
-
-
 Here is the current user input:
-Yes I am.
+Waggle.
