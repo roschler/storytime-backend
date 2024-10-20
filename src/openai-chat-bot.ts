@@ -544,6 +544,10 @@ export function buildChatBotSystemPrompt_image_assistant(
  *  create a license terms generation prompt for the license assistant.
  *
  * @param userPrompt - The current prompt from the user.
+ * @param subAssistantName - The name of the sub-assistant
+ *  selected to handle this chat volley.
+ * @param subAssistantPromptText - The prompt text to use
+ *  for the selected sub-assistant.
  * @param chatHistoryObj - The chat history object for the current
  *  user.
  * @param bIsStartNewLicenseTermsSession - If TRUE, then
@@ -554,24 +558,24 @@ export function buildChatBotSystemPrompt_image_assistant(
  *  upcoming text completion call.
  */
 export function buildChatBotSystemPrompt_license_assistant(
-	userPrompt: string,
-	chatHistoryObj: ChatHistory,
-	bIsStartNewLicenseTermsSession: boolean): UserAndSystemPrompt {
+		userPrompt: string,
+		subAssistantName: string,
+		subAssistantPromptText: string,
+		chatHistoryObj: ChatHistory,
+		bIsStartNewLicenseTermsSession: boolean): UserAndSystemPrompt {
 	const useUserPrompt = userPrompt.trim();
 
 	if (useUserPrompt.length < 1)
 		throw new Error(`The user prompt is empty.`);
 
-	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
+	if (subAssistantName.length < 1)
+		throw new Error(`The sub-assistant name is empty.`);
 
-	// For now, we read in the contents of the license terms
-	//  system prompt, so we can edit it and change the
-	//  behavior of the system without having to restart
-	//  the back-end server.
-	//
-	// TODO: Make this a one-time read on start up.
-	const systemPrompt_license_assistant =
-		readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
+	if (subAssistantPromptText.length < 1)
+		throw new Error(`The sub-assistant prompt text is empty.`);
+
+	console.info(CONSOLE_CATEGORY, `Current user prompt: ${userPrompt}`);
+	console.info(CONSOLE_CATEGORY, `Sub-assistant name: ${subAssistantName}`);
 
 	const strChatHistory = buildChatHistorySummary(chatHistoryObj, bIsStartNewLicenseTermsSession);
 
@@ -612,7 +616,7 @@ export function buildChatBotSystemPrompt_license_assistant(
 	// Build the full prompt from our sub-prompts.
 	const arySubPrompts = [];
 
-	arySubPrompts.push(systemPrompt_license_assistant)
+	arySubPrompts.push(subAssistantPromptText)
 
 	// We don't add the user prompt to the system prompt,
 	//  otherwise we don't take advantage of prompt caching

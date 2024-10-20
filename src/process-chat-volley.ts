@@ -4,7 +4,7 @@ import type WebSocket from "ws"
 import {
 	ChatVolley,
 	CurrentChatState_image_assistant, CurrentChatState_license_assistant, EnumChatbotNames,
-	readChatHistory,
+	readChatHistory, StringOrNull,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
 import {
@@ -19,7 +19,7 @@ import {
 	g_ImageGenPromptToTweetPrompt,
 	g_TextCompletionParams,
 	g_TextCompletionParamsForIntentDetector,
-	processAllIntents,
+	processAllIntents, readImageGenerationSubPromptOrDie,
 	showIntentResultObjects,
 } from "./openai-chat-bot"
 import {
@@ -421,7 +421,7 @@ export async function processLicenseChatVolley(
 			// Merge the intent detector ID into the
 			//  JSON response object.
 			const jsonResponseObj = {
-				intent_detector_id:  intentResultObj.result_or_error.intent_detector_id,
+				intent_detector_id: intentResultObj.result_or_error.intent_detector_id,
 				array_child_objects: intentResultObj.result_or_error.json_response
 			}
 
@@ -446,11 +446,49 @@ export async function processLicenseChatVolley(
 
 	// -------------------- END  : DETERMINE USER INPUT TYPE ------------
 
+	// -------------------- BEGIN: SELECT SUB-ASSISTANT ------------
 
-	// Build the system prompt.
+	// Now that we know the type of user input it is, run it by
+	//  the correct SUB-ASSISTANT.
+	let subAssistantPromptText: StringOrNull = null;
+
+	// Build the system prompt for the sub-assistant that handles
+	//  this kind of user input.
+	if (userReplyType === "form_fill_reply") {
+		// -------------------- BEGIN: FORM FILL SUB-ASSISTANT ------------
+
+		// For now, we read in the contents of the license terms
+		//  system prompt, so we can edit it and change the
+		//  behavior of the system without having to restart
+		//  the back-end server.
+		//
+		// TODO: Make this and the other sub-assistant prompt text loads
+		//  a one-time read on start up.
+		subAssistantPromptText =
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
+
+
+		// -------------------- END  : FORM FILL SUB-ASSISTANT ------------
+	} else if (userReplyType === "query_for_information") {
+		// -------------------- BEGIN: LIBRARIAN SUB-ASSISTANT ------------
+
+		subAssistantPromptText =
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
+
+		// -------------------- END  : LIBRARIAN SUB-ASSISTANT ------------
+	} else {
+		throw new Error(`Don't know how to handle a user reply type of:${userReplyType}`);
+	}
+
+	// -------------------- END  : SELECT SUB-ASSISTANT ------------
+
+	// -------------------- BEGIN: MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
+
 	const systemAndUserPromptToLLM =
 		buildChatBotSystemPrompt_license_assistant(
 			userInput,
+			userReplyType,
+			subAssistantPromptText,
 			chatHistoryObj,
 			bStartNewLicenseTerms
 		)
@@ -460,7 +498,7 @@ export async function processLicenseChatVolley(
 
 	const textCompletion =
 		await chatCompletionImmediate(
-			'MAIN-IMAGE-GENERATION-PROMPT',
+			userReplyType,
 			systemAndUserPromptToLLM.systemPrompt,
 			systemAndUserPromptToLLM.userPrompt,
 			g_TextCompletionParams,
@@ -468,6 +506,9 @@ export async function processLicenseChatVolley(
 
 	const jsonResponseObj =
 		textCompletion.json_response as LicenseTermsLlmJsonResponse;
+
+
+	// -------------------- END  : MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
 
 
 	console.info(`// -------------------- BEGIN: CHAT VOLLEY ------------`)
@@ -478,11 +519,6 @@ export async function processLicenseChatVolley(
 	console.info(`// -------------------- END  : CHAT VOLLEY ------------`)
 
 	// -------------------- BEGIN: UPDATE PILTERMS OBJECT ------------
-
-	// TODO: This is where we need to analyze the response from
-	//  the LLM and make changes to the PilTerms object and/or
-	//  set the flag that indicates the user has accepted the
-	//  license terms, and therefore is ready to mint the NFT.
 
 	// -------------------- END  : UPDATE PILTERMS OBJECT ------------
 
