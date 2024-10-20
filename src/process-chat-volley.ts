@@ -465,7 +465,7 @@ export async function processLicenseChatVolley(
 		// TODO: Make this and the other sub-assistant prompt text loads
 		//  a one-time read on start up.
 		subAssistantPromptText =
-			readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-form-fill-agent.txt');
 
 
 		// -------------------- END  : FORM FILL SUB-ASSISTANT ------------
@@ -473,7 +473,7 @@ export async function processLicenseChatVolley(
 		// -------------------- BEGIN: LIBRARIAN SUB-ASSISTANT ------------
 
 		subAssistantPromptText =
-			readImageGenerationSubPromptOrDie('system-prompt-for-license-terms.txt');
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-librarian.txt');
 
 		// -------------------- END  : LIBRARIAN SUB-ASSISTANT ------------
 	} else {
@@ -496,6 +496,8 @@ export async function processLicenseChatVolley(
 	// Get the response from the LLM.
 	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`)
 
+	let jsonResponseObj = null;
+
 	const textCompletion =
 		await chatCompletionImmediate(
 			userReplyType,
@@ -504,12 +506,27 @@ export async function processLicenseChatVolley(
 			g_TextCompletionParams,
 			true);
 
-	const jsonResponseObj =
-		textCompletion.json_response as LicenseTermsLlmJsonResponse;
+	if (userReplyType === "form_fill_reply") {
+		// The librarian sub-assistant insists on giving simple text answers, so
+		//  we make a JSON response object from it.
+		const synthesizeJsonResponseObj: LicenseTermsLlmJsonResponse =
+			{
+				system_prompt: textCompletion.text_response,
+				isUserSatisfiedWithLicense: false,
+				pil_terms: null
+			}
 
+		jsonResponseObj = synthesizeJsonResponseObj;
+
+		console.info(textCompletion.text_response);
+	} else {
+		jsonResponseObj =
+			textCompletion.json_response as LicenseTermsLlmJsonResponse;
+		console.info(`jsonResponseObj object:`);
+		console.dir(jsonResponseObj, {depth: null, colors: true});
+	}
 
 	// -------------------- END  : MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
-
 
 	console.info(`// -------------------- BEGIN: CHAT VOLLEY ------------`)
 
