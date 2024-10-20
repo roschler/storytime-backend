@@ -137,6 +137,7 @@ export interface LicenseTermsLlmJsonResponse
 	system_prompt: string; // <This is the answer you have crafted for the user>,
 	pil_terms: unknown; // <This is the PilTerms JSON object.  Any values you were able to determine during the chat volley should be assigned to the related field or fields.>
 	isUserSatisfiedWithLicense: boolean; // <This should be TRUE if the user indicated they are satisfied with the current terms of the license, FALSE if not.>
+	license_terms_explained: string; // The current friendly explanation of the license terms the user has specified so far.
 }
 
 // -------------------- END  : EXPECTED JSON RESPONSE OBJECT FORMAT FOR LICENSE ASSISTANT TEXT COMPLETIONS ------------

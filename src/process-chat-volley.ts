@@ -186,7 +186,7 @@ function getStringIntentDetectionValue(
 								// We automatically convert boolean and numeric values to strings.
 								propValue = propValue.toString()
 							} else {
-								throw new Error(`The linked property("${linkedPropName}) tied to property name("${propName}") in the child object with intent_detector_id '${intentDetectorId}' is not a string and could not be converted to one.`);
+								// throw new Error(`The linked property("${linkedPropName}) tied to property name("${propName}") in the child object with intent_detector_id '${intentDetectorId}' is not a string and could not be converted to one.`);
 							}
 						}
 					}
@@ -447,6 +447,8 @@ export async function processLicenseChatVolley(
 	// Check to see if the user reply was actually a reference to
 	//  a license term.
 	let licenseTermValue = null;
+	let originalUserReplyType =
+		userReplyType;
 
 	const licenseTermSpecified =
 		getStringIntentDetectionValue(
@@ -538,14 +540,15 @@ export async function processLicenseChatVolley(
 			g_TextCompletionParams,
 			true);
 
-	if (userReplyType === "query_for_information") {
+	if (userReplyType === "query_for_information" || originalUserReplyType === "query_for_information") {
 		// The librarian sub-assistant insists on giving simple text answers, so
 		//  we make a JSON response object from it.
 		const synthesizeJsonResponseObj: LicenseTermsLlmJsonResponse =
 			{
 				system_prompt: textCompletion.text_response,
 				isUserSatisfiedWithLicense: false,
-				pil_terms: null
+				pil_terms: null,
+				license_terms_explained: ''
 			}
 
 		jsonResponseObj = synthesizeJsonResponseObj;
@@ -615,6 +618,66 @@ export async function processLicenseChatVolley(
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
+	// -------------------- BEGIN: MAKE THE LICENSE EXPLAINER CALL ------------
+
+	/* eslint-disable */
+	function removeNullProperties(obj: Record<string, any>): Record<string, any> {
+		const newObj: Record<string, any> = {};
+
+		for (const key in obj) {
+			if (obj[key] !== null) {
+				newObj[key] = obj[key];
+			}
+		}
+
+		return newObj;
+	}
+	/* eslint-enable */
+
+	let textCompletionExplainer = null;
+
+	let licenseTermsExplanation =
+		'Your license terms will appear here...';
+
+	if (chatState_current.pilTerms) {
+
+		const licenseExplainerSystemPromptText =
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-explainer.txt');
+
+		if (licenseExplainerSystemPromptText.length < 1)
+			throw new Error(`The explainer license system prompt text is empty.`);
+
+		const pilTermsNoNulls =
+			removeNullProperties(chatState_current.pilTerms);
+
+		// If the object has all NULL properties, don't
+		//  bother creating a license terms explanation.
+		if (Object.keys(pilTermsNoNulls).length > 0) {
+
+		// The latest PilTerms object with null properties
+		//  removed is the user input.
+		const pilTermsAsUserInput =
+			JSON.stringify(pilTermsNoNulls);
+
+		// Make the text completion call to the license explainer.
+		textCompletionExplainer =
+			await chatCompletionImmediate(
+				'LICENSE-ASSISTANT-EXPLAINER',
+				licenseExplainerSystemPromptText,
+				pilTermsAsUserInput,
+				g_TextCompletionParams,
+				false);
+		}
+
+		if (textCompletionExplainer && textCompletionExplainer.text_response) {
+			licenseTermsExplanation = textCompletionExplainer.text_response;
+		}
+	}
+
+	// -------------------- END  : MAKE THE LICENSE EXPLAINER CALL ------------
+
+	// -------------------- BEGIN: RETURN RESPONSE ------------
+
 	// Now send the response message to the client.
 	if (client) {
 		let newState = initialState
@@ -626,6 +689,11 @@ export async function processLicenseChatVolley(
 			newState
 		)
 
+		// Add the current license terms explanation text to
+		//  the payload.
+		jsonResponseObj.license_terms_explained =
+			licenseTermsExplanation
+
 		sendJsonObjectMessage(
 			client,
 			{
@@ -635,53 +703,8 @@ export async function processLicenseChatVolley(
 		)
 	}
 
-	// -------------------- BEGIN: MAKE THE LICENSE EXPLAINER CALL ------------
 
-	if (chatState_current.pilTerms) {
-
-		const licenseExplainerSystemPromptText =
-			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-explainer.txt');
-
-		if (licenseExplainerSystemPromptText.length < 1)
-			throw new Error(`The explainer license system prompt text is empty.`);
-
-		// The latest PilTerms object is the user input.
-		const pilTermsAsUserInput =
-			JSON.stringify(chatState_current.pilTerms);
-
-		// Make the text completion call to the license explainer.
-		const textCompletionExplainer =
-			await chatCompletionImmediate(
-				'LICENSE-ASSISTANT-EXPLAINER',
-				licenseExplainerSystemPromptText,
-				pilTermsAsUserInput,
-				g_TextCompletionParams,
-				true);
-
-		// Now send the license explanation message to the client.
-		if (client) {
-			let newState = initialState
-
-			newState.state_change_message = textCompletionExplainer.text_response;
-
-			sendStateMessage(
-				client,
-				newState
-			)
-
-			sendJsonObjectMessage(
-				client,
-				{
-					json_type: "license_response",
-					json_object: jsonResponseObj
-				}
-			)
-		}
-	}
-
-	// -------------------- END  : MAKE THE LICENSE EXPLAINER CALL ------------
-
-
+	// -------------------- END  : RETURN RESPONSE ------------
 
 	// Use "license_response" as the response payload type along
 	// with a LicenseType payload.

@@ -135,6 +135,27 @@ export async function chatCompletionImmediate(
 		throw new Error("The intentDetectorId must not be empty.");
 	}
 
+	// This function will make sure that string that is
+	//  supposed to be a JSON object is properly formed.
+	//  Sometimes the LLM throws in comments into a JSON
+	//  object which are not allowed, or forgets to double-quote
+	//  all property names.
+	function conformJsonObjectString(strJsonObj: string): string {
+		// Step 1: Remove comments (single-line and multi-line)
+		const withoutComments = strJsonObj
+			.replace(/\/\/.*(?=\n|\r)/g, '') // Remove single-line comments
+			.replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
+
+		// Step 2: Ensure all property names are surrounded by double quotes
+		const withProperQuotes = withoutComments.replace(
+			/([a-zA-Z0-9_]+)\s*:/g, // Matches unquoted keys followed by colon
+			'"$1":' // Surround the key with double quotes
+		);
+
+		// Step 3: Return the string
+		return withProperQuotes;
+	}
+
 	/*
 		Full prompt is quite long.
 
@@ -175,9 +196,12 @@ export async function chatCompletionImmediate(
 
 		if (bIsJsonResponseExpected) {
 			try {
+				const conformedTextResponse =
+					conformJsonObjectString(textResponse)
+
 				// We should be able to parse the text response into
 				//  an object.
-				jsonResponse = JSON.parse(textResponse);
+				jsonResponse = JSON.parse(conformedTextResponse);
 			} catch (parseError) {
 				return {
 					intent_detector_id: intentDetectorId,
