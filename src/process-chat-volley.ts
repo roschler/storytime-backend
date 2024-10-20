@@ -3,7 +3,7 @@
 import type WebSocket from "ws"
 import {
 	ChatVolley,
-	CurrentChatState_image_assistant, CurrentChatState_license_assistant, EnumChatbotNames,
+	CurrentChatState_image_assistant, CurrentChatState_license_assistant, EnumChatbotNames, PilTermsExtended,
 	readChatHistory, StringOrNull,
 	writeChatHistory,
 } from "./chat-volleys/chat-volleys"
@@ -142,7 +142,7 @@ function getStringIntentDetectionValue(
 	intentDetectorId: string,
 	propName: string,
 	linkedPropName: string | null
-): string | null {
+): string | boolean | number | null {
 	// Validate intentDetectorId
 	if (!intentDetectorId.trim()) {
 		throw new Error('The intentDetectorId cannot be empty.');
@@ -182,8 +182,11 @@ function getStringIntentDetectionValue(
 							propValue = (childObj as any)[linkedPropName]
 
 							// Yes. Check if the value is a string
-							if (typeof propValue !== 'string') {
-								throw new Error(`The linked property("${linkedPropName}) tied to property name("${propName}") in the child object with intent_detector_id '${intentDetectorId}' is not a string.`);
+							if (typeof propValue !== 'string' ) {
+								// We automatically convert boolean and numeric values to strings.
+								propValue = propValue.toString()
+							} else {
+								throw new Error(`The linked property("${linkedPropName}) tied to property name("${propName}") in the child object with intent_detector_id '${intentDetectorId}' is not a string and could not be converted to one.`);
 							}
 						}
 					}
@@ -433,7 +436,7 @@ export async function processLicenseChatVolley(
 		throw new Error(`The array of intent detectors JSON response objects is empty.`);
 
 	// Show the user reply type.
-	const userReplyType =
+	let userReplyType =
 		getStringIntentDetectionValue(
 			aryIntentDetectorJsonResponseObjs,
 			enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE,
@@ -443,6 +446,8 @@ export async function processLicenseChatVolley(
 
 	// Check to see if the user reply was actually a reference to
 	//  a license term.
+	let licenseTermValue = null;
+
 	const licenseTermSpecified =
 		getStringIntentDetectionValue(
 			aryIntentDetectorJsonResponseObjs,
@@ -451,11 +456,25 @@ export async function processLicenseChatVolley(
 			null
 		);
 
-	console.info(CONSOLE_CATEGORY, `licenseTermSpecified: ${licenseTermSpecified}`)
+	// If the user specified a specific license term, then override
+	//  the reply type.
+	if (licenseTermSpecified) {
+		userReplyType = "form_fill_reply"
 
+		// Get the detected value.
+		licenseTermValue =
+			getStringIntentDetectionValue(
+				aryIntentDetectorJsonResponseObjs,
+				enumIntentDetectorId_license_assistant.DETECT_USER_INPUT_AS_LICENSE_TERM,
+				'license_term',
+				'license_term_value'
+			);
 
-	console.info(CONSOLE_CATEGORY, `userReplyType: ${userReplyType}`)
-
+		console.info(CONSOLE_CATEGORY, `licenseTermSpecified: ${licenseTermSpecified}`)
+		console.info(CONSOLE_CATEGORY, `userReplyType forced to: ${userReplyType}`)
+	} else {
+		console.info(CONSOLE_CATEGORY, `userReplyType: ${userReplyType}`)
+	}
 
 	// -------------------- END  : DETERMINE USER INPUT TYPE ------------
 
@@ -542,7 +561,20 @@ export async function processLicenseChatVolley(
 
 	// -------------------- END  : MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
 
+	// -------------------- BEGIN: UPDATE CHAT HISTORY PILTERMS STATE ------------
+
+	if (jsonResponseObj.pil_terms) {
+		// Update the current chat state with the updated PilTerms object.
+		chatState_current.pilTerms = jsonResponseObj.pil_terms as PilTermsExtended;
+
+		console.info(`jsonResponseObj object:`);
+		console.dir(jsonResponseObj, {depth: null, colors: true});
+	}
+
+	// -------------------- END  : UPDATE CHAT HISTORY PILTERMS STATE ------------
+
 	console.info(`--------->>>>>>>>>> User input type: ${userReplyType}`)
+
 
 	/*
 	console.info(`// -------------------- BEGIN: CHAT VOLLEY ------------`)
@@ -583,7 +615,6 @@ export async function processLicenseChatVolley(
 
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
-
 	// Now send the response message to the client.
 	if (client) {
 		let newState = initialState
@@ -603,6 +634,54 @@ export async function processLicenseChatVolley(
 			}
 		)
 	}
+
+	// -------------------- BEGIN: MAKE THE LICENSE EXPLAINER CALL ------------
+
+	if (chatState_current.pilTerms) {
+
+		const licenseExplainerSystemPromptText =
+			readImageGenerationSubPromptOrDie('system-prompt-for-license-assistant-explainer.txt');
+
+		if (licenseExplainerSystemPromptText.length < 1)
+			throw new Error(`The explainer license system prompt text is empty.`);
+
+		// The latest PilTerms object is the user input.
+		const pilTermsAsUserInput =
+			JSON.stringify(chatState_current.pilTerms);
+
+		// Make the text completion call to the license explainer.
+		const textCompletionExplainer =
+			await chatCompletionImmediate(
+				'LICENSE-ASSISTANT-EXPLAINER',
+				licenseExplainerSystemPromptText,
+				pilTermsAsUserInput,
+				g_TextCompletionParams,
+				true);
+
+		// Now send the license explanation message to the client.
+		if (client) {
+			let newState = initialState
+
+			newState.state_change_message = textCompletionExplainer.text_response;
+
+			sendStateMessage(
+				client,
+				newState
+			)
+
+			sendJsonObjectMessage(
+				client,
+				{
+					json_type: "license_response",
+					json_object: jsonResponseObj
+				}
+			)
+		}
+	}
+
+	// -------------------- END  : MAKE THE LICENSE EXPLAINER CALL ------------
+
+
 
 	// Use "license_response" as the response payload type along
 	// with a LicenseType payload.
@@ -963,7 +1042,7 @@ export async function processImageChatVolley(
 					enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
 					'complaint_type',
 					'complaint_text'
-				)
+				) as string
 
 			if (wrongContentText && wrongContentText.length > 0)
 				aryChangeDescriptions.push(enumChangeDescription.CHANGE_DESC_FIX_WRONG_CONTENT)

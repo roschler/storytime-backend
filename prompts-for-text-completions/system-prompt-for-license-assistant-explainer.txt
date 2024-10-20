@@ -185,13 +185,3 @@ Here is a helpful JSON object that contains descriptions of each of the fields i
     }
   }
 ]
-
-OUTPUT FORMAT
-
-You should always give your answer in the license_response JSON object format shown below.  Here is the format you should use:
-
-{
-    "system_prompt": <This is the friendly explanation you have crafted for the user>,
-    "pil_terms": <This is the PilTerms JSON object.  You should fill in all properties that you included explanation with a boolean true.">
-    "isUserSatisfiedWithLicense": <This should be boolean true if the user indicated they are satisfied with the current terms of the license, boolean false if not.>
-}

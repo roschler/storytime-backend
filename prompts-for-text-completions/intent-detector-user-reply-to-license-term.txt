@@ -252,7 +252,8 @@ If you determine that the user is actually giving a value for a specific license
 
 [
     {
-        "license_term": <PUT THE NAME OF THE PROPERTY VALUE IN THE PilTermsExtended OBJECT HERE THAT FITS>
+        "license_term": <PUT THE NAME OF THE PROPERTY VALUE IN THE PilTermsExtended OBJECT HERE THAT FITS>,
+        "license_term_value": <PUT THE VALUE THAT THE PROPERTY SHOULD BE SET TO>
     }
 ]
 
@@ -260,6 +261,7 @@ If you determine that the user has made a reply to a form fill question, you sho
 
 [
     {
-        "license_term": null
+        "license_term": null,
+        "license_term_value": null
     }
 ]
