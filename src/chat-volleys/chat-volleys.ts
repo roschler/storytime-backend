@@ -25,7 +25,7 @@ export type StringOrNull = string | null;
 
 /**
  * This class has the same fields as the PilTerms struct
- *  but as JavaScript object with JavaScript types that
+ *  but as a JavaScript object with JavaScript types that
  *  can optionally be NULL.
  */
 export class PilTermsExtended {
