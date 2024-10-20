@@ -441,6 +441,19 @@ export async function processLicenseChatVolley(
 			null
 		);
 
+	// Check to see if the user reply was actually a reference to
+	//  a license term.
+	const licenseTermSpecified =
+		getStringIntentDetectionValue(
+			aryIntentDetectorJsonResponseObjs,
+			enumIntentDetectorId_license_assistant.DETECT_USER_INPUT_AS_LICENSE_TERM,
+			'license_term',
+			null
+		);
+
+	console.info(CONSOLE_CATEGORY, `licenseTermSpecified: ${licenseTermSpecified}`)
+
+
 	console.info(CONSOLE_CATEGORY, `userReplyType: ${userReplyType}`)
 
 
@@ -506,7 +519,7 @@ export async function processLicenseChatVolley(
 			g_TextCompletionParams,
 			true);
 
-	if (userReplyType === "form_fill_reply") {
+	if (userReplyType === "query_for_information") {
 		// The librarian sub-assistant insists on giving simple text answers, so
 		//  we make a JSON response object from it.
 		const synthesizeJsonResponseObj: LicenseTermsLlmJsonResponse =
@@ -522,18 +535,23 @@ export async function processLicenseChatVolley(
 	} else {
 		jsonResponseObj =
 			textCompletion.json_response as LicenseTermsLlmJsonResponse;
+
 		console.info(`jsonResponseObj object:`);
 		console.dir(jsonResponseObj, {depth: null, colors: true});
 	}
 
 	// -------------------- END  : MAKE THE SUB-ASSISTANT TEXT COMPLETION CALL ------------
 
+	console.info(`--------->>>>>>>>>> User input type: ${userReplyType}`)
+
+	/*
 	console.info(`// -------------------- BEGIN: CHAT VOLLEY ------------`)
 
 	console.info(`jsonResponseObj object:`);
 	console.dir(jsonResponseObj, {depth: null, colors: true});
 
 	console.info(`// -------------------- END  : CHAT VOLLEY ------------`)
+	 */
 
 	// -------------------- BEGIN: UPDATE PILTERMS OBJECT ------------
 

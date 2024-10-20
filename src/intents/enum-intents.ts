@@ -104,6 +104,9 @@ export function isValidEnumChangeDescription(enChangeDescription: string) {
 export enum enumIntentDetectorId_license_assistant {
 	// Determine the nature of a user's input.
 	DETERMINE_USER_INPUT_TYPE = "determine_user_input_type",
+	// Recognize seemingly general replies by the user that
+	//  are actually specific license terms.
+	DETECT_USER_INPUT_AS_LICENSE_TERM = "detect_user_input_as_license_term"
 }
 
 

@@ -115,8 +115,7 @@ export function buildChatHistorySummary(
 
 	if (!bIsStartNewLicenseTermsSession) {
 		// Get the last chat volley.
-		const lastChatVolleyObj =
-			chatHistoryObj.getLastVolley()
+		// const lastChatVolleyObj = chatHistoryObj.getLastVolley()
 
 		// Build the chat history.
 		const strChatHistory_local =
@@ -215,7 +214,7 @@ for (const intentId of Object.values(enumIntentDetectorId_image_assistant)) {
 
 // -------------------- BEGIN: LICENSE ASSISTANT INTENTS ------------
 
-// >>>>> INTENT:
+// >>>>> INTENT: DETERMINE_USER_INPUT_TYPE
 g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE] =
 	{
 		primary_resource_name: "intent-detector-question-or-form-fill-reply.txt",
@@ -227,6 +226,18 @@ g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETE
 	readImageGenerationSubPromptOrDie(
 		g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETERMINE_USER_INPUT_TYPE].primary_resource_name);
 
+
+// >>>>> INTENT: DETECT_USER_INPUT_AS_LICENSE_TERM
+g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETECT_USER_INPUT_AS_LICENSE_TERM] =
+	{
+		primary_resource_name: "intent-detector-user-reply-to-license-term.txt",
+		prompt_text: ""
+	};
+
+// Load it.
+g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETECT_USER_INPUT_AS_LICENSE_TERM].prompt_text =
+	readImageGenerationSubPromptOrDie(
+		g_AryIntentPrompts_license_assistant[enumIntentDetectorId_license_assistant.DETECT_USER_INPUT_AS_LICENSE_TERM].primary_resource_name);
 
 // -------------------- END  : LICENSE ASSISTANT INTENTS ------------
 
