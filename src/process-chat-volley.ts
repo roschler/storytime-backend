@@ -338,6 +338,9 @@ export async function processLicenseChatVolley(
 	if (client) {
 		let newState = initialState
 
+		// Set the "streaming" flag to trigger the
+		//  client side spinner.
+		newState.streaming_text = true;
 		newState.state_change_message = 'Thinking...'
 
 		sendStateMessage(client, newState)
@@ -381,9 +384,9 @@ export async function processLicenseChatVolley(
 	if (client) {
 		let newState = initialState
 
-		// We haven't started the image request yet but
-		//  overall, we are indeed waiting for images.
-		newState.waiting_for_images = true
+		// Set the "streaming" flag to trigger the
+		//  client side spinner.
+		newState.streaming_text = true;
 		newState.state_change_message = 'Thinking...'
 
 		sendStateMessage(client, newState)
@@ -548,6 +551,17 @@ export async function processLicenseChatVolley(
 	// Write out the last prompt pair for debugging purposes.
 	writeTextFile('./DUMP-PROMPTS.TXT', systemAndUserPromptToLLM.systemPrompt + '\n\n' +
 		systemAndUserPromptToLLM.userPrompt)
+
+	if (client) {
+		let newState = initialState
+
+		// Set the "streaming" flag to trigger the
+		//  client side spinner.
+		newState.streaming_text = true;
+		newState.state_change_message = 'Considering license choices...'
+
+		sendStateMessage(client, newState)
+	}
 
 	const textCompletion =
 		await chatCompletionImmediate(
@@ -749,6 +763,10 @@ export async function processLicenseChatVolley(
 		let newState = initialState
 
 		newState.state_change_message = 'New response...'
+
+		// Clear the "streaming" flag to remove the
+		//  client side spinner.
+		newState.streaming_text = false;
 
 		sendStateMessage(
 			client,
