@@ -8,7 +8,7 @@ import path from "node:path"
 
 const CONSOLE_CATEGORY = 'blockchain-server-side-only';
 
-const DIR_USER_BLOCKCHAIN_PRESENCE = '../user-blockchain-presence-files';
+const DIR_USER_BLOCKCHAIN_PRESENCE = './user-blockchain-presence-files';
 
 /**
  *
