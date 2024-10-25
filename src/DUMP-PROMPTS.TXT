@@ -227,116 +227,32 @@ What they said to you is prefixed by the string "USER INPUT:"
 Your response to their input is prefixed by the string "SYSTEM RESPONSE:"
   
 Use the chat history to help guide your efforts.  Here it is now:
-				USER INPUT: What are those?,
+				USER INPUT: Yes.  I want non-commercial license.,
 
 		     SYSTEM RESPONSE: {
-    "best_license_guess": "UNKNOWN",
-    "confidence": "VERY LOW",
-    "next_question": "No problem! Let's figure it out together. Do you want to make money from your work?",
+    "best_license_guess": "Non-Commercial Social Remixing",
+    "confidence": "VERY HIGH",
+    "next_question": "Great! The Non-Commercial Social Remixing license allows others to remix your work for free while giving you full credit. Are you also okay with others distributing their remixes anywhere, as long as they credit you appropriately?",
     "is_license_choice_confirmed": false,
     "defaultMintingFee": 0,
     "commercialUse": false,
-    "derivativesAllowed": false,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Use",
-    "confidence": "LOW",
-    "next_question": "Do you want others to be able to create derivative works from your original work?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
     "derivativesAllowed": null,
     "commercialRevShare": 0
 },
 
 
-USER INPUT: yes I would,
+USER INPUT: Yes.,
 
 		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
-    "confidence": "MEDIUM",
-    "next_question": "Would you like to earn a percentage of the revenue from any derivative works?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
-    "confidence": "HIGH",
-    "next_question": "What percentage of the revenue from derivative works would you like to earn?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 0
-},
-
-
-USER INPUT: 3 percent,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
+    "best_license_guess": "Non-Commercial Social Remixing",
     "confidence": "VERY HIGH",
-    "next_question": "What should be the minting fee for using your original work?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 0,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 3
-},
-
-
-USER INPUT: 2.2 Eth,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
-    "confidence": "VERY HIGH",
-    "next_question": "Please confirm, you are choosing the 'Commercial Remix' license with a 3% revenue share from derivative works and a minting fee of 2.2 Eth. Is that correct?",
-    "is_license_choice_confirmed": false,
-    "defaultMintingFee": 2.2,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 3
-},
-
-
-USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "Commercial Remix",
-    "confidence": "VERY HIGH",
-    "next_question": "Great! You have chosen the 'Commercial Remix' license with a 3% revenue share from derivative works and a minting fee of 2.2 Eth. Please hit the Story Protocol button to finalize your choice.",
-    "is_license_choice_confirmed": true,
-    "defaultMintingFee": 2.2,
-    "commercialUse": true,
-    "derivativesAllowed": true,
-    "commercialRevShare": 3
-},
-
-
-USER INPUT: yes,
-
-		     SYSTEM RESPONSE: {
-    "best_license_guess": "UNKNOWN",
-    "confidence": "VERY LOW",
-    "next_question": "Could you please specify the type of license you need? Are you looking for a Non-Commercial Social Remixing, Commercial Use, or Commercial Remix license?",
+    "next_question": "Perfect! Just to confirm, you're okay with not making any money from the original or derivative works, correct?",
     "is_license_choice_confirmed": false,
     "defaultMintingFee": 0,
     "commercialUse": false,
-    "derivativesAllowed": false,
+    "derivativesAllowed": true,
     "commercialRevShare": 0
 },
 
 
-What's a license?
+Yes.
