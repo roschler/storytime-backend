@@ -24,28 +24,20 @@ FUTURE FEATURES:
 
 NEXT:
 
-    >>>> BUG: Need to serialize and deserialize (reviver) BigInt.  See this:
+    - The system can't tell the difference between a "wrong_content"
+     complaint and a image modification.
 
-    >>>> Try moving the chat history into the user prompt, out of the system prompt
+        Tomorrow:
 
-    https://github.com/GoogleChromeLabs/jsbi/issues/30
+            + Modify the wrong_content detector to output "wrong_content" or "adjust_image"
 
-    ```
-        toObject() {
-            return JSON.parse(JSON.stringify(this, (key, value) =>
-                typeof value === 'bigint'
-                    ? value.toString()
-                    : value // return everything else unchanged
-            ));
-        }
-    ```
+            + Modify image request prompt builder function to have different
+                handling for "adjust_image", while keeping the current
+                handling for "wrong_content"
 
-    >>>>> Badly need cancelable (when new image is requested)
-      503 retry with exponential back-off.  Also, when a 503
-      error occurs, we should not lose the user's prompt.  It's
-      getting replaced with the default prompt when that happens.
+    BONUS: Add a "New Image" button and implement it.
 
-    LATER: Add server side verification of user public address via
+    >>>>>LATER: Add server side verification of user public address via
      client side payload signature checking.
 
     > Big bug: Major items from the prompt are being lost
