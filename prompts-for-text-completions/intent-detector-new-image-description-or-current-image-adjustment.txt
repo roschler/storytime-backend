@@ -40,6 +40,22 @@ Here are some examples where the user is making a request to modify the same ima
 
 		<previous_prompt>
 
+			A green frog sits in a tree.
+
+		</previous_prompt>
+
+		<current_user_input>
+
+			Make the frog blue.
+
+		</current_user_input>
+
+	</example>
+
+	<example>
+
+		<previous_prompt>
+
 			In a dystopian, science fiction landscape a metal robot scans the area for targets.
 
 		</previous_prompt>

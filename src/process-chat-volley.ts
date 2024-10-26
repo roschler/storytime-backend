@@ -839,6 +839,17 @@ export async function processImageChatVolley(
 		userId_in: string,
 		userInput_in: string): Promise<string[]> {
 
+	// Simple function to send a state message when just
+	//  a text notification to the client is needed.
+	const sendStateMessageSimplified = (newStateMessage: string) => {
+		const newState = initialState;
+
+		if (client) {
+			newState.state_change_message = newStateMessage;
+			sendStateMessage(client, newState);
+		}
+	}
+
 	const userId = userId_in.trim()
 
 	if (userId.length < 1)
@@ -1044,15 +1055,35 @@ export async function processImageChatVolley(
 		//  the intent detections to see if we should make any
 		//  state changes.
 
-		// >>>>> Start new image?
-		const bIsStartNewImageDetected =
+		// >>>>> Explicit start new image request?
+		const bIsStartNewImageDetected_explicit =
 			getBooleanIntentDetectionValue(
 				aryIntentDetectorJsonResponseObjs,
 				enumIntentDetectorId_image_assistant.START_NEW_IMAGE,
 				'start_new_image'
 			);
 
-		if (bIsStartNewImageDetected == true) {
+		// >>>>> Implicit start new image request?
+		const natureOfUserRequest =
+			getStringIntentDetectionValue(
+				aryIntentDetectorJsonResponseObjs,
+				enumIntentDetectorId_image_assistant.NATURE_OF_USER_REQUEST,
+				'create_new_image_request',
+				null
+			);
+		
+		let bIsStartNewImageDetected_implicit = false;
+		
+		if (natureOfUserRequest) {
+			bIsStartNewImageDetected_implicit =
+				natureOfUserRequest === 'create_new_image_request';
+		}
+
+
+		// Explicit or implicit request to start a new image
+		//  detected?
+		if (bIsStartNewImageDetected_explicit || bIsStartNewImageDetected_implicit) {
+			// Yes.  Set the start new image flag.
 			bIsStartNewImage = true;
 
 			// Reset image generation parameters
@@ -1064,6 +1095,13 @@ export async function processImageChatVolley(
 
 			console.info(CONSOLE_CATEGORY, `Image generation parameters reset to the defaults, due to a start new image request.`)
 		}
+
+		// Notify the client on the nature of the current
+		//  user request.
+		if (bIsStartNewImage)
+			sendStateMessageSimplified('New image request detected...');
+		else
+			sendStateMessageSimplified('Modifying existing image...');
 
 		// >>>>> Text on image wanted?
 		const bIsTextOnImageDesired =
@@ -1385,17 +1423,6 @@ export async function processImageChatVolley(
 	// -------------------- END  : UPDATE CHAT HISTORY ------------
 
 	// -------------------- BEGIN: MAKE IMAGE REQUEST ------------
-
-	// generateImages_chat_bot will call this function if it
-	//  makes a retry attempts.
-	const sendStateMessageSimplified = (newStateMessage: string) => {
-		const newState = initialState;
-
-		if (client) {
-			newState.state_change_message = newStateMessage;
-			sendStateMessage(client, newState);
-		}
-	}
 
 	// Is the model locked?
 	if (bIsStableDiffusionModelLocked) {
