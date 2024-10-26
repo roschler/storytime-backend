@@ -66,7 +66,7 @@ export enum EnumStoryProtocolLicenses {
 // Set this to TRUE if you want to lock the stable diffusion
 //  model to the faster "LIGHTNING" model.  This is useful
 //  during testing when fast iterations are wanted.
-const bIsStableDiffusionModelLocked = true;
+const bIsStableDiffusionModelLocked = false;
 
 console.info(CONSOLE_CATEGORY, `STABLE DIFFUSION MODEL LOCKED: ${bIsStableDiffusionModelLocked}`);
 
@@ -923,6 +923,41 @@ export async function processImageChatVolley(
 			sendStateMessage(client, newState)
 		}
 
+		// -------------------- BEGIN: CHAT HISTORY FOR INTENTS ------------
+
+		const bDoGiveChatHistoryToIntents = true;
+
+		let userInputForIntents = userInput;
+
+		if (bDoGiveChatHistoryToIntents) {
+			// Search backwards through the chat history until
+			//  we find the most recent occurrence where
+			//  the is_new_session flag is TRUE, indicating
+			//  that was the original prompt to create the
+			//  image.
+			let ndxFoundAt = -1;
+
+
+
+			let chatHistoryForIntents = `
+			Here is the original user input that created the image, followed the history of requests the user made to modify image, with the last user input being the most recent request from the user:
+
+			ORIGINAL USER INPUT TO CREATE IMAGE:
+			
+			"${originalImageDescription}"
+			
+			HISTORY OF MODIFICATION REQUEST:
+			
+			${historyOfModificationRequests}
+			
+			CURRENT USER INPUT:
+			
+			${userInput}
+			`;
+		}
+
+		// -------------------- END  : CHAT HISTORY FOR INTENTS ------------
+
 		// Run the user input by all intents.
 		console.info(CONSOLE_CATEGORY, `Doing intents through OpenAI...`)
 
@@ -930,7 +965,7 @@ export async function processImageChatVolley(
 			await processAllIntents(
 				Object.values(enumIntentDetectorId_image_assistant),
 				g_TextCompletionParamsForIntentDetector,
-				userInput)
+				userInputForIntents);
 
 		// Dump the user input to the console.
 		console.info(CONSOLE_CATEGORY, `UserInput:\n\n${userInput}\n\n`)
@@ -1068,7 +1103,7 @@ export async function processImageChatVolley(
 			getStringIntentDetectionValue(
 				aryIntentDetectorJsonResponseObjs,
 				enumIntentDetectorId_image_assistant.NATURE_OF_USER_REQUEST,
-				'create_new_image_request',
+				'nature_of_user_request',
 				null
 			);
 		

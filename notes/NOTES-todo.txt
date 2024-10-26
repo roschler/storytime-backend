@@ -24,33 +24,14 @@ FUTURE FEATURES:
 
 NEXT:
 
+    - If a new image is started, reset to the default engine but do this
+        before   the text on image flag is set!
+
     - The system can't tell the difference between a "wrong_content"
      complaint and a image modification.
 
-     - Create a new "new_image_or_adjust_image_request" intent
-       detector.  Give some sample pairs of
-
-            A: Adjustment request
-
-            1) Prompt from last volley
-            2) Modification, some with wrong content complaint, some without
-
-            B: New image request
-
-            1) Prompt from last volley
-            2) Brand new image request
-
-        Use it to determine if the current user input is an adjustment to the last prompt, or the request for a brand new image.
-
-        Tomorrow:
-
-            + Modify the wrong_content detector to output "wrong_content" or "adjust_image"
-
-            + Modify image request prompt builder function to have different
-                handling for "adjust_image", while keeping the current
-                handling for "wrong_content"
-
-    BONUS: Add a "New Image" button and implement it.
+        + We need to stop treating image modification requests as
+          complaints.
 
     >>>>>LATER: Add server side verification of user public address via
      client side payload signature checking.

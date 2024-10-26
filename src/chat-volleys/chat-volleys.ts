@@ -588,6 +588,7 @@ export class ChatHistory {
 		if (this.isHistoryEmpty()) {
 			return null;
 		}
+
 		return this.aryChatVolleys[this.aryChatVolleys.length - 1];
 	}
 
@@ -655,6 +656,92 @@ Use the chat history to help guide your efforts.  Here it is now:
 		}
 
 		return strChatHistory
+	}
+
+	/**
+	 * This function searches backwards from the end of the
+	 *  chat history for the most recent chat volley that
+	 *  has the is_new_session flag set to TRUE.  It then
+	 *  builds a history that includes the user input for
+	 *  that chat volley, considered to be the initial
+	 *  prompt that created the current image being worked
+	 *  on, and appends any new user input, which are considered
+	 *  to be requests to modify the original image.
+	 */
+	public buildChatHistoryLastImageOnly():StringOrNull {
+
+		if (this.isHistoryEmpty()) {
+			return null;
+		}
+
+		// Search backwards for the first chat volley
+		//  we find that has the new session flag set to
+		//  TRUE.
+		let ndxFoundAt = -1;
+
+		for (
+				let ndxOfChatVolley = this.aryChatVolleys.length - 1; ndxOfChatVolley >= 0;
+				ndxOfChatVolley--) {
+			const chatVolleyObj = this.aryChatVolleys[ndxOfChatVolley];
+
+			if (chatVolleyObj.is_new_session) {
+				ndxFoundAt = ndxOfChatVolley;
+				break;
+			}
+
+		}
+
+		if (ndxFoundAt < 0) {
+			// This should never happen, since this means
+			//  somehow the original image description prompt
+			//  was not entered into the chat history, or
+			//  the is_new_session flag was not set to TRUE
+			//  when it was.
+			//
+			// We don't throw an error in case the error occurred
+			//  due to deletion or loss of our chat history files.
+
+			// -------------------- BEGIN: EXIT POINT ------------
+
+			const errMsg = `Unable to find any chat volley object with the is_new_session flag set to true.`;
+
+			console.error(CONSOLE_CATEGORY, errMsg);
+
+			return errMsg;
+
+			// -------------------- END  : EXIT POINT ------------
+		} else {
+			const originalImageDescription =
+				this.aryChatVolleys[ndxFoundAt].user_input;
+			const aryModifications: string[] = [];
+
+			for (
+					let ndx = ndxFoundAt + 1;
+					ndx < this.aryChatVolleys.length;
+					ndx++) {
+				aryModifications.push(this.aryChatVolleys[ndx].user_input);
+			}
+
+			let chatHistoryForLastImage =
+			`
+			Here is the original image description that created the image:
+			
+			${originalImageDescription}
+			`;
+
+			if (aryModifications.length > 0) {
+				const modificationsHistory =
+					aryModifications.join('\n');
+
+				chatHistoryForLastImage +=
+					`
+					Here is a list of modifications the user requested, in chronological order:
+					`
+				chatHistoryForLastImage += modificationsHistory;
+			}
+
+			return chatHistoryForLastImage;
+		}
 	}
 
 	// -------------------- BEGIN: SERIALIZATION METHODS ------------

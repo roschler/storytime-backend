@@ -19,7 +19,8 @@ Example output, in JSON format:
 [
 	{
 		"complaint_type": "wrong_content",
-		"complaint_text": "The monks hands are not raised."
+		"complaint_text": "The monks hands are not raised.",
+		"is_extended_wrong_content": true
 	}
 ]
 
