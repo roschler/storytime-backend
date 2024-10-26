@@ -50,7 +50,11 @@ export enum enumIntentDetectorId_image_assistant {
 	// User is complaining about the generation speed.
 	USER_COMPLAINT_IMAGE_GENERATION_SPEED = "user_complaint_speed_image_generation_speed",
 	// User wants to start a brand new image.
-	START_NEW_IMAGE = "start_new_image"
+	START_NEW_IMAGE = "start_new_image",
+	// Identify the nature of the user input as either
+	//  an adjustment to an existing image, or the request
+	//  to start a brand new image.
+	NATURE_OF_USER_REQUEST = "nature_of_user_request"
 }
 
 // -------------------- END  : enumIntentDetectorId_image_assistant ------------

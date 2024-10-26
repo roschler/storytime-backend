@@ -197,6 +197,13 @@ g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.USER_COM
 		prompt_text: ""
 	};
 
+// >>>>> INTENT: USER_INPUT_REQUEST_NATURE
+g_AryIntentPrompts_image_assistant[enumIntentDetectorId_image_assistant.NATURE_OF_USER_REQUEST] =
+	{
+		primary_resource_name: "intent-detector-new-image-description-or-current-image-adjustment.txt",
+		prompt_text: ""
+	};
+
 // We iterate over all the intent values known to the system
 //  at this time to make sure that every one of them has a
 //  corresponding prompt resource, and then we load that into

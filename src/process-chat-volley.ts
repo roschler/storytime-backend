@@ -61,6 +61,18 @@ export enum EnumStoryProtocolLicenses {
 	COMMERCIAL_REMIX = "Commercial Remix"
 }
 
+// -------------------- BEGIN: MODEL LOCK FLAG ------------
+
+// Set this to TRUE if you want to lock the stable diffusion
+//  model to the faster "LIGHTNING" model.  This is useful
+//  during testing when fast iterations are wanted.
+const bIsStableDiffusionModelLocked = true;
+
+console.info(CONSOLE_CATEGORY, `STABLE DIFFUSION MODEL LOCKED: ${bIsStableDiffusionModelLocked}`);
+
+
+// -------------------- END  : MODEL LOCK FLAG ------------
+
 // -------------------- BEGIN: HELPER FUNCTIONS ------------
 
 // -------------------- BEGIN: INTENT DETECTOR RESULT ARRAY HELPER FUNCTIONS ------------
@@ -1383,6 +1395,15 @@ export async function processImageChatVolley(
 			newState.state_change_message = newStateMessage;
 			sendStateMessage(client, newState);
 		}
+	}
+
+	// Is the model locked?
+	if (bIsStableDiffusionModelLocked) {
+		// Override the model ID to use the faster
+		//  default model.
+		chatState_current.model_id = DEFAULT_IMAGE_GENERATION_MODEL_ID;
+
+		sendStateMessageSimplified('MODEL LOCKED TO FASTER GENERATION MODEL!')
 	}
 
 	const aryImageUrls =
