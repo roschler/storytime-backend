@@ -521,7 +521,7 @@ export function buildChatBotSystemPrompt_image_assistant(
 
 				previousImageGenerationPromptOrNothing +=
 					`
-					First of all, I need you to rewrite this image generation prompt so that "${wrongContentText}" is the first image element mentioned in the prompt and it is the main focus of the scene, with the other elements in my prompt being dependent on it.  However, make sure you do not leave out any scene elements or directions mentioned in my prompt.
+					Here is the biggest complaint I have with the image:\n<complaint>${wrongContentText}</complaint>\n Rewrite my prompt so that the scene element or issue mentioned in the complaint is the first image element mentioned in the revised prompt you create for me.  Make the complaint element the main focus of the scene.  However, make sure you do not leave out any of the other scene elements or directions mentioned in my prompt.
 					`
 				// -------------------- END  : REWRITE AROUND WRONG CONTENT ------------
 			}
@@ -537,8 +537,17 @@ export function buildChatBotSystemPrompt_image_assistant(
 		//	// Build the full adorned user prompt.
 		adornedUserPrompt += previousImageGenerationPromptOrNothing;
 
-		// Add the current user input.
-		adornedUserPrompt += 'Also. ' + useUserPrompt;
+		// If we had any "wrong content" text, we need to remove
+		// it from the current user input.
+		const fixedUserPrompt =
+			wrongContentText
+				? useUserPrompt.replace(new RegExp(wrongContentText, "i"), "").trim()
+				: useUserPrompt;
+
+		if (fixedUserPrompt.length > 5)
+			// Append the current user input, without the wrong
+			//  content text..
+			adornedUserPrompt += 'Also. ' + useUserPrompt;
 	} else {
 		// This is first prompt for a new image generation session.
 		//  Just use the current user input.
@@ -559,6 +568,11 @@ export function buildChatBotSystemPrompt_image_assistant(
 	//  flag them as unused variables.
 	const evalStrMainSystemPrompt =
 		'`' + g_MainImageGenerationSystemPrompt + '`';
+
+	// Apparently we need to reference g_MainImageGenerationFaqPrompt
+	//  or the global variable reference will not be available to the
+	//  eval() function.
+	const mainImageGenerationFaqPrompt = g_MainImageGenerationFaqPrompt;
 
 	const evaluatedSystemPrompt =
 		eval(evalStrMainSystemPrompt)
