@@ -27,6 +27,21 @@ NEXT:
     - The system can't tell the difference between a "wrong_content"
      complaint and a image modification.
 
+     - Create a new "new_image_or_adjust_image_request" intent
+       detector.  Give some sample pairs of
+
+            A: Adjustment request
+
+            1) Prompt from last volley
+            2) Modification, some with wrong content complaint, some without
+
+            B: New image request
+
+            1) Prompt from last volley
+            2) Brand new image request
+
+        Use it to determine if the current user input is an adjustment to the last prompt, or the request for a brand new image.
+
         Tomorrow:
 
             + Modify the wrong_content detector to output "wrong_content" or "adjust_image"
