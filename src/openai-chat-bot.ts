@@ -465,16 +465,16 @@ export const g_ImageGenPromptToTweetPrompt =
  *  start a completely new image, so we won't pass in the
  *  last image generation prompt to the image prompt LLM.
  *  Otherwise, we consider this the continuation of an
- *  existing image session and we will pass it.
+ *  existing image session.
  *
- * @return Returns the system prompt to use in the
- *  upcoming text completion call.
+ * @returns - Returns the user prompt and system prompt to
+ *  use in the upcoming text completion call.
  */
 export function buildChatBotSystemPrompt_image_assistant(
 		userPrompt: string,
 		wrongContentText: string | null,
 		chatHistoryObj: ChatHistory,
-		bIsStartNewImage: boolean): string {
+		bIsStartNewImage: boolean): UserAndSystemPrompt {
 	// IMPORTANT!: This variable name must match the one used
 	//  in the system prompt text file!
 	const useUserPrompt = userPrompt.trim();
@@ -486,15 +486,7 @@ export function buildChatBotSystemPrompt_image_assistant(
 
 	// Extract the most recent chat history and create
 	//  a block of plain text from it.
-	//
-	// IMPORTANT!: This variable name must match the one used
-	//  in the system prompt text file!
-	// const chatHistorySummaryAsText =
-	//	chatHistoryObj.buildChatHistoryPrompt()
-
-	// IMPORTANT!: This variable name must match the one used
-	//  in the system prompt text file!
-	let previousImageGenerationPromptOrNothing = ''
+	let previousImageGenerationPromptOrNothing = '';
 
 	if (!bIsStartNewImage) {
 		// Get the last chat volley.
@@ -506,13 +498,13 @@ export function buildChatBotSystemPrompt_image_assistant(
 			//  modify the existing content.
 			previousImageGenerationPromptOrNothing =
 				`
-					Here is the previous image generation prompt you created:\n
+					Please help me with this image generation prompt:\n
 					${lastChatVolleyObj.prompt}\n
 				`
 			if (lastChatVolleyObj.negative_prompt.length > 0) {
 				previousImageGenerationPromptOrNothing +=
 					`
-							Here is the previous negative prompt you created:\n
+							And also help me with this text I am using as the negative prompt to the stable diffusion model:\n
 							${lastChatVolleyObj.negative_prompt}
 						`
 			}
@@ -529,25 +521,38 @@ export function buildChatBotSystemPrompt_image_assistant(
 
 				previousImageGenerationPromptOrNothing +=
 					`
-					Rewrite this image generation prompt so that the subject in the user's complaint, "${wrongContentText}", becomes the focus of the scene described by your revised image prompt.
+					First of all, I need you to rewrite this image generation prompt so that "${wrongContentText}" is the first image element mentioned in the prompt and it is the main focus of the scene, with the other elements in my prompt being dependent on it.  However, make sure you do not leave out any scene elements or directions mentioned in my prompt.
 					`
 				// -------------------- END  : REWRITE AROUND WRONG CONTENT ------------
 			}
 		}
 	}
 
-	const adornedUserPrompt =
-		`Here is the current user input.  Use it to guide the improvements to your revised prompt:\n${useUserPrompt}\n`
+	let adornedUserPrompt = '';
 
-	// Build the full prompt from our sub-prompts.
-	const arySubPrompts = [];
+	if (previousImageGenerationPromptOrNothing.length > 0) {
+		// This is not the first prompt but a continuation of
+		//  a current image generation session.
+		//
+		//	// Build the full adorned user prompt.
+		adornedUserPrompt += previousImageGenerationPromptOrNothing;
+
+		// Add the current user input.
+		adornedUserPrompt += 'Also. ' + useUserPrompt;
+	} else {
+		// This is first prompt for a new image generation session.
+		//  Just use the current user input.
+		adornedUserPrompt = useUserPrompt;
+	}
 
 	// Not using this prompt for now.  Needs curation.
-	// arySubPrompts.push(g_TipsFromDiscordMembersPrompt)
+	// arySubPromptsForUserPrompt.push(g_TipsFromDiscordMembersPrompt)
 
 	// Main image generation system prompt.  Use it as a
 	//  template string so that we can insert the needed values
-	//  in the right place.
+	//  in the right place.  Note, the current generation of
+	//  the system prompt for image generation has a template
+	//  string variable reference to: g_MainImageGenerationFaqPrompt
 
 	// NOTE: Because they are only found in the system
 	//  prompt eval string, the IDE will incorrectly
@@ -558,12 +563,11 @@ export function buildChatBotSystemPrompt_image_assistant(
 	const evaluatedSystemPrompt =
 		eval(evalStrMainSystemPrompt)
 
-	arySubPrompts.push(evaluatedSystemPrompt)
+	const userPromptAndSystemPromptObj = {
+		userPrompt: adornedUserPrompt,
+		systemPrompt: evaluatedSystemPrompt }
 
-	// Main tips document.
-	arySubPrompts.push(g_MainImageGenerationFaqPrompt)
-
-	return arySubPrompts.join(' ')
+	return userPromptAndSystemPromptObj;
 }
 
 /**

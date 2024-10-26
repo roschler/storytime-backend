@@ -192,10 +192,6 @@ export class CurrentChatState_license_assistant {
 	/**
 	 * Constructs an instance of CurrentChatState_license_assistant.
 	 *
-	 * @param model_id - The model currently selected for _license_assistantlicense terms.
-	 * @param loras - The LoRA object that has the currently selected, if any, LoRA models.
-	 * @param guidance_scale - The current value set for the context free guidance parameter.
-	 * @param steps - The current value set for the number of steps to use when generating an image.
 	 */
 	constructor(
 		pilTerms: PilTermsExtended | null) {
@@ -313,7 +309,12 @@ export class ChatVolley {
 	/**
 	 * The full system prompt we sent to the LLM for consideration.
 	 */
-	public full_prompt_to_system: string;
+	public full_system_prompt: string;
+
+	/**
+	 * The full user prompt we sent to the LLM for consideration.
+	 */
+	public full_user_prompt: string;
 
 	// -------------------- END  : COMMON ASSISTANT FIELDS ------------
 
@@ -378,7 +379,8 @@ export class ChatVolley {
 	 * @param chat_state_at_start_license_assistant - For license assistant chats, the state of the chat at the start of the volley.
 	 * @param chat_state_at_end_license_assistant - For license assistant chats, the state of the chat at the end of the volley.
 	 * @param array_of_intent_detections - Array of intent detections including complaint type and complaint text.
-	 * @param full_prompt_to_system - The full prompt we sent to the LLM for consideration.
+	 * @param full_system_prompt - The full prompt we sent to the LLM for consideration.
+	 * @param full_user_input - The full user prompt we sent to the LLM for consideration with our adornments made (e.g. - chat history, wrong content instructions, etc.)
 	 */
 	constructor(
 		is_new_session: boolean,
@@ -393,7 +395,8 @@ export class ChatVolley {
 		chat_state_at_start_license_assistant: CurrentChatState_license_assistant | null,
 		chat_state_at_end_license_assistant: CurrentChatState_license_assistant | null,
 		array_of_intent_detections: IntentJsonResponseObject[],
-		full_prompt_to_system: string
+		full_system_prompt: string,
+		full_user_input: string
 	) {
 		this.is_new_session = is_new_session;
 
@@ -414,7 +417,8 @@ export class ChatVolley {
 		this.prompt = prompt;
 		this.negative_prompt = negative_prompt;
 		this.response_to_user = response_sent_to_client;
-		this.full_prompt_to_system = full_prompt_to_system;
+		this.full_system_prompt = full_system_prompt;
+		this.full_user_prompt = full_user_input;
 	}
 
 	/**
@@ -499,7 +503,8 @@ export class ChatVolley {
 			negative_prompt: this.negative_prompt,
 			response_to_user: this.response_to_user,
 			array_of_intent_detections: this.array_of_intent_detections,
-			full_prompt_to_system: this.full_prompt_to_system
+			full_system_prompt: this.full_system_prompt,
+			full_user_prompt: this.full_user_prompt
 		};
 	}
 
@@ -526,7 +531,8 @@ export class ChatVolley {
 				? null
 				: CurrentChatState_license_assistant.fromJSON(json.chat_state_at_end_license_assistant),
 			json.array_of_intent_detections,
-			json.full_prompt_to_system
+			json.full_system_prompt,
+			json.full_user_prompt
 		);
 	}
 

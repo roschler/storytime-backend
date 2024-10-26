@@ -665,7 +665,8 @@ export async function processLicenseChatVolley(
 			chatState_start,
 			chatState_current,
 			aryIntentDetectorJsonResponseObjs,
-			systemAndUserPromptToLLM.systemPrompt + ' <=> ' + systemAndUserPromptToLLM.userPrompt
+			systemAndUserPromptToLLM.systemPrompt + ' <=> ' + systemAndUserPromptToLLM.userPrompt,
+			systemAndUserPromptToLLM.userPrompt
 		)
 
 	chatHistoryObj.addChatVolley(newChatVolleyObj)
@@ -1258,24 +1259,24 @@ export async function processImageChatVolley(
 
 	// -------------------- BEGIN: MAIN IMAGE GENERATOR PROMPT STEP ------------
 
-	console.info(CONSOLE_CATEGORY, `----------------------- MAIN LLM INTERACTION ---------------\n\n`)
+	console.info(CONSOLE_CATEGORY, `----------------------- MAIN LLM INTERACTION ---------------\n\n`);
 
 	// Now we need to get help from the LLM on creating or refining
 	//  a good prompt for the user.
-	const fullPromptToLLM =
+	const userAndSystemPromptObj =
 		buildChatBotSystemPrompt_image_assistant(
 			userInput,
 			wrongContentText,
 			chatHistoryObj,
-			bIsStartNewImage)
+			bIsStartNewImage);
 
-	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`)
+	console.info(CONSOLE_CATEGORY, `>>>>> Making main LLM text completion request <<<<<`);
 
 	const textCompletion =
 		await chatCompletionImmediate(
 			'MAIN-IMAGE-GENERATION-PROMPT',
-			fullPromptToLLM,
-			userInput,
+			userAndSystemPromptObj.systemPrompt,
+			userAndSystemPromptObj.userPrompt,
 			g_TextCompletionParams,
 			true);
 
@@ -1360,7 +1361,8 @@ export async function processImageChatVolley(
 			null,
 			null,
 			aryIntentDetectorJsonResponseObjs,
-			fullPromptToLLM
+			userAndSystemPromptObj.systemPrompt,
+			userAndSystemPromptObj.userPrompt
 		)
 
 	chatHistoryObj.addChatVolley(newChatVolleyObj)
