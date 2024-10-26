@@ -1374,12 +1374,25 @@ export async function processImageChatVolley(
 
 	// -------------------- BEGIN: MAKE IMAGE REQUEST ------------
 
+	// generateImages_chat_bot will call this function if it
+	//  makes a retry attempts.
+	const sendStateMessageSimplified = (newStateMessage: string) => {
+		const newState = initialState;
+
+		if (client) {
+			newState.state_change_message = newStateMessage;
+			sendStateMessage(client, newState);
+		}
+	}
+
 	const aryImageUrls =
 		// https://dream-gateway.livepeer.cloud/text-to-image
 		await generateImages_chat_bot(
 			revisedImageGenPrompt,
 			jsonResponse.negative_prompt,
-			chatState_current)
+			chatState_current,
+			sendStateMessageSimplified,
+			3)
 
 	// -------------------- END  : MAKE IMAGE REQUEST ------------
 
@@ -1396,7 +1409,7 @@ export async function processImageChatVolley(
 		newState.waiting_for_images = false
 		newState.state_change_message = ''
 
-		sendStateMessage(client, newState)
+		sendStateMessage(client, newState);
 	}
 
 	// -------------------- END  : SEND IMAGE RESULT TO CLIENT ------------
