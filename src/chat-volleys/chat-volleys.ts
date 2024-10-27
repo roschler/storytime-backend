@@ -738,12 +738,15 @@ Use the chat history to help guide your efforts.  Here it is now:
 				aryModifications.push(this.aryChatVolleys[ndx].user_input);
 			}
 
+			// IMPORTANT!  The labels used here MUST match those
+			//  found in the intent detectors that look for
+			//  them, like the extended wrong content detector!
 			let chatHistoryForLastImage =
-			`
-			Here is the original image description that created the image:
-			
-			${originalImageDescription}
-			`;
+				`
+				Here is the original image description that created the image:
+				
+				ORIGINAL IMAGE DESCRIPTION: ${originalImageDescription}
+				`;
 
 			if (aryModifications.length > 0) {
 				const modificationsHistory =
@@ -755,6 +758,13 @@ Use the chat history to help guide your efforts.  Here it is now:
 					`
 				chatHistoryForLastImage += modificationsHistory;
 			}
+
+			chatHistoryForLastImage +=
+				`
+				Here is current user input from the user:
+				
+				USER FEEDBACK: ${userInput}
+				`;
 
 			return chatHistoryForLastImage;
 		}

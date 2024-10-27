@@ -989,86 +989,6 @@ export async function processImageChatVolley(
 		if (aryIntentDetectorJsonResponseObjs.length < 1)
 			throw new Error(`The array of intent detectors JSON response objects is empty.`);
 
-		// -------------------- BEGIN: EXTENDED WRONG CONTENT DETECTOR ------------
-
-		// The extended wrong content detector is handled separately
-		//  because we need to push text into the prompt for it.
-
-		// Prepare the EXTENDED wrong content prompt.
-		const previousImageGenPrompt =
-			previousChatVolleyPrompt ?? '';
-
-		const evalStrExtendedWrongContent =
-			'`' + g_ExtendedWrongContentPrompt + '`';
-
-		const evaluatedExtendedWrongContent =
-			eval(evalStrExtendedWrongContent);
-
-		// Make a separate completion call for it.
-		console.info(CONSOLE_CATEGORY, `>>>>> Making extended wrong content detector completion request <<<<<`)
-
-		const textCompletion =
-			await chatCompletionImmediate(
-				'EXTENDED-WRONG-CONTENT-PROMPT',
-				evaluatedExtendedWrongContent,
-				userInput,
-				g_TextCompletionParams,
-				true);
-
-		if (textCompletion.is_error)
-			throw new Error(`The extended wrong content detector completion call failed with error: ${textCompletion.error_message}`);
-
-		const extWrongContentJsonResponseObj: IntentJsonResponseObject =
-			{
-				intent_detector_id: enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
-				array_child_objects: textCompletion.json_response as object[]
-			}
-
-		if (extWrongContentJsonResponseObj.array_child_objects.length > 0) {
-			// The extended wrong content detector has a tendency
-			//  to replace the complaint_type property name with
-			//  something it deems more appropriate.  So if we
-			//  don't find a complaint_type property, we add it
-			//  with the value "wrong_content" because the only
-			//  thing it detects is wrong content.
-			let bIsMissingComplaintType = true;
-			let strComplaintText = "(none)";
-
-			// Check if any child object has "wrong_content" as the complaint_type
-			bIsMissingComplaintType = !extWrongContentJsonResponseObj.array_child_objects.some(
-				(childObj: any) => childObj.complaint_type === "wrong_content"
-			);
-
-			// If no "wrong_content" object found, search for the
-			//  first object with "complaint_text" and set
-			//  strComplaintText its value.  We use this
-			//  technique because when the LLM makes the
-			//  mistake we are fixing, it has, so far,
-			//  produced the JSON object with
-			//  "complaint_text" having the correct value.
-			if (bIsMissingComplaintType) {
-				const firstComplaintTextObj = extWrongContentJsonResponseObj.array_child_objects.find(
-					(childObj: any) => childObj.complaint_text
-				);
-
-				if (firstComplaintTextObj) {
-					strComplaintText = (firstComplaintTextObj as unknown as any).complaint_text;
-				}
-
-				// Add a new child object to the array with the
-				//  correct complaint_type value of "wrong_content".
-				extWrongContentJsonResponseObj.array_child_objects.push({
-					complaint_type: "wrong_content",
-					complaint_text: strComplaintText
-				});
-			}
-		}
-
-		// Add it to the array of intent detection JSON response objects.
-		aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj)
-
-		// -------------------- END  : EXTENDED WRONG CONTENT DETECTOR ------------
-
 		// -------------------- BEGIN: INTENT DETECTIONS TO STATE CHANGES ------------
 
 		// Now we examine the JSON response objects received from
@@ -1122,6 +1042,93 @@ export async function processImageChatVolley(
 			sendStateMessageSimplified('New image request detected...');
 		else
 			sendStateMessageSimplified('Modifying existing image...');
+
+		// -------------------- BEGIN: EXTENDED WRONG CONTENT DETECTOR ------------
+
+		// We do not execute the extended wrong content
+		//  detector if the user input was classified as
+		//  a new image request.
+		if (bIsStartNewImage) {
+			console.info(CONSOLE_CATEGORY, `New image request.  Ignoring extended wrong content detector.`);
+		} else {
+			// The extended wrong content detector is handled separately
+			//  because we need to push text into the prompt for it.
+
+			// Prepare the EXTENDED wrong content prompt.
+			const previousImageGenPrompt =
+				previousChatVolleyPrompt ?? '';
+
+			const evalStrExtendedWrongContent =
+				'`' + g_ExtendedWrongContentPrompt + '`';
+
+			const evaluatedExtendedWrongContent =
+				eval(evalStrExtendedWrongContent);
+
+			// Make a separate completion call for it.
+			console.info(CONSOLE_CATEGORY, `>>>>> Making extended wrong content detector completion request <<<<<`)
+
+			const textCompletion =
+				await chatCompletionImmediate(
+					'EXTENDED-WRONG-CONTENT-PROMPT',
+					evaluatedExtendedWrongContent,
+					userInputForIntents,
+					g_TextCompletionParams,
+					true);
+
+			if (textCompletion.is_error)
+				throw new Error(`The extended wrong content detector completion call failed with error: ${textCompletion.error_message}`);
+
+			const extWrongContentJsonResponseObj: IntentJsonResponseObject =
+				{
+					intent_detector_id: enumIntentDetectorId_image_assistant.USER_COMPLAINT_IMAGE_QUALITY_OR_WRONG_CONTENT,
+					array_child_objects: textCompletion.json_response as object[]
+				}
+
+			if (extWrongContentJsonResponseObj.array_child_objects.length > 0) {
+				// The extended wrong content detector has a tendency
+				//  to replace the complaint_type property name with
+				//  something it deems more appropriate.  So if we
+				//  don't find a complaint_type property, we add it
+				//  with the value "wrong_content" because the only
+				//  thing it detects is wrong content.
+				let bIsMissingComplaintType = true;
+				let strComplaintText = "(none)";
+
+				// Check if any child object has "wrong_content" as the complaint_type
+				bIsMissingComplaintType = !extWrongContentJsonResponseObj.array_child_objects.some(
+					(childObj: any) => childObj.complaint_type === "wrong_content"
+				);
+
+				// If no "wrong_content" object found, search for the
+				//  first object with "complaint_text" and set
+				//  strComplaintText its value.  We use this
+				//  technique because when the LLM makes the
+				//  mistake we are fixing, it has, so far,
+				//  produced the JSON object with
+				//  "complaint_text" having the correct value.
+				if (bIsMissingComplaintType) {
+					const firstComplaintTextObj = extWrongContentJsonResponseObj.array_child_objects.find(
+						(childObj: any) => childObj.complaint_text
+					);
+
+					if (firstComplaintTextObj) {
+						strComplaintText = (firstComplaintTextObj as unknown as any).complaint_text;
+					}
+
+					// Add a new child object to the array with the
+					//  correct complaint_type value of "wrong_content".
+					extWrongContentJsonResponseObj.array_child_objects.push({
+						complaint_type: "wrong_content",
+						complaint_text: strComplaintText
+					});
+				}
+			}
+
+			// Add it to the array of intent detection JSON response objects.
+			aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj)
+		}
+
+		// -------------------- END  : EXTENDED WRONG CONTENT DETECTOR ------------
 
 		// >>>>> Text on image wanted?
 		const bIsTextOnImageDesired =
@@ -1419,7 +1426,7 @@ export async function processImageChatVolley(
 
 	const newChatVolleyObj =
 		new ChatVolley(
-			false,
+			bIsStartNewImage,
 			null,
 			userInput,
 			revisedImageGenPrompt,

@@ -25,7 +25,7 @@ If the user indicates that there are issues with text in the image, such as miss
 
 {"complaint_type": "problems_with_text", "complaint_text: <text you matched">}
 
-If the content of the image is not what the user wants or requested, or if they use any other phrase with a similar meaning such, as but not limited to: "I wanted a dog instead", "I said a cart, not car", "I wanted the man to look directly at the camera", "I wanted a portrait view, not a profile view", "No, not a black dress, a white vest", "It doesn't look anything like what I asked for", "The sultan is missing", "What happened to the dog?", "I don't see the horse", "There is no spider in the picture", "The man is not looking at the table" then output this JSON object:
+Look for explicit complaints about the image from the user.  However, make sure it is a complaint and not simply a request to modify the image in some incremental way.  Complaints will usually have language indicating they had made a previous request that was not satisfied in the current image and therefore will have language with verbs in the past tense like: "I said", I wanted", "I expected".  If you detect a phrase like that, then output this JSON object:
 
 {"complaint_type": "wrong_content", "complaint_text: <text you matched">}
 
