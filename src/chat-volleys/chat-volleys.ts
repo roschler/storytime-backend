@@ -662,14 +662,29 @@ Use the chat history to help guide your efforts.  Here it is now:
 	 * This function searches backwards from the end of the
 	 *  chat history for the most recent chat volley that
 	 *  has the is_new_session flag set to TRUE.  It then
-	 *  builds a history that includes the user input for
-	 *  that chat volley, considered to be the initial
-	 *  prompt that created the current image being worked
-	 *  on, and appends any new user input, which are considered
-	 *  to be requests to modify the original image.
+	 *  builds a chat history string formatted as an LLM
+	 *  annotated prompt, that includes:
+	 *
+	 *  	- The initial image description
+	 *  	- The user requests to modify the image that followed,
+	 *  		if any.
+	 *      - And finally, the user input passed to this function.
+	 *
+	 * @returns - Returns the chat history for most recent
+	 *  image session, starting from the initial image
+	 *  description, up until the last chat volley, a
+	 *  prompt ready formatted string, or NULL if a chat
+	 *  volley with the is_new_session flag set to TRUE
+	 *  could not be found.
 	 */
-	public buildChatHistoryLastImageOnly():StringOrNull {
+	public buildChatHistoryLastImageOnly(userInput: string):StringOrNull {
 
+		// There should always be current user input.
+		if (userInput.trim().length < 1)
+			throw new Error(`The userInput parameter is empty.`);
+
+
+		// If there's not chat history yet, there's nothing to build.
 		if (this.isHistoryEmpty()) {
 			return null;
 		}
@@ -707,12 +722,13 @@ Use the chat history to help guide your efforts.  Here it is now:
 
 			console.error(CONSOLE_CATEGORY, errMsg);
 
-			return errMsg;
+			return null;
 
 			// -------------------- END  : EXIT POINT ------------
 		} else {
 			const originalImageDescription =
 				this.aryChatVolleys[ndxFoundAt].user_input;
+
 			const aryModifications: string[] = [];
 
 			for (

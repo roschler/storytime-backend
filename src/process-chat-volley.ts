@@ -930,30 +930,15 @@ export async function processImageChatVolley(
 		let userInputForIntents = userInput;
 
 		if (bDoGiveChatHistoryToIntents) {
-			// Search backwards through the chat history until
-			//  we find the most recent occurrence where
-			//  the is_new_session flag is TRUE, indicating
-			//  that was the original prompt to create the
-			//  image.
-			let ndxFoundAt = -1;
+			const chatHistoryLastImagePrompt =
+				chatHistoryObj.buildChatHistoryLastImageOnly(userInput);
 
-
-
-			let chatHistoryForIntents = `
-			Here is the original user input that created the image, followed the history of requests the user made to modify image, with the last user input being the most recent request from the user:
-
-			ORIGINAL USER INPUT TO CREATE IMAGE:
-			
-			"${originalImageDescription}"
-			
-			HISTORY OF MODIFICATION REQUEST:
-			
-			${historyOfModificationRequests}
-			
-			CURRENT USER INPUT:
-			
-			${userInput}
-			`;
+			if (chatHistoryLastImagePrompt) {
+				// Replace the user input with the annotated
+				//  user input that contains the chat history
+				//  for the last image
+				userInputForIntents = chatHistoryLastImagePrompt;
+			}
 		}
 
 		// -------------------- END  : CHAT HISTORY FOR INTENTS ------------
