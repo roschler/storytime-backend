@@ -12,7 +12,8 @@
 export enum enumImageGenerationModelId {
 	// The ByteDance lightning model.
 	BYTEDANCE_LIGHTNING = "ByteDance/SDXL-Lightning",
-	// The RealVisXL lightning model.
+	// The RealVisXL lightning model.  This model does
+	//  great dinosaurs!
 	REALVIS_LIGHTNING = "SG161222/RealVisXL_V4.0_Lightning",
 	// The Black Forest FLUX model.
 	FLUX = "black-forest-labs/FLUX.1-dev",

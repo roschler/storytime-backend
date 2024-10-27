@@ -1084,6 +1084,7 @@ export async function processImageChatVolley(
 					array_child_objects: textCompletion.json_response as object[]
 				}
 
+			/* The new extended wrong content detector does not have this problem.
 			if (extWrongContentJsonResponseObj.array_child_objects.length > 0) {
 				// The extended wrong content detector has a tendency
 				//  to replace the complaint_type property name with
@@ -1123,9 +1124,10 @@ export async function processImageChatVolley(
 					});
 				}
 			}
+			*/
 
 			// Add it to the array of intent detection JSON response objects.
-			aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj)
+			aryIntentDetectorJsonResponseObjs.push(extWrongContentJsonResponseObj);
 		}
 
 		// -------------------- END  : EXTENDED WRONG CONTENT DETECTOR ------------
