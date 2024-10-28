@@ -62,6 +62,6 @@ You should output your response in JSON format, with a single child object in an
 	{
         "intent_detector_id": "extended_wrong_content_detector",
 		"complaint_type": <PUT THE DOMINANT CATEGORY FOR THE USER FEEDBACK HERE> ,
-		"complaint_text": <PUT THE TEXT YOU MATCHED HERE>,
+		"complaint_text": <PUT THE TEXT YOU MATCHED HERE>
 	}
 ]
