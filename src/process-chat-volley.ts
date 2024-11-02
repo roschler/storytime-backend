@@ -1359,6 +1359,10 @@ export async function processImageChatVolley(
 			g_TextCompletionParams,
 			true);
 
+	if (textCompletion.is_error) {
+		throw new Error(`Error during main image generation text completion:\n${textCompletion.error_message}`);
+	}
+
 	// Type assertion to include 'revised_image_prompt'
 	const jsonResponse = textCompletion.json_response as ImageGeneratorLlmJsonResponse;
 
